@@ -1,0 +1,22 @@
+nebula=
+{
+	coordinate=
+	{
+		x=-117.08
+		y=367.11
+		origin=4294967295
+		randomized=yes
+	}
+	name=
+	{
+		key="Disak_Hek_Dust_Clouds"
+	}
+	radius=30
+	galactic_object=55
+	galactic_object=193
+	galactic_object=197
+	galactic_object=383
+	galactic_object=481
+	galactic_object=682
+	galactic_object=824
+}

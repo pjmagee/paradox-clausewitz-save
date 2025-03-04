@@ -1,0 +1,2505 @@
+pop_factions=
+{
+	0=
+	{
+		country=3
+		type="traditionalist"
+		name=
+		{
+			key="%ADJ%"
+			variables=
+			{
+				
+				{
+					key="1"
+					value=
+					{
+						key="of_the_High_Priesthood"
+						variables=
+						{
+							
+							{
+								key="1"
+								value=
+								{
+									key="Council"
+								}
+							}
+ 
+						}
+					}
+				}
+ 
+			}
+		}
+		parameters=
+		{
+			
+			{
+				key=empire
+				data=
+				{
+					type=country
+					id=3
+					opener_id=4294967295
+				}
+			}
+ 
+		}
+		support_percent=0.55957
+		support_power=209
+		faction_approval=0.84999
+		members=
+		{
+			103 104 105 106 108 109 113 118 119 121 131 132 16779357 2161 2170 2289 2370 123 129 133 2452 2192 2411 128 111 125 2908 2599 122 2970 2824 2462 3325 2909 2512 3336 3344 102 127 3425 3439 114 3512 3523 2815 2978 107 3610 3489 16777700 124 3692 130 2556 126 3664 16779623 3790 3805 2476 2635 3997 3998 
+		}
+	}
+	1=
+	{
+		country=3
+		type="supremacist"
+		name=
+		{
+			key="%ADJECTIVE%"
+			variables=
+			{
+				
+				{
+					key="adjective"
+					value=
+					{
+						key="SPEC_NEX"
+					}
+				}
+ 
+				{
+					key="1"
+					value=
+					{
+						key="%ADJ%"
+						variables=
+						{
+							
+							{
+								key="1"
+								value=
+								{
+									key="Supremacy"
+									variables=
+									{
+										
+										{
+											key="1"
+											value=
+											{
+												key="Vanguard"
+											}
+										}
+ 
+									}
+								}
+							}
+ 
+						}
+					}
+				}
+ 
+			}
+		}
+		parameters=
+		{
+			
+			{
+				key=empire
+				data=
+				{
+					type=country
+					id=3
+					opener_id=4294967295
+				}
+			}
+ 
+		}
+		support_percent=0.21686
+		support_power=81
+		faction_approval=0.7
+		members=
+		{
+			116 2683 2768 110 2964 3054 112 3507 2636 3393 3742 2859 3855 3887 2695 3925 115 3946 2735 3788 2719 2703 117 16779011 120 
+		}
+	}
+	2=
+	{
+		country=9
+		type="traditionalist"
+		name=
+		{
+			key="%ADJ%"
+			variables=
+			{
+				
+				{
+					key="1"
+					value=
+					{
+						key="of_the_High_Priesthood"
+						variables=
+						{
+							
+							{
+								key="1"
+								value=
+								{
+									key="Council"
+								}
+							}
+ 
+						}
+					}
+				}
+ 
+			}
+		}
+		parameters=
+		{
+			
+			{
+				key=empire
+				data=
+				{
+					type=country
+					id=9
+					opener_id=4294967295
+				}
+			}
+ 
+		}
+		support_percent=0.27817
+		support_power=134.5
+		faction_approval=0.75001
+		members=
+		{
+			1602 1603 16779359 2371 2451 293 302 1614 292 290 1607 2177 301 312 2203 2493 2793 3450 289 2327 303 3552 311 3538 1599 3676 296 2287 1615 3801 2922 33556653 16779574 2781 16779360 3936 2374 309 300 1604 3349 297 
+		}
+	}
+	3=
+	{
+		country=30
+		type="supremacist"
+		name=
+		{
+			key="%ADJ%"
+			variables=
+			{
+				
+				{
+					key="1"
+					value=
+					{
+						key="PRESCRIPTED_species_adjective_humans1"
+						variables=
+						{
+							
+							{
+								key="1"
+								value=
+								{
+									key="%ADJ%"
+									variables=
+									{
+										
+										{
+											key="1"
+											value=
+											{
+												key="Dominance"
+												variables=
+												{
+													
+													{
+														key="1"
+														value=
+														{
+															key="Bloc"
+														}
+													}
+ 
+												}
+											}
+										}
+ 
+									}
+								}
+							}
+ 
+						}
+					}
+				}
+ 
+			}
+		}
+		parameters=
+		{
+			
+			{
+				key=empire
+				data=
+				{
+					type=country
+					id=30
+					opener_id=4294967295
+				}
+			}
+ 
+		}
+		support_percent=0.33025
+		support_power=71.5
+		faction_approval=1
+		members=
+		{
+			1551 1553 2260 1535 2510 2561 1552 2889 2195 1548 2731 3409 2648 2896 1539 1534 3014 3354 2935 3771 3934 1542 1530 16780068 1532 
+		}
+	}
+	4=
+	{
+		country=30
+		type="imperialist"
+		name=
+		{
+			key="Crimson_Warrior_Lodge"
+		}
+		parameters=
+		{
+			
+			{
+				key=empire
+				data=
+				{
+					type=country
+					id=30
+					opener_id=4294967295
+				}
+			}
+ 
+		}
+		support_percent=0.66974
+		support_power=145
+		faction_approval=0.84998
+		members=
+		{
+			1538 1544 2311 1537 1543 1540 16779358 2606 2623 2690 2765 2834 1541 2372 2435 3016 16777712 16779394 1533 1528 3081 1536 3452 3476 1545 3529 1546 3592 3645 3667 3723 2430 3562 1555 1549 1547 1531 2173 3814 1529 3864 2774 1550 2543 3970 4002 4013 1554 
+		}
+	}
+	5=
+	{
+		country=71
+		type="imperialist"
+		name=
+		{
+			key="Patriotic_Vanguard"
+		}
+		parameters=
+		{
+			
+			{
+				key=empire
+				data=
+				{
+					type=country
+					id=71
+					opener_id=4294967295
+				}
+			}
+ 
+		}
+		support_percent=0.17886
+		support_power=33
+		faction_approval=0.34998
+		members=
+		{
+			1890 2555 1897 1879 1889 2772 1883 2886 3312 3669 3735 
+		}
+	}
+	6=
+	{
+		country=71
+		type="progressive"
+		name=
+		{
+			key="%ADJ%"
+			variables=
+			{
+				
+				{
+					key="1"
+					value=
+					{
+						key="Citizens_for_Freedom"
+						variables=
+						{
+							
+							{
+								key="1"
+								value=
+								{
+									key="Association"
+								}
+							}
+ 
+						}
+					}
+				}
+ 
+			}
+		}
+		parameters=
+		{
+			
+			{
+				key=empire
+				data=
+				{
+					type=country
+					id=71
+					opener_id=4294967295
+				}
+			}
+ 
+		}
+		support_percent=0.82113
+		support_power=151.5
+		faction_approval=1
+		members=
+		{
+			1882 1884 1885 1887 1888 1895 1898 1901 1903 2329 2330 2333 2383 1891 2445 1902 1892 2738 1881 1899 1886 2980 3010 1893 2331 3319 1876 2860 3399 1878 1877 3542 3560 2626 1896 1900 3638 2847 3675 1894 2569 3424 3462 2651 2332 3880 3895 3973 1880 2996 
+		}
+	}
+	7=
+	{
+		country=7
+		type="prosperity"
+		name=
+		{
+			key="%ADJ%"
+			variables=
+			{
+				
+				{
+					key="1"
+					value=
+					{
+						key="Internal_Development"
+						variables=
+						{
+							
+							{
+								key="1"
+								value=
+								{
+									key="Committee"
+								}
+							}
+ 
+						}
+					}
+				}
+ 
+			}
+		}
+		parameters=
+		{
+			
+			{
+				key=empire
+				data=
+				{
+					type=country
+					id=7
+					opener_id=4294967295
+				}
+			}
+ 
+		}
+		support_percent=0.73548
+		support_power=114
+		faction_approval=1
+		members=
+		{
+			222 223 224 226 229 232 235 241 246 247 249 16777574 225 2460 2268 248 2175 2716 243 2513 2790 239 245 233 227 3481 3398 3572 3663 3772 2359 228 236 2928 2199 238 
+		}
+	}
+	8=
+	{
+		country=7
+		type="progressive"
+		name=
+		{
+			key="%ADJ%"
+			variables=
+			{
+				
+				{
+					key="1"
+					value=
+					{
+						key="Free_Elections"
+						variables=
+						{
+							
+							{
+								key="1"
+								value=
+								{
+									key="Party"
+								}
+							}
+ 
+						}
+					}
+				}
+ 
+			}
+		}
+		parameters=
+		{
+			
+			{
+				key=empire
+				data=
+				{
+					type=country
+					id=7
+					opener_id=4294967295
+				}
+			}
+ 
+		}
+		support_percent=0.26451
+		support_power=41
+		faction_approval=1
+		members=
+		{
+			2152 2403 242 240 231 3021 2867 2653 237 2226 234 2585 244 230 
+		}
+	}
+	9=
+	{
+		country=26
+		type="imperialist"
+		name=
+		{
+			key="Banner_of_Triumph"
+		}
+		parameters=
+		{
+			
+			{
+				key=empire
+				data=
+				{
+					type=country
+					id=26
+					opener_id=4294967295
+				}
+			}
+ 
+		}
+		support_percent=0.75237
+		support_power=435.25
+		faction_approval=0.94996
+		members=
+		{
+			1466 1469 1470 1472 1475 1479 1481 1482 1486 1492 1494 1497 1499 1500 1501 1502 1506 1507 1521 1522 1940 2279 1518 1484 1952 2343 1953 1517 2507 1508 1941 2509 2242 2441 2552 1954 1503 2646 2652 1480 2611 1515 1946 2743 1523 1478 2663 2778 2821 2846 1519 2865 1956 2879 1955 2912 1514 2522 2369 2962 2504 2998 1483 3015 3032 1945 2301 3045 2446 2582 1491 1948 3330 3347 1512 1487 3366 3373 2739 1942 2439 1944 3328 3444 1488 3456 3468 3000 3485 1870 3498 1474 2272 1477 2976 3332 2727 2344 1471 1943 3634 2317 2215 16779958 2179 3517 3678 2762 1871 2571 3580 3722 2523 2596 3743 3401 1476 3683 1869 1495 3760 3762 2180 2782 2243 3800 3624 3608 3809 3063 1496 2256 1513 1873 3844 1490 3848 3068 3537 1951 3918 3921 2728 3367 3947 2932 3949 3951 1467 3684 3551 3902 4021 
+		}
+	}
+	10=
+	{
+		country=26
+		type="technologist"
+		name=
+		{
+			key="%ADJ%"
+			variables=
+			{
+				
+				{
+					key="1"
+					value=
+					{
+						key="Institute"
+						variables=
+						{
+							
+							{
+								key="1"
+								value=
+								{
+									key="of_Scientific_Scholars"
+								}
+							}
+ 
+						}
+					}
+				}
+ 
+			}
+		}
+		parameters=
+		{
+			
+			{
+				key=empire
+				data=
+				{
+					type=country
+					id=26
+					opener_id=4294967295
+				}
+			}
+ 
+		}
+		support_percent=0.07865
+		support_power=45.5
+		faction_approval=0.6
+		members=
+		{
+			1465 1493 1498 1504 1505 1509 1947 1473 1485 2836 2708 1867 1957 1950 1872 
+		}
+	}
+	11=
+	{
+		country=11
+		type="technologist"
+		name=
+		{
+			key="%ADJ%"
+			variables=
+			{
+				
+				{
+					key="1"
+					value=
+					{
+						key="Association"
+						variables=
+						{
+							
+							{
+								key="1"
+								value=
+								{
+									key="for_the_Advancement_of_Science"
+								}
+							}
+ 
+						}
+					}
+				}
+ 
+			}
+		}
+		parameters=
+		{
+			
+			{
+				key=empire
+				data=
+				{
+					type=country
+					id=11
+					opener_id=4294967295
+				}
+			}
+ 
+		}
+		support_percent=0.38716
+		support_power=87.5
+		faction_approval=0.79999
+		members=
+		{
+			365 367 2227 2220 2605 16779485 362 16779712 2251 16779069 364 16780532 2234 2924 16777698 16780047 2584 16780285 3767 3879 16780556 3488 16780761 
+		}
+	}
+	16777228=
+	{
+		country=10
+		type="imperialist"
+		name=
+		{
+			key="Strength_Through_Conquest_Coalition"
+		}
+		parameters=
+		{
+			
+			{
+				key=empire
+				data=
+				{
+					type=country
+					id=10
+					opener_id=4294967295
+				}
+			}
+ 
+		}
+		support_percent=0.29177
+		support_power=110
+		faction_approval=0.24998
+		members=
+		{
+			2270 1994 318 2020 3001 3058 2016 2931 2231 2013 2505 2006 317 2549 3632 330 328 2021 2010 2717 3759 2017 2015 3930 3932 342 2478 3963 2300 2722 
+		}
+	}
+	13=
+	{
+		country=75
+		type="technologist"
+		name=
+		{
+			key="%ADJ%"
+			variables=
+			{
+				
+				{
+					key="1"
+					value=
+					{
+						key="Institute"
+						variables=
+						{
+							
+							{
+								key="1"
+								value=
+								{
+									key="of_Research_Efficiency"
+								}
+							}
+ 
+						}
+					}
+				}
+ 
+			}
+		}
+		parameters=
+		{
+			
+			{
+				key=empire
+				data=
+				{
+					type=country
+					id=75
+					opener_id=4294967295
+				}
+			}
+ 
+		}
+		support_percent=0.49948
+		support_power=241.5
+		faction_approval=0.95
+		members=
+		{
+			2056 2058 2060 2061 2062 2066 2071 2074 2076 2078 2079 2362 2419 2467 2468 2553 2073 2055 2639 2200 2264 2775 2780 1671 1676 1684 2065 2436 2069 2662 1675 2965 2176 3041 2413 3323 3406 2947 3012 2305 2067 2393 3706 2224 1673 2907 3719 2750 3746 3644 2149 2602 3807 2070 3821 3823 1674 1685 2052 1670 2075 3477 3873 3057 2888 3908 1687 3919 1668 1663 3928 3944 3991 1669 1683 3822 1660 1667 3320 
+		}
+	}
+	14=
+	{
+		country=75
+		type="prosperity"
+		name=
+		{
+			key="%ADJ%"
+			variables=
+			{
+				
+				{
+					key="1"
+					value=
+					{
+						key="Progress_Promotion"
+						variables=
+						{
+							
+							{
+								key="1"
+								value=
+								{
+									key="Committee"
+								}
+							}
+ 
+						}
+					}
+				}
+ 
+			}
+		}
+		parameters=
+		{
+			
+			{
+				key=empire
+				data=
+				{
+					type=country
+					id=75
+					opener_id=4294967295
+				}
+			}
+ 
+		}
+		support_percent=0.16752
+		support_power=81
+		faction_approval=0.25
+		members=
+		{
+			2068 2483 2581 2665 2054 2349 1686 2489 3353 3386 2053 3441 2063 3062 2064 1682 3594 3631 2744 2714 3660 2072 3717 2554 2059 3534 
+		}
+	}
+	15=
+	{
+		country=15
+		type="technologist"
+		name=
+		{
+			key="%ADJ%"
+			variables=
+			{
+				
+				{
+					key="1"
+					value=
+					{
+						key="Institute"
+						variables=
+						{
+							
+							{
+								key="1"
+								value=
+								{
+									key="of_Scientific_Scholars"
+								}
+							}
+ 
+						}
+					}
+				}
+ 
+			}
+		}
+		parameters=
+		{
+			
+			{
+				key=empire
+				data=
+				{
+					type=country
+					id=15
+					opener_id=4294967295
+				}
+			}
+ 
+		}
+		support_percent=0.52121
+		support_power=86
+		faction_approval=0.49999
+		members=
+		{
+			2367 2432 2447 2511 16779435 16779740 2697 2752 2777 479 2630 2829 2884 3004 2183 3043 3590 492 2634 3870 3313 2376 3927 3931 2816 3491 2659 2960 
+		}
+	}
+	16=
+	{
+		country=15
+		type="imperialist"
+		name=
+		{
+			key="Military_Industrial_Complex"
+		}
+		parameters=
+		{
+			
+			{
+				key=empire
+				data=
+				{
+					type=country
+					id=15
+					opener_id=4294967295
+				}
+			}
+ 
+		}
+		support_percent=0.47878
+		support_power=79
+		faction_approval=0.69997
+		members=
+		{
+			2564 2615 2723 2562 2844 2741 2700 2679 2229 2779 2354 3502 2201 3576 2338 3657 3358 16779081 2472 2491 3818 3682 2395 2323 3702 4030 
+		}
+	}
+	17=
+	{
+		country=4
+		type="imperialist"
+		name=
+		{
+			key="Martial_Supremacy_Alliance"
+		}
+		parameters=
+		{
+			
+			{
+				key=empire
+				data=
+				{
+					type=country
+					id=4
+					opener_id=4294967295
+				}
+			}
+ 
+		}
+		support_percent=0.312
+		support_power=78
+		faction_approval=0.59997
+		members=
+		{
+			155 158 2548 2668 2198 3356 3423 3479 2267 2174 3588 3050 3679 161 2875 154 3836 3845 3859 156 3748 3926 159 3661 2870 
+		}
+	}
+	18=
+	{
+		country=4
+		type="technologist"
+		name=
+		{
+			key="%ADJ%"
+			variables=
+			{
+				
+				{
+					key="1"
+					value=
+					{
+						key="Association"
+						variables=
+						{
+							
+							{
+								key="1"
+								value=
+								{
+									key="of_Scientific_Ascendancy"
+								}
+							}
+ 
+						}
+					}
+				}
+ 
+			}
+		}
+		parameters=
+		{
+			
+			{
+				key=empire
+				data=
+				{
+					type=country
+					id=4
+					opener_id=4294967295
+				}
+			}
+ 
+		}
+		support_percent=0.688
+		support_power=172
+		faction_approval=0.9
+		members=
+		{
+			144 146 148 149 150 160 2157 2379 147 2433 2310 2647 2482 2604 2361 2766 2803 2225 2517 2933 2972 3018 2732 3310 3346 16779471 3307 3457 143 3513 3458 145 3593 3604 3686 3689 3567 152 3493 153 3850 3877 3948 3780 3954 3955 2424 157 3986 151 142 
+		}
+	}
+	19=
+	{
+		country=10
+		type="prosperity"
+		name=
+		{
+			key="%ADJ%"
+			variables=
+			{
+				
+				{
+					key="1"
+					value=
+					{
+						key="Wealth_Promotion"
+						variables=
+						{
+							
+							{
+								key="1"
+								value=
+								{
+									key="Initiative"
+								}
+							}
+ 
+						}
+					}
+				}
+ 
+			}
+		}
+		parameters=
+		{
+			
+			{
+				key=empire
+				data=
+				{
+					type=country
+					id=10
+					opener_id=4294967295
+				}
+			}
+ 
+		}
+		support_percent=0.19628
+		support_power=74
+		members=
+		{
+			325 333 337 2002 2004 2007 2404 2387 327 334 315 3392 3544 2003 2759 2019 344 3557 2001 3646 336 
+		}
+	}
+	20=
+	{
+		country=9
+		type="prosperity"
+		name=
+		{
+			key="%ADJ%"
+			variables=
+			{
+				
+				{
+					key="1"
+					value=
+					{
+						key="National_Wealth"
+						variables=
+						{
+							
+							{
+								key="1"
+								value=
+								{
+									key="Council"
+								}
+							}
+ 
+						}
+					}
+				}
+ 
+			}
+		}
+		parameters=
+		{
+			
+			{
+				key=empire
+				data=
+				{
+					type=country
+					id=9
+					opener_id=4294967295
+				}
+			}
+ 
+		}
+		support_percent=0.07135
+		support_power=34.5
+		members=
+		{
+			1598 2405 1613 3042 3642 3563 2675 2558 3075 
+		}
+	}
+	33554453=
+	{
+		country=26
+		type="totalitarian"
+		name=
+		{
+			key="%ADJ%"
+			variables=
+			{
+				
+				{
+					key="1"
+					value=
+					{
+						key="Hierarchical"
+						variables=
+						{
+							
+							{
+								key="1"
+								value=
+								{
+									key="Union"
+								}
+							}
+ 
+						}
+					}
+				}
+ 
+			}
+		}
+		parameters=
+		{
+			
+			{
+				key=empire
+				data=
+				{
+					type=country
+					id=26
+					opener_id=4294967295
+				}
+			}
+ 
+		}
+		support_percent=0.05012
+		support_power=29
+		faction_approval=0.24998
+		members=
+		{
+			2418 1468 1868 2211 1510 1489 2410 3522 1864 3882 2866 
+		}
+	}
+	22=
+	{
+		country=10
+		type="xenoist"
+		name=
+		{
+			key="AassocB"
+			variables=
+			{
+				
+				{
+					key="1"
+					value=
+					{
+						key="%ADJ%"
+						variables=
+						{
+							
+							{
+								key="1"
+								value=
+								{
+									key="Xeno"
+									variables=
+									{
+										
+										{
+											key="1"
+											value=
+											{
+												key="Friendship"
+											}
+										}
+ 
+									}
+								}
+							}
+ 
+						}
+					}
+				}
+ 
+				{
+					key="2"
+					value=
+					{
+						key="Institute"
+					}
+				}
+ 
+			}
+		}
+		parameters=
+		{
+			
+			{
+				key=empire
+				data=
+				{
+					type=country
+					id=10
+					opener_id=4294967295
+				}
+			}
+ 
+		}
+		support_percent=0.51193
+		support_power=193
+		faction_approval=1
+		members=
+		{
+			2014 316 322 332 339 345 346 1995 1997 1998 1999 2005 2008 2347 335 2000 320 321 2587 329 2618 2011 340 343 2247 338 2857 1991 1989 1993 324 3061 341 326 2988 3436 2018 2009 2202 3520 1988 323 1990 331 2012 1996 1992 3750 3781 319 2841 3831 3371 
+		}
+	}
+	23=
+	{
+		country=9
+		type="imperialist"
+		name=
+		{
+			key="Red_Legion"
+		}
+		parameters=
+		{
+			
+			{
+				key=empire
+				data=
+				{
+					type=country
+					id=9
+					opener_id=4294967295
+				}
+			}
+ 
+		}
+		support_percent=0.31747
+		support_power=153.5
+		faction_approval=0.89998
+		members=
+		{
+			1610 288 294 310 1616 2397 1617 2499 2616 2628 2667 1619 2158 2726 2730 1606 314 2849 2871 308 2806 1608 2597 295 2939 2589 3055 2917 2545 3432 1612 306 3637 3623 2302 2487 1600 3738 2315 313 2987 299 3082 2709 304 298 2334 3453 4035 
+		}
+	}
+	24=
+	{
+		country=26
+		type="supremacist"
+		name=
+		{
+			key="%ADJECTIVE%"
+			variables=
+			{
+				
+				{
+					key="adjective"
+					value=
+					{
+						key="SPEC_Opalglec"
+					}
+				}
+ 
+				{
+					key="1"
+					value=
+					{
+						key="%ADJ%"
+						variables=
+						{
+							
+							{
+								key="1"
+								value=
+								{
+									key="Future"
+									variables=
+									{
+										
+										{
+											key="1"
+											value=
+											{
+												key="Vanguard"
+											}
+										}
+ 
+									}
+								}
+							}
+ 
+						}
+					}
+				}
+ 
+			}
+		}
+		parameters=
+		{
+			
+			{
+				key=empire
+				data=
+				{
+					type=country
+					id=26
+					opener_id=4294967295
+				}
+			}
+ 
+		}
+		support_percent=0.09593
+		support_power=55.5
+		faction_approval=0.8
+		members=
+		{
+			2380 1520 2457 2670 2885 2981 1949 3416 1516 2971 3047 2319 3709 2368 4006 
+		}
+	}
+	25=
+	{
+		country=6
+		type="technologist"
+		name=
+		{
+			key="%ADJ%"
+			variables=
+			{
+				
+				{
+					key="1"
+					value=
+					{
+						key="Association"
+						variables=
+						{
+							
+							{
+								key="1"
+								value=
+								{
+									key="of_Technological_Progress"
+								}
+							}
+ 
+						}
+					}
+				}
+ 
+			}
+		}
+		parameters=
+		{
+			
+			{
+				key=empire
+				data=
+				{
+					type=country
+					id=6
+					opener_id=4294967295
+				}
+			}
+ 
+		}
+		support_percent=0.51036
+		support_power=160
+		faction_approval=0.89999
+		members=
+		{
+			2235 204 208 211 213 215 1958 1959 1975 1987 210 1972 1983 1986 2650 191 2760 217 196 1981 1971 2236 2193 3024 3029 1976 1967 2792 1960 209 198 3073 212 206 1963 193 205 2293 201 1974 221 192 3460 1966 2263 202 2864 3929 3379 3982 16778990 216 
+		}
+	}
+	26=
+	{
+		country=6
+		type="progressive"
+		name=
+		{
+			key="%ADJ%"
+			variables=
+			{
+				
+				{
+					key="1"
+					value=
+					{
+						key="Electoral_Freedom"
+						variables=
+						{
+							
+							{
+								key="1"
+								value=
+								{
+									key="Committee"
+								}
+							}
+ 
+						}
+					}
+				}
+ 
+			}
+		}
+		parameters=
+		{
+			
+			{
+				key=empire
+				data=
+				{
+					type=country
+					id=6
+					opener_id=4294967295
+				}
+			}
+ 
+		}
+		support_percent=0.25837
+		support_power=81
+		faction_approval=0.9
+		members=
+		{
+			190 195 200 214 1961 1964 1965 1968 1979 2340 1978 1969 1980 2687 1970 2894 197 1973 3494 220 199 2417 219 3681 218 
+		}
+	}
+	27=
+	{
+		country=0
+		type="progressive"
+		name=
+		{
+			key="%ADJ%"
+			variables=
+			{
+				
+				{
+					key="1"
+					value=
+					{
+						key="Liberty_Now"
+						variables=
+						{
+							
+							{
+								key="1"
+								value=
+								{
+									key="Initiative"
+								}
+							}
+ 
+						}
+					}
+				}
+ 
+			}
+		}
+		parameters=
+		{
+			
+			{
+				key=empire
+				data=
+				{
+					type=country
+					id=0
+					opener_id=4294967295
+				}
+			}
+ 
+		}
+		support_percent=0.76299
+		support_power=183.5
+		faction_approval=1
+		members=
+		{
+			0 1 2 6 7 13 15 17 19 20 21 26 28 31 2181 2254 2325 2453 2506 30 2657 2360 2570 2692 24 2721 2763 2826 2314 5 27 10 2985 14 3331 2625 3402 3408 3415 12 25 2402 3471 3516 3519 3630 3 3707 3733 9 29 2217 3025 3874 18 3817 16780283 3959 3972 2968 
+		}
+	}
+	28=
+	{
+		country=0
+		type="xenoist"
+		name=
+		{
+			key="AassocB"
+			variables=
+			{
+				
+				{
+					key="1"
+					value=
+					{
+						key="%ADJ%"
+						variables=
+						{
+							
+							{
+								key="1"
+								value=
+								{
+									key="Alien"
+									variables=
+									{
+										
+										{
+											key="1"
+											value=
+											{
+												key="Rights"
+											}
+										}
+ 
+									}
+								}
+							}
+ 
+						}
+					}
+				}
+ 
+				{
+					key="2"
+					value=
+					{
+						key="Alliance"
+					}
+				}
+ 
+			}
+		}
+		parameters=
+		{
+			
+			{
+				key=empire
+				data=
+				{
+					type=country
+					id=0
+					opener_id=4294967295
+				}
+			}
+ 
+		}
+		support_percent=0.237
+		support_power=57
+		faction_approval=0.84997
+		members=
+		{
+			11 3052 22 3077 2984 8 3548 23 3628 3617 2658 3712 3787 16779462 16 4 3345 2808 2897 
+		}
+	}
+	29=
+	{
+		country=9
+		type="totalitarian"
+		name=
+		{
+			key="%ADJ%"
+			variables=
+			{
+				
+				{
+					key="1"
+					value=
+					{
+						key="Noble_Privilege"
+						variables=
+						{
+							
+							{
+								key="1"
+								value=
+								{
+									key="Vanguard"
+								}
+							}
+ 
+						}
+					}
+				}
+ 
+			}
+		}
+		parameters=
+		{
+			
+			{
+				key=empire
+				data=
+				{
+					type=country
+					id=9
+					opener_id=4294967295
+				}
+			}
+ 
+		}
+		support_percent=0.13443
+		support_power=65
+		faction_approval=0.29999
+		members=
+		{
+			2444 1618 2664 1620 3056 3350 3388 3434 3482 1625 3492 2916 2940 3736 3796 2542 3827 3989 4024 4033 
+		}
+	}
+	30=
+	{
+		country=11
+		type="supremacist"
+		name=
+		{
+			key="%ADJECTIVE%"
+			variables=
+			{
+				
+				{
+					key="adjective"
+					value=
+					{
+						key="SPEC_Yldar"
+					}
+				}
+ 
+				{
+					key="1"
+					value=
+					{
+						key="%ADJ%"
+						variables=
+						{
+							
+							{
+								key="1"
+								value=
+								{
+									key="Preservation"
+									variables=
+									{
+										
+										{
+											key="1"
+											value=
+											{
+												key="Movement"
+											}
+										}
+ 
+									}
+								}
+							}
+ 
+						}
+					}
+				}
+ 
+			}
+		}
+		parameters=
+		{
+			
+			{
+				key=empire
+				data=
+				{
+					type=country
+					id=11
+					opener_id=4294967295
+				}
+			}
+ 
+		}
+		support_percent=0.46017
+		support_power=104
+		faction_approval=0.85001
+		members=
+		{
+			359 372 363 2631 374 2593 16779636 3397 2748 16780109 16780121 16780202 373 366 2882 370 360 16780742 16780914 16780646 16780765 16780688 16780821 2159 3829 33557139 3942 2842 16780747 
+		}
+	}
+	31=
+	{
+		country=33554482
+		type="progressive"
+		name=
+		{
+			key="%ADJ%"
+			variables=
+			{
+				
+				{
+					key="1"
+					value=
+					{
+						key="Individual_Choice"
+						variables=
+						{
+							
+							{
+								key="1"
+								value=
+								{
+									key="League"
+								}
+							}
+ 
+						}
+					}
+				}
+ 
+			}
+		}
+		parameters=
+		{
+			
+			{
+				key=empire
+				data=
+				{
+					type=country
+					id=33554482
+					opener_id=4294967295
+				}
+			}
+ 
+		}
+		support_percent=0.53138
+		support_power=63.5
+		faction_approval=1
+		members=
+		{
+			1575 1579 1591 1597 2244 1596 2595 2666 1574 2771 1585 1580 3377 1586 3613 1594 1577 3528 3896 1584 1581 2938 
+		}
+	}
+	32=none
+	16777249=
+	{
+		country=75
+		type="imperialist"
+		name=
+		{
+			key="Order_of_the_Burning_Star"
+		}
+		parameters=
+		{
+			
+			{
+				key=empire
+				data=
+				{
+					type=country
+					id=75
+					opener_id=4294967295
+				}
+			}
+ 
+		}
+		support_percent=0.19855
+		support_power=96
+		faction_approval=0.19998
+		members=
+		{
+			2753 2715 2471 1664 1678 2853 2963 3005 1661 2077 2673 3368 3390 2573 3418 3433 3464 1672 1662 3506 1679 3566 3611 3626 3487 3405 2904 2845 
+		}
+	}
+	34=
+	{
+		country=5
+		type="technologist"
+		name=
+		{
+			key="%ADJ%"
+			variables=
+			{
+				
+				{
+					key="1"
+					value=
+					{
+						key="Committee"
+						variables=
+						{
+							
+							{
+								key="1"
+								value=
+								{
+									key="of_Scientific_Scholars"
+								}
+							}
+ 
+						}
+					}
+				}
+ 
+			}
+		}
+		parameters=
+		{
+			
+			{
+				key=empire
+				data=
+				{
+					type=country
+					id=5
+					opener_id=4294967295
+				}
+			}
+ 
+		}
+		support_percent=0.77431
+		support_power=254.75
+		faction_approval=0.74999
+		members=
+		{
+			2429 2563 170 171 175 177 180 181 182 183 186 187 188 189 2182 2406 172 2699 2740 2789 2877 2364 2954 3019 3079 2249 3352 2945 3427 178 3474 3370 3490 16779091 2257 2277 2278 2312 2328 2392 2428 2463 2497 2551 2591 2632 2645 2785 2818 2878 2890 2929 2930 2966 3009 3051 3355 3419 3454 3524 3571 2421 2318 3338 2913 16779364 179 3731 16777694 184 3753 3326 3794 3826 16779701 2373 3448 173 2308 3956 3957 2348 2804 4017 3615 
+		}
+	}
+	35=
+	{
+		country=5
+		type="totalitarian"
+		name=
+		{
+			key="%ADJ%"
+			variables=
+			{
+				
+				{
+					key="1"
+					value=
+					{
+						key="Noble_Privilege"
+						variables=
+						{
+							
+							{
+								key="1"
+								value=
+								{
+									key="Vanguard"
+								}
+							}
+ 
+						}
+					}
+				}
+ 
+			}
+		}
+		parameters=
+		{
+			
+			{
+				key=empire
+				data=
+				{
+					type=country
+					id=5
+					opener_id=4294967295
+				}
+			}
+ 
+		}
+		support_percent=0.1231
+		support_power=40.5
+		faction_approval=0.74998
+		members=
+		{
+			2633 2250 2710 2484 185 3693 2773 176 3515 3935 3337 174 
+		}
+	}
+	16777252=
+	{
+		country=75
+		type="traditionalist"
+		name=
+		{
+			key="%ADJ%"
+			variables=
+			{
+				
+				{
+					key="1"
+					value=
+					{
+						key="of_Spiritualism_Unchained"
+						variables=
+						{
+							
+							{
+								key="1"
+								value=
+								{
+									key="Church"
+								}
+							}
+ 
+						}
+					}
+				}
+ 
+			}
+		}
+		parameters=
+		{
+			
+			{
+				key=empire
+				data=
+				{
+					type=country
+					id=75
+					opener_id=4294967295
+				}
+			}
+ 
+		}
+		support_percent=0.04343
+		support_power=21
+		members=
+		{
+			2798 2799 2800 2801 2459 1681 3053 3865 
+		}
+	}
+	37=
+	{
+		country=33554482
+		type="supremacist"
+		name=
+		{
+			key="%ADJECTIVE%"
+			variables=
+			{
+				
+				{
+					key="adjective"
+					value=
+					{
+						key="SPEC_Pari"
+					}
+				}
+ 
+				{
+					key="1"
+					value=
+					{
+						key="%ADJ%"
+						variables=
+						{
+							
+							{
+								key="1"
+								value=
+								{
+									key="Preservation"
+									variables=
+									{
+										
+										{
+											key="1"
+											value=
+											{
+												key="Movement"
+											}
+										}
+ 
+									}
+								}
+							}
+ 
+						}
+					}
+				}
+ 
+			}
+		}
+		parameters=
+		{
+			
+			{
+				key=empire
+				data=
+				{
+					type=country
+					id=33554482
+					opener_id=4294967295
+				}
+			}
+ 
+		}
+		support_percent=0.46861
+		support_power=56
+		faction_approval=0.8
+		members=
+		{
+			1572 1587 2725 2861 1583 1589 1582 3044 1590 1595 1578 2825 3776 2914 1592 
+		}
+	}
+	33554470=
+	{
+		country=11
+		type="imperialist"
+		name=
+		{
+			key="Red_Legion"
+		}
+		parameters=
+		{
+			
+			{
+				key=empire
+				data=
+				{
+					type=country
+					id=11
+					opener_id=4294967295
+				}
+			}
+ 
+		}
+		support_percent=0.15265
+		support_power=34.5
+		faction_approval=0.54998
+		members=
+		{
+			16780000 371 361 3435 16779892 16780111 16779817 2307 369 16780667 
+		}
+	}
+	16777255=
+	{
+		country=9
+		type="xenoist"
+		name=
+		{
+			key="AassocB"
+			variables=
+			{
+				
+				{
+					key="1"
+					value=
+					{
+						key="%ADJ%"
+						variables=
+						{
+							
+							{
+								key="1"
+								value=
+								{
+									key="Alien"
+									variables=
+									{
+										
+										{
+											key="1"
+											value=
+											{
+												key="Awareness"
+											}
+										}
+ 
+									}
+								}
+							}
+ 
+						}
+					}
+				}
+ 
+				{
+					key="2"
+					value=
+					{
+						key="Association"
+					}
+				}
+ 
+			}
+		}
+		parameters=
+		{
+			
+			{
+				key=empire
+				data=
+				{
+					type=country
+					id=9
+					opener_id=4294967295
+				}
+			}
+ 
+		}
+		support_percent=0.13857
+		support_power=67
+		faction_approval=0.19999
+		members=
+		{
+			2559 1611 1621 1623 2682 1609 2297 3595 287 3694 1624 2830 2408 2898 3858 2767 3891 1622 3933 1605 291 
+		}
+	}
+	16777256=
+	{
+		country=9
+		type="supremacist"
+		name=
+		{
+			key="%ADJECTIVE%"
+			variables=
+			{
+				
+				{
+					key="adjective"
+					value=
+					{
+						key="SPEC_Opalglec"
+					}
+				}
+ 
+				{
+					key="1"
+					value=
+					{
+						key="%ADJ%"
+						variables=
+						{
+							
+							{
+								key="1"
+								value=
+								{
+									key="Primacy"
+									variables=
+									{
+										
+										{
+											key="1"
+											value=
+											{
+												key="Bloc"
+											}
+										}
+ 
+									}
+								}
+							}
+ 
+						}
+					}
+				}
+ 
+			}
+		}
+		parameters=
+		{
+			
+			{
+				key=empire
+				data=
+				{
+					type=country
+					id=9
+					opener_id=4294967295
+				}
+			}
+ 
+		}
+		support_percent=0.05997
+		support_power=29
+		faction_approval=0.8
+		members=
+		{
+			3311 307 2286 2995 3385 305 2285 3841 
+		}
+	}
+	41=
+	{
+		country=3
+		type="imperialist"
+		name=
+		{
+			key="Military_Industrial_Complex"
+		}
+		parameters=
+		{
+			
+			{
+				key=empire
+				data=
+				{
+					type=country
+					id=3
+					opener_id=4294967295
+				}
+			}
+ 
+		}
+		support_percent=0.22356
+		support_power=83.5
+		faction_approval=0.39997
+		members=
+		{
+			2516 3002 3023 2840 3060 2409 3333 2874 3372 3428 2572 2579 3559 2326 3614 3621 3673 3725 2828 3547 16779819 2769 3066 33556588 3867 2950 4007 
+		}
+	}
+	42=
+	{
+		country=62
+		type="technologist"
+		name=
+		{
+			key="%ADJ%"
+			variables=
+			{
+				
+				{
+					key="1"
+					value=
+					{
+						key="Academy"
+						variables=
+						{
+							
+							{
+								key="1"
+								value=
+								{
+									key="of_High_Technology"
+								}
+							}
+ 
+						}
+					}
+				}
+ 
+			}
+		}
+		parameters=
+		{
+			
+			{
+				key=empire
+				data=
+				{
+					type=country
+					id=62
+					opener_id=4294967295
+				}
+			}
+ 
+		}
+		support_percent=0.39574
+		support_power=46.5
+		faction_approval=0.44999
+		members=
+		{
+			1717 1720 1721 1731 1734 1736 3455 3607 3672 1728 1744 2990 3747 1737 2991 1725 
+		}
+	}
+	43=
+	{
+		country=62
+		type="imperialist"
+		name=
+		{
+			key="March_of_the_Brave"
+		}
+		parameters=
+		{
+			
+			{
+				key=empire
+				data=
+				{
+					type=country
+					id=62
+					opener_id=4294967295
+				}
+			}
+ 
+		}
+		support_percent=0.60425
+		support_power=71
+		faction_approval=0.84996
+		members=
+		{
+			1718 1724 1726 1729 1730 1733 1740 1741 1742 2992 1727 1719 1743 3071 3359 1732 1723 1722 1735 2993 3893 1739 1738 
+		}
+	}
+	44=
+	{
+		country=5
+		type="imperialist"
+		name=
+		{
+			key="Path_to_Victory_Committee"
+		}
+		parameters=
+		{
+			
+			{
+				key=empire
+				data=
+				{
+					type=country
+					id=5
+					opener_id=4294967295
+				}
+			}
+ 
+		}
+		support_percent=0.10258
+		support_power=33.75
+		faction_approval=0.44996
+		members=
+		{
+			2851 2216 2560 2163 2258 2313 2422 2502 2519 3754 16778907 3697 
+		}
+	}
+	45=
+	{
+		country=6
+		type="imperialist"
+		name=
+		{
+			key="March_of_the_Brave"
+		}
+		parameters=
+		{
+			
+			{
+				key=empire
+				data=
+				{
+					type=country
+					id=6
+					opener_id=4294967295
+				}
+			}
+ 
+		}
+		support_percent=0.11642
+		support_power=36.5
+		faction_approval=0.44996
+		members=
+		{
+			1982 1984 2521 2951 3565 3583 2610 2454 207 1977 203 1962 
+		}
+	}
+	46=
+	{
+		country=26
+		type="isolationist"
+		name=
+		{
+			key="%ADJ%"
+			variables=
+			{
+				
+				{
+					key="1"
+					value=
+					{
+						key="Eternal_Vigilance"
+						variables=
+						{
+							
+							{
+								key="1"
+								value=
+								{
+									key="Movement"
+								}
+							}
+ 
+						}
+					}
+				}
+ 
+			}
+		}
+		parameters=
+		{
+			
+			{
+				key=empire
+				data=
+				{
+					type=country
+					id=26
+					opener_id=4294967295
+				}
+			}
+ 
+		}
+		support_percent=0.0229
+		support_power=13.25
+		faction_approval=0.20001
+		members=
+		{
+			1874 3421 3609 3497 1866 3652 3674 3967 3894 
+		}
+	}
+	47=
+	{
+		country=6
+		type="xenoist"
+		name=
+		{
+			key="AassocB"
+			variables=
+			{
+				
+				{
+					key="1"
+					value=
+					{
+						key="%ADJ%"
+						variables=
+						{
+							
+							{
+								key="1"
+								value=
+								{
+									key="Xeno"
+									variables=
+									{
+										
+										{
+											key="1"
+											value=
+											{
+												key="Liberty"
+											}
+										}
+ 
+									}
+								}
+							}
+ 
+						}
+					}
+				}
+ 
+				{
+					key="2"
+					value=
+					{
+						key="Center"
+					}
+				}
+ 
+			}
+		}
+		parameters=
+		{
+			
+			{
+				key=empire
+				data=
+				{
+					type=country
+					id=6
+					opener_id=4294967295
+				}
+			}
+ 
+		}
+		support_percent=0.11483
+		support_power=36
+		faction_approval=0.44996
+		members=
+		{
+			1985 16779426 2357 2588 3744 3749 2770 2876 2693 3890 3939 194 
+		}
+	}
+	48=
+	{
+		country=75
+		type="xenoist"
+		name=
+		{
+			key="AassocB"
+			variables=
+			{
+				
+				{
+					key="1"
+					value=
+					{
+						key="%ADJ%"
+						variables=
+						{
+							
+							{
+								key="1"
+								value=
+								{
+									key="Xeno"
+									variables=
+									{
+										
+										{
+											key="1"
+											value=
+											{
+												key="Justice"
+											}
+										}
+ 
+									}
+								}
+							}
+ 
+						}
+					}
+				}
+ 
+				{
+					key="2"
+					value=
+					{
+						key="Lobby"
+					}
+				}
+ 
+			}
+		}
+		parameters=
+		{
+			
+			{
+				key=empire
+				data=
+				{
+					type=country
+					id=75
+					opener_id=4294967295
+				}
+			}
+ 
+		}
+		support_percent=0.091
+		support_power=44
+		faction_approval=0.49999
+		members=
+		{
+			2797 1666 1680 2508 3587 3843 3866 3478 2911 2057 3581 1677 1665 4029 3011 4036 
+		}
+	}
+}

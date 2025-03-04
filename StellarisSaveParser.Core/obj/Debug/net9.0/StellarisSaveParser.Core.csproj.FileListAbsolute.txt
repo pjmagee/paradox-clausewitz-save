@@ -1,0 +1,11 @@
+D:\stellaris-sav-parser\StellarisSaveParser.Core\bin\Debug\net9.0\StellarisSaveParser.Core.deps.json
+D:\stellaris-sav-parser\StellarisSaveParser.Core\bin\Debug\net9.0\StellarisSaveParser.Core.dll
+D:\stellaris-sav-parser\StellarisSaveParser.Core\bin\Debug\net9.0\StellarisSaveParser.Core.pdb
+D:\stellaris-sav-parser\StellarisSaveParser.Core\obj\Debug\net9.0\StellarisSaveParser.Core.GeneratedMSBuildEditorConfig.editorconfig
+D:\stellaris-sav-parser\StellarisSaveParser.Core\obj\Debug\net9.0\StellarisSaveParser.Core.AssemblyInfoInputs.cache
+D:\stellaris-sav-parser\StellarisSaveParser.Core\obj\Debug\net9.0\StellarisSaveParser.Core.AssemblyInfo.cs
+D:\stellaris-sav-parser\StellarisSaveParser.Core\obj\Debug\net9.0\StellarisSaveParser.Core.csproj.CoreCompileInputs.cache
+D:\stellaris-sav-parser\StellarisSaveParser.Core\obj\Debug\net9.0\StellarisSaveParser.Core.dll
+D:\stellaris-sav-parser\StellarisSaveParser.Core\obj\Debug\net9.0\refint\StellarisSaveParser.Core.dll
+D:\stellaris-sav-parser\StellarisSaveParser.Core\obj\Debug\net9.0\StellarisSaveParser.Core.pdb
+D:\stellaris-sav-parser\StellarisSaveParser.Core\obj\Debug\net9.0\ref\StellarisSaveParser.Core.dll
