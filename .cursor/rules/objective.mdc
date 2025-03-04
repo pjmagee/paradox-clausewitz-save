@@ -9,23 +9,16 @@ DO NOT EDIT EXISTING TEST DATA
 
 # CODE RULES
 
-- Write effecient c# code that uses spans / memory
-- Write a reader similiar to how System.Text.Json was designed to parse large json files
-- Reverse engineer the stellaris sav file gamestate format
-- Must use KeyValue / List / Object / Int / Bool / String KeyValue Type design
-- Should not write properties or methods based on specific Key names used within the file
-- We are writing a gamestate file parser/reader in C#
+- The Design of the library should closely follow System.Text.Json.JsonDocument
+- Writing a parser for Stellaris the .sav zipfile that contains meta and gamestate key/value files
 
-# Reverse Engineering GameState
+# Reverse Engineering
 
-- The gamestate file is NOT JSON. The gamestate file is similar to a keyvalue store, but is not simple
-- The @unzipped-chunked folder can be used to read partial contents of the [original-gamestate](mdc:reverse-engineer-samples/original-gamestate)
-
-- Write unit tests to ensure the parser created is working properly
-- Ensure to cover all known keys 
-- Ensure values are captured correctly from the gamestate
-
-- Must handle lists, nested objected, strings, booleans, etc etc
+- The stellaris file format is not json
+- The stellaris file format is similar to valve key/value store but not identical
+- The @TestData folder contains files that contain the data structures we need to support
+- Implement a Lexer that understands the syntax of the Stellaris file
+- There should be various TokenTypes 
 
 # Testing
 

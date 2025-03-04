@@ -1,9 +1,5 @@
-// Enum for the value types.
-// Base class for parsed elements.
-// Represents an object (with duplicate keys allowed).
-// Represents a primitive value along with its type and parsed value.
+using System.IO;
 
-// Provides a JsonDocument-like API for the parsed game state.
 public class GameStateDocument
 {
     public Element RootElement { get; }

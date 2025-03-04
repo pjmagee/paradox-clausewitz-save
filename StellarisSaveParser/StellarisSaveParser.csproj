@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>    
+    <TargetFrameworks>net9.0;net8.0</TargetFrameworks>    
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <None Include="..\README.md" Pack="true" PackagePath="\"/>
+  </ItemGroup>
+  
+  <PropertyGroup>
+    <PackageId>MageeSoft.StellarisSaveParser</PackageId>
+    <Title>Stellaris Save Parser</Title>
+    <Authors>Patrick Magee</Authors>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <Description>A Paradox Interactive Stellaris save file parser. Extracts the gamestate file from a Stellaris .sav (ZIP archive) and parses it into a queryable document structure similar to JsonDocument.</Description>
+    <Copyright>Patrick Magee</Copyright>
+    <PackageProjectUrl>https://github.com/pjmagee/stellaris-sav-parser</PackageProjectUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/pjmagee/stellaris-sav-parser</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>Stellaris Paradox SaveParser GameState Queryable</PackageTags>
+    <PackageReleaseNotes>Initial release.</PackageReleaseNotes>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <Product>Stellaris Save Parser</Product>
+    <PackageVersion>0.0.1</PackageVersion>
+  </PropertyGroup>
+
+</Project>
