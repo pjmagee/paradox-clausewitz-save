@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("StellarisSaveParser.Tests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c89fc8d2effbea32fd4885aecd84109a56537e1c")]
 [assembly: System.Reflection.AssemblyProductAttribute("StellarisSaveParser.Tests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("StellarisSaveParser.Tests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
