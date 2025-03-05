@@ -113,6 +113,7 @@ public class Parser
             throw new Exception($"Unexpected token in value: {_currentToken.Type} ('{_currentToken.Text}')");
         }
     }
+    
     // Parses a block delimited by '{' and '}'. Supports mixed content.
     private Element ParseBlock()
     {
