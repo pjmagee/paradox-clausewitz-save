@@ -32,11 +32,15 @@ jobs:
       
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v5
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         slug: pjmagee/stellaris-sav-parser
         name: codecov-umbrella
-        fail_ci_if_error: false
-        verbose: true
+        fail_ci_if_error: true
+        verbose: false
         directory: ./StellarisSaveParser.Tests/
         files: ./StellarisSaveParser.Tests/coverage.opencover.xml
+        
+        
