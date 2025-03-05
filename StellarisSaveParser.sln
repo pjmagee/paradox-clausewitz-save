@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StellarisSaveParser", "Stel
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StellarisSaveParser.Tests", "StellarisSaveParser.Tests\StellarisSaveParser.Tests.csproj", "{5AC4122F-CCC4-41F4-9D0B-272D88165E87}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StellarisSaveParser.Cli", "StellarisSaveParser.Cli\StellarisSaveParser.Cli.csproj", "{F6297D7F-6833-44C5-B1F4-4B906842EEED}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -41,6 +43,18 @@ Global
 		{5AC4122F-CCC4-41F4-9D0B-272D88165E87}.Release|x64.Build.0 = Release|Any CPU
 		{5AC4122F-CCC4-41F4-9D0B-272D88165E87}.Release|x86.ActiveCfg = Release|Any CPU
 		{5AC4122F-CCC4-41F4-9D0B-272D88165E87}.Release|x86.Build.0 = Release|Any CPU
+		{F6297D7F-6833-44C5-B1F4-4B906842EEED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F6297D7F-6833-44C5-B1F4-4B906842EEED}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F6297D7F-6833-44C5-B1F4-4B906842EEED}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{F6297D7F-6833-44C5-B1F4-4B906842EEED}.Debug|x64.Build.0 = Debug|Any CPU
+		{F6297D7F-6833-44C5-B1F4-4B906842EEED}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{F6297D7F-6833-44C5-B1F4-4B906842EEED}.Debug|x86.Build.0 = Debug|Any CPU
+		{F6297D7F-6833-44C5-B1F4-4B906842EEED}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F6297D7F-6833-44C5-B1F4-4B906842EEED}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F6297D7F-6833-44C5-B1F4-4B906842EEED}.Release|x64.ActiveCfg = Release|Any CPU
+		{F6297D7F-6833-44C5-B1F4-4B906842EEED}.Release|x64.Build.0 = Release|Any CPU
+		{F6297D7F-6833-44C5-B1F4-4B906842EEED}.Release|x86.ActiveCfg = Release|Any CPU
+		{F6297D7F-6833-44C5-B1F4-4B906842EEED}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

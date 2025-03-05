@@ -12,6 +12,8 @@ jobs:
     
     steps:
     - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0  # Shallow clones should be disabled for better coverage reporting
     
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
@@ -25,12 +27,16 @@ jobs:
       run: dotnet build --no-restore
       
     - name: Test with coverage
+      # https://github.com/codecov/example-csharp
       run: dotnet test --no-build --verbosity normal /p:CollectCoverage=true /p:CoverletOutputFormat=opencover /p:CoverletOutput="./coverage.opencover.xml"
       
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        files: ./StellarisSaveParser.Tests/coverage.opencover.xml
+        slug: pjmagee/stellaris-sav-parser
+        name: codecov-umbrella
         fail_ci_if_error: false
-        verbose: true 
+        verbose: true
+        directory: ./StellarisSaveParser.Tests/
+        files: ./StellarisSaveParser.Tests/coverage.opencover.xml
