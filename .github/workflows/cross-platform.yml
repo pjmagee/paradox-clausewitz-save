@@ -1,0 +1,9 @@
+# This workflow has been removed as Ubuntu testing is sufficient
+name: Placeholder
+on:
+  workflow_dispatch:
+jobs:
+  placeholder:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "This workflow is disabled" 

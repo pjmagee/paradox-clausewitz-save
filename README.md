@@ -1,6 +1,9 @@
 # Stellaris Save Parser
 
-A .NET library for parsing Stellaris save files (.sav), providing easy access to both gamestate and meta information.
+[![.NET Build and Test](https://github.com/pjmagee/stellaris-sav-parser/actions/workflows/dotnet.yml/badge.svg)](https://github.com/pjmagee/stellaris-sav-parser/actions/workflows/dotnet.yml)
+[![codecov](https://codecov.io/gh/pjmagee/stellaris-sav-parser/branch/main/graph/badge.svg)](https://codecov.io/gh/pjmagee/stellaris-sav-parser)
+
+A .NET library for parsing Stellaris save files (.sav), providing easy access to both gamestate and meta information. The library supports both regular and Ironman save files.
 
 The library is designed to be used in a similar manner to JsonDocument, with a focus on readability and ease of use.
 
