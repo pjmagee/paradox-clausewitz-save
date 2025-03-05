@@ -4,6 +4,7 @@ using System.CommandLine.Builder;
 using System.CommandLine.Hosting;
 using System.CommandLine.NamingConventionBinder;
 using System.CommandLine.Parsing;
+using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -23,6 +24,15 @@ public class Program
         // Add commands
         rootCommand.AddCommand(new ListSavesCommand());
         rootCommand.AddCommand(new SummarizeCommand());
+        
+        // Create a version command
+        var versionCommand = new Command("version", "Display the version of the tool");
+        versionCommand.SetHandler(() =>
+        {
+            var version = Assembly.GetExecutingAssembly().GetName().Version;
+            Console.WriteLine($"MageeSoft.StellarisSaveParser.Cli v{version}");
+        });
+        rootCommand.AddCommand(versionCommand);
         
         // Configure the command line parser
         var parser = new CommandLineBuilder(rootCommand)

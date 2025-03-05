@@ -1,0 +1,45 @@
+name: Publish .NET Tool
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 9.0.x
+        
+    - name: Restore dependencies
+      run: dotnet restore
+      
+    - name: Build
+      run: dotnet build --configuration Release --no-restore
+      
+    - name: Test
+      run: dotnet test --configuration Release --no-build
+      
+    - name: Pack
+      run: dotnet pack StellarisSaveParser.Cli/StellarisSaveParser.Cli.csproj --configuration Release --no-build --output ./nupkg
+      
+    - name: Push to NuGet
+      if: ${{ github.event_name == 'release' }}
+      run: |
+        dotnet nuget push "./nupkg/MageeSoft.StellarisSaveParser.Cli.*.nupkg" \
+          --api-key ${{ secrets.NUGET_API_KEY }} \
+          --source "https://api.nuget.org/v3/index.json" \
+          --skip-duplicate
+      
+    - name: Push to GitHub Packages
+      if: ${{ github.event_name == 'release' }}
+      run: |
+        dotnet nuget push "./nupkg/MageeSoft.StellarisSaveParser.Cli.*.nupkg" \
+          --api-key ${{ secrets.GITHUB_TOKEN }} \
+          --source "https://nuget.pkg.github.com/pjmagee/index.json" \
+          --skip-duplicate 

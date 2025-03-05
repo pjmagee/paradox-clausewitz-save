@@ -5,6 +5,22 @@
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    
+    <!-- .NET Tool specific settings -->
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>stellaris-sav</ToolCommandName>
+    <PackageOutputPath>./nupkg</PackageOutputPath>
+    
+    <!-- Package metadata -->
+    <PackageId>MageeSoft.StellarisSaveParser.Cli</PackageId>
+    <Authors>pjmagee</Authors>
+    <Description>A command-line tool for parsing and analyzing Stellaris save files</Description>
+    <PackageTags>stellaris;parser;cli;game;save;paradox</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/pjmagee/stellaris-sav-parser</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/pjmagee/stellaris-sav-parser</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <Version>0.1.0</Version>
   </PropertyGroup>
 
   <ItemGroup>

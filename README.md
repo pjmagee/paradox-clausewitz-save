@@ -235,3 +235,37 @@ catch (InvalidDataException)
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
+
+## CLI Tool
+
+The Stellaris Save Parser is also available as a .NET global tool. You can install it using the following command:
+
+```bash
+dotnet tool install --global MageeSoft.StellarisSaveParser.Cli
+```
+
+### CLI Commands
+
+Once installed, you can use the tool with the following commands:
+
+```bash
+# List all Stellaris save files on your system
+stellaris-sav list
+
+# Show a numbered list for easy reference
+stellaris-sav list --numbered
+
+# Show full paths instead of shortened paths
+stellaris-sav list --full-path
+
+# Sort save files by name, date, or size
+stellaris-sav list --sort name
+stellaris-sav list --sort date
+stellaris-sav list --sort size
+
+# Summarize a save file by path
+stellaris-sav summarize path/to/save/file.sav
+
+# Summarize a save file by number from the list
+stellaris-sav summarize --number 1
+```
