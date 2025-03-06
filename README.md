@@ -15,9 +15,102 @@ The library is designed to be used in a similar manner to JsonDocument, with a f
 
 ## Installation
 
+### .NET Tool (Recommended)
+
 ```bash
-dotnet add package MageeSoft.StellarisSaveParser --version 0.0.1
+dotnet tool install --global MageeSoft.StellarisSaveParser.Cli
 ```
+
+This will install the `stellaris-sav` command globally on your system.
+
+### Native Executables
+
+If you don't have .NET installed, you can download pre-built native executables from the [Releases](https://github.com/pjmagee/stellaris-sav-parser/releases) page.
+
+## Usage
+
+```bash
+stellaris-sav [command] [options]
+```
+
+### Commands
+
+- `list`: List available save files
+- `parse`: Parse a save file and output the result
+- `help`: Display help information
+
+### Examples
+
+List all save files:
+
+```bash
+stellaris-sav list
+```
+
+Parse a specific save file:
+
+```bash
+stellaris-sav parse "path/to/save.sav"
+```
+
+## Building from Source
+
+### Prerequisites
+
+- .NET 9.0 SDK or later
+
+### Build and Run
+
+```bash
+dotnet build
+dotnet run --project StellarisSaveParser.Cli
+```
+
+### Install Locally
+
+```bash
+dotnet pack
+dotnet tool install --global --add-source ./StellarisSaveParser.Cli/nupkg MageeSoft.StellarisSaveParser.Cli
+```
+
+### Test the Tool
+
+```powershell
+.\etc\test-tool.ps1
+```
+
+### Building Native Executables
+
+To build native executables for your platform:
+
+```powershell
+# On Windows
+.\etc\build-native.ps1
+
+# On Linux/macOS
+chmod +x ./etc/build-native.sh
+./etc/build-native.sh
+```
+
+This will:
+1. Detect the current platform and architecture
+2. Build native executables for your current OS (both x64 and ARM64 if supported)
+3. Create zip files ready for distribution
+4. Place all builds in the `native-build` directory
+
+Note: Due to limitations with Native AOT, cross-OS compilation is not supported. You can only build executables for the OS you are currently running on.
+
+For more information about native builds, see [NATIVE-BUILDS.md](NATIVE-BUILDS.md).
+
+## Publishing to NuGet
+
+```powershell
+.\etc\publish-nuget.ps1 <your-api-key>
+```
+
+## License
+
+MIT
 
 ## Quick Start
 
@@ -269,3 +362,49 @@ stellaris-sav summarize path/to/save/file.sav
 # Summarize a save file by number from the list
 stellaris-sav summarize --number 1
 ```
+
+### Native Executables
+
+For users who prefer not to install .NET, we provide native executables for various platforms. These are self-contained applications that don't require .NET to be installed.
+
+You can download the appropriate executable for your platform from the [latest release](https://github.com/pjmagee/stellaris-sav-parser/releases/latest) page.
+
+Available platforms:
+- Windows (x64, ARM64)
+- Linux (x64, ARM64)
+- macOS (x64, ARM64)
+
+#### Using Native Executables
+
+1. Download the appropriate zip file for your platform
+2. Extract the zip file
+3. Run the executable from the command line:
+
+```bash
+# Windows
+stellaris-sav.exe list
+
+# Linux/macOS
+./stellaris-sav list
+```
+
+## Building Native Executables Locally
+
+If you want to build the native executables yourself, you can use the provided scripts:
+
+```bash
+# Windows
+.\build-native.ps1
+
+# Linux/macOS
+chmod +x build-native.sh
+./build-native.sh
+```
+
+These scripts will:
+1. Detect your current platform and architecture
+2. Build native executables for your platform (both x64 and ARM64 if supported)
+3. Create zip files ready for distribution
+4. Place all builds in the `native-build` directory, organized by platform
+
+For more detailed information about the native build process, see [NATIVE-BUILDS.md](NATIVE-BUILDS.md).
