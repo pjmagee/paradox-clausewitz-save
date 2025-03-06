@@ -71,7 +71,7 @@ build_native_executable() {
             return 1
         fi
     else
-        echo -e "\n\e[31mNative build failed for $rid\e[0m"
+        echo -e "\n\e[31mNative build failed for $rid with exit code $build_result\e[0m"
         return 1
     fi
 }
@@ -139,9 +139,7 @@ for i in {0..3}; do
     binary_name="${binary_name_array[$i]}"
     source_binary="${source_binary_array[$i]}"
     
-    build_native_executable "$rid" "$artifact_name" "$binary_name" "$source_binary"
-    
-    if [ $? -eq 0 ]; then
+    if build_native_executable "$rid" "$artifact_name" "$binary_name" "$source_binary"; then
         ((success_count++))
     else
         ((failure_count++))
@@ -155,14 +153,8 @@ echo -e "========================================================"
 echo -e "\e[32mSuccessful builds: $success_count\e[0m"
 if [ $failure_count -gt 0 ]; then
     echo -e "\e[31mFailed builds: $failure_count\e[0m"
-else
-    echo -e "\e[32mFailed builds: $failure_count\e[0m"
-fi
-echo -e "\n\e[36mNative executables are available in the ./native-build directory\e[0m"
-
-# Return success if all builds succeeded
-if [ $failure_count -gt 0 ]; then
     exit 1
 else
+    echo -e "\e[32mFailed builds: $failure_count\e[0m"
     exit 0
 fi 
