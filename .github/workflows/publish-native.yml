@@ -18,7 +18,7 @@ jobs:
         with:
           dotnet-version: 9.0.x
       - name: Build native executables for Windows
-        run: .\etc\build-native.ps1 win
+        run: .\etc\build-native-windows.ps1     
       - name: Upload Windows x64 artifact
         uses: actions/upload-release-asset@v1
         env:
@@ -48,10 +48,8 @@ jobs:
           dotnet-version: 9.0.x
       - name: Build native executables for Linux
         run: |
-          sudo apt-get update && sudo apt-get install -y clang zlib1g-dev zip
-
-          chmod +x ./etc/build-native.sh
-          ./etc/build-native.sh linux
+          chmod +x ./etc/build-native-linux.sh
+          ./etc/build-native-linux.sh
       - name: Upload Linux x64 artifact
         uses: actions/upload-release-asset@v1
         env:
@@ -83,8 +81,8 @@ jobs:
         run: dotnet workload install macos
       - name: Build native executables for macOS
         run: |
-          chmod +x ./etc/build-native.sh
-          ./etc/build-native.sh osx
+          chmod +x ./etc/build-native-macos.sh
+          ./etc/build-native-macos.sh
       - name: Upload macOS x64 artifact
         uses: actions/upload-release-asset@v1
         env:
@@ -102,4 +100,4 @@ jobs:
           upload_url: ${{ github.event.release.upload_url }}
           asset_path: ./native-build/osx-arm64/stellaris-sav-osx-arm64.zip
           asset_name: stellaris-sav-osx-arm64.zip
-          asset_content_type: application/zip 
+          asset_content_type: application/zip
