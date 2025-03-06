@@ -58,23 +58,30 @@ function Build-NativeExecutable {
     Write-Host "========================================================" -ForegroundColor Cyan
 
     # Create output directory if it doesn't exist
-    $outputDir = "../native-build/$rid"
+    $outputDir = Join-Path -Path $PSScriptRoot -ChildPath "..\native-build\$rid"
     if (!(Test-Path -Path $outputDir)) {
         New-Item -ItemType Directory -Path $outputDir -Force | Out-Null
     }
 
     # Build the native executable
-    dotnet publish ../StellarisSaveParser.Cli/StellarisSaveParser.Cli.csproj `
+    $projectPath = Join-Path -Path $PSScriptRoot -ChildPath "..\StellarisSaveParser.Cli\StellarisSaveParser.Cli.csproj"
+    dotnet publish $projectPath `
         -c Release `
         -r $rid `
         --self-contained true `
+        -p:PublishAot=true `
+        -p:StripSymbols=true `
+        -p:InvariantGlobalization=true `
+        -p:OptimizationPreference=Size `
         -p:PublishSingleFile=true `
         -p:PublishTrimmed=true `
+        -p:EnableCompressionInSingleFile=true `
         -o $outputDir
 
     if ($LASTEXITCODE -eq 0) {
         Write-Host "`nNative build completed successfully for $rid!" -ForegroundColor Green
         
+        # Check for the executable in the publish directory
         $exePath = Join-Path -Path $outputDir -ChildPath $sourceBinary
         
         if (Test-Path $exePath) {
@@ -127,7 +134,6 @@ Write-Host "Detected OS: $currentOS" -ForegroundColor Cyan
 
 # Parse command line arguments
 $targetPlatform = $null
-$forceAllPlatforms = $false
 
 for ($i = 0; $i -lt $args.Count; $i++) {
     if ($args[$i] -eq "-Platform" -or $args[$i] -eq "--platform") {
@@ -136,22 +142,13 @@ for ($i = 0; $i -lt $args.Count; $i++) {
             $i++
         }
     }
-    elseif ($args[$i] -eq "-ForceAll" -or $args[$i] -eq "--force-all") {
-        $forceAllPlatforms = $true
-    }
 }
 
 # Determine build strategy
 if ($null -ne $targetPlatform) {
     Write-Host "Building only for platform: $targetPlatform" -ForegroundColor Yellow
-}
-elseif ($forceAllPlatforms) {
-    Write-Host "WARNING: Forcing build for ALL platforms regardless of current OS" -ForegroundColor Red
-    Write-Host "This may fail due to cross-compilation limitations. See: https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/cross-compile" -ForegroundColor Red
-}
-else {
+} else {
     Write-Host "Building only for current OS: $currentOS" -ForegroundColor Yellow
-    Write-Host "Use -ForceAll to attempt building for all platforms (may fail)" -ForegroundColor Yellow
     
     # Map OS name to RID prefix
     if ($currentOS -eq "windows") {
@@ -185,9 +182,9 @@ foreach ($target in $matrix) {
 Write-Host "`n========================================================" -ForegroundColor Cyan
 Write-Host "Build Summary" -ForegroundColor Cyan
 Write-Host "========================================================" -ForegroundColor Cyan
-Write-Host "Successful builds: $successCount" -ForegroundColor Green
+Write-Host "Successful builds: $successCount" -ForegroundColor $(if ($successCount -gt 0) { "Green" } else { "Red" })
 Write-Host "Failed builds: $failureCount" -ForegroundColor $(if ($failureCount -gt 0) { "Red" } else { "Green" })
-Write-Host "`nNative executables are available in the ../native-build directory" -ForegroundColor Cyan
+Write-Host "`nNative executables are available in the native-build directory" -ForegroundColor Cyan
 
 # Return success if all builds succeeded
 if ($failureCount -gt 0) {

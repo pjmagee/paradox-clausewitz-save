@@ -4,6 +4,10 @@ on:
   release:
     types: [created]
 
+permissions:
+  contents: write
+  packages: write
+
 jobs:
   build-windows:
     runs-on: windows-latest
@@ -14,7 +18,7 @@ jobs:
         with:
           dotnet-version: 9.0.x
       - name: Build native executables for Windows
-        run: .\etc\build-native.ps1 -Platform windows
+        run: .\etc\build-native.ps1 win
       - name: Upload Windows x64 artifact
         uses: actions/upload-release-asset@v1
         env:
@@ -44,6 +48,8 @@ jobs:
           dotnet-version: 9.0.x
       - name: Build native executables for Linux
         run: |
+          sudo apt-get update && sudo apt-get install -y clang zlib1g-dev zip
+
           chmod +x ./etc/build-native.sh
           ./etc/build-native.sh linux
       - name: Upload Linux x64 artifact

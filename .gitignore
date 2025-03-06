@@ -116,4 +116,7 @@ StyleCopReport.xml
 .builds
 *.pidb
 *.svclog
-*.scc 
+*.scc # Native builds
+
+native-build/
+

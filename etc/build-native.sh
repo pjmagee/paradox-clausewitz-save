@@ -1,27 +1,12 @@
 #!/bin/bash
 set -e
 
-# Define the matrix of runtime identifiers to build for
-declare -A matrix
-matrix[0,rid]="linux-x64"
-matrix[0,artifact_name]="stellaris-sav-linux-x64"
-matrix[0,binary_name]="stellaris-sav"
-matrix[0,source_binary]="StellarisSaveParser.Cli"
-
-matrix[1,rid]="linux-arm64"
-matrix[1,artifact_name]="stellaris-sav-linux-arm64"
-matrix[1,binary_name]="stellaris-sav"
-matrix[1,source_binary]="StellarisSaveParser.Cli"
-
-matrix[2,rid]="osx-x64"
-matrix[2,artifact_name]="stellaris-sav-osx-x64"
-matrix[2,binary_name]="stellaris-sav"
-matrix[2,source_binary]="StellarisSaveParser.Cli"
-
-matrix[3,rid]="osx-arm64"
-matrix[3,artifact_name]="stellaris-sav-osx-arm64"
-matrix[3,binary_name]="stellaris-sav"
-matrix[3,source_binary]="StellarisSaveParser.Cli"
+# Define the matrix of runtime identifiers to build for using separate arrays
+# This is more compatible with different bash versions
+rid_array=("linux-x64" "linux-arm64" "osx-x64" "osx-arm64")
+artifact_name_array=("stellaris-sav-linux-x64" "stellaris-sav-linux-arm64" "stellaris-sav-osx-x64" "stellaris-sav-osx-arm64")
+binary_name_array=("stellaris-sav" "stellaris-sav" "stellaris-sav" "stellaris-sav")
+source_binary_array=("StellarisSaveParser.Cli" "StellarisSaveParser.Cli" "StellarisSaveParser.Cli" "StellarisSaveParser.Cli")
 
 # Function to build a native executable for a specific runtime identifier
 build_native_executable() {
@@ -35,16 +20,21 @@ build_native_executable() {
     echo -e "========================================================"
     
     # Create output directory
-    local output_dir="../native-build/$rid"
+    local output_dir="./native-build/$rid"
     mkdir -p "$output_dir"
     
     # Build the native executable
-    dotnet publish ../StellarisSaveParser.Cli/StellarisSaveParser.Cli.csproj \
+    dotnet publish ./StellarisSaveParser.Cli/StellarisSaveParser.Cli.csproj \
         -c Release \
         -r $rid \
         --self-contained true \
+        -p:PublishAot=true \
+        -p:StripSymbols=true \
+        -p:InvariantGlobalization=true \
+        -p:OptimizationPreference=Size \
         -p:PublishSingleFile=true \
         -p:PublishTrimmed=true \
+        -p:EnableCompressionInSingleFile=true \
         -o "$output_dir"
     
     local build_result=$?
@@ -91,7 +81,7 @@ current_os="unknown"
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
     current_os="linux"
 elif [[ "$OSTYPE" == "darwin"* ]]; then
-    current_os="osx"
+    current_os="macos"
 else
     echo -e "\e[31mUnsupported OS: $OSTYPE\e[0m"
     exit 1
@@ -107,14 +97,9 @@ echo -e "\e[36mDetected OS: $current_os (ARM: $is_arm)\e[0m"
 
 # Parse command line arguments
 target_platform=""
-force_all=false
 
 while [[ $# -gt 0 ]]; do
     case $1 in
-        --force-all|-f)
-            force_all=true
-            shift
-            ;;
         *)
             # Assume it's a platform specification
             target_platform=$1
@@ -126,12 +111,8 @@ done
 # Determine build strategy
 if [ -n "$target_platform" ]; then
     echo -e "\e[33mBuilding only for platform: $target_platform\e[0m"
-elif [ "$force_all" = true ]; then
-    echo -e "\e[31mWARNING: Forcing build for ALL platforms regardless of current OS\e[0m"
-    echo -e "\e[31mThis may fail due to cross-compilation limitations. See: https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/cross-compile\e[0m"
 else
     echo -e "\e[33mBuilding only for current OS: $current_os\e[0m"
-    echo -e "\e[33mUse --force-all or -f to attempt building for all platforms (may fail)\e[0m"
     
     # Map OS name to RID prefix (no change needed for Linux)
     if [ "$current_os" = "macos" ]; then
@@ -146,7 +127,7 @@ success_count=0
 failure_count=0
 
 for i in {0..3}; do
-    rid="${matrix[$i,rid]}"
+    rid="${rid_array[$i]}"
     
     # Skip if not matching target platform
     if [ -n "$target_platform" ] && [[ "$rid" != $target_platform* ]]; then
@@ -154,9 +135,9 @@ for i in {0..3}; do
         continue
     fi
     
-    artifact_name="${matrix[$i,artifact_name]}"
-    binary_name="${matrix[$i,binary_name]}"
-    source_binary="${matrix[$i,source_binary]}"
+    artifact_name="${artifact_name_array[$i]}"
+    binary_name="${binary_name_array[$i]}"
+    source_binary="${source_binary_array[$i]}"
     
     build_native_executable "$rid" "$artifact_name" "$binary_name" "$source_binary"
     
@@ -177,7 +158,7 @@ if [ $failure_count -gt 0 ]; then
 else
     echo -e "\e[32mFailed builds: $failure_count\e[0m"
 fi
-echo -e "\n\e[36mNative executables are available in the ../native-build directory\e[0m"
+echo -e "\n\e[36mNative executables are available in the ./native-build directory\e[0m"
 
 # Return success if all builds succeeded
 if [ $failure_count -gt 0 ]; then

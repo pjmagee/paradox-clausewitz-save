@@ -21,12 +21,6 @@
     <RepositoryUrl>https://github.com/pjmagee/stellaris-sav-parser</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <Version>0.1.0</Version>
-    
-    <!-- Native compilation settings -->
-    <PublishAot>true</PublishAot>
-    <StripSymbols>true</StripSymbols>
-    <InvariantGlobalization>true</InvariantGlobalization>
-    <OptimizationPreference>Size</OptimizationPreference>
   </PropertyGroup>
 
   <!-- Configuration-specific settings -->
