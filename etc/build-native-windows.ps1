@@ -3,10 +3,9 @@ $ErrorActionPreference = "Stop"
 
 # Define the matrix of runtime identifiers to build for using separate arrays
 $ridArray = @("win-x64", "win-arm64")
-$artifactNameArray = @("stellaris-sav-win-x64", "stellaris-sav-win-arm64")
-$binaryNameArray = @("stellaris-sav.exe", "stellaris-sav.exe")
+$artifactNameArray = @("stellaris-sav-win-x64.exe", "stellaris-sav-win-arm64.exe")
+$binaryNameArray = @("stellaris-sav-win-x64.exe", "stellaris-sav-win-arm64.exe")
 $sourceBinaryArray = @("StellarisSaveParser.Cli.exe", "StellarisSaveParser.Cli.exe")
-
 
 # https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/cross-compile#windows
 # Function to build a native executable for a specific runtime identifier
@@ -23,11 +22,11 @@ function Build-NativeExecutable {
     Write-Host "========================================================"
     
     # Create output directory
-    $outputDir = "./native-build/$rid"
+    $outputDir = "./native-build"
     New-Item -ItemType Directory -Force -Path $outputDir | Out-Null
     
     # Build the native executable
-    $buildResult = dotnet publish ./StellarisSaveParser.Cli/StellarisSaveParser.Cli.csproj `
+    dotnet publish ./StellarisSaveParser.Cli/StellarisSaveParser.Cli.csproj `
         -c Release `
         -r $rid `
         --self-contained true `
@@ -59,11 +58,6 @@ function Build-NativeExecutable {
             # Get file size
             $fileSize = (Get-Item $targetPath).Length
             Write-Host "Executable size: $([math]::Round($fileSize/1MB, 2)) MB"
-            
-            # Create zip file
-            $zipPath = Join-Path $outputDir "$artifactName.zip"
-            Compress-Archive -Path $targetPath -DestinationPath $zipPath -Force
-            Write-Host "Created zip file: $zipPath"
             
             return $true
         }

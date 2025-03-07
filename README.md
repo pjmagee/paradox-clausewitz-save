@@ -85,18 +85,16 @@ To build native executables for your platform:
 
 ```powershell
 # On Windows
-.\etc\build-native.ps1
+.\etc\build-native-windows.ps1
 
 # On Linux/macOS
-chmod +x ./etc/build-native.sh
-./etc/build-native.sh
+chmod +x ./etc/build-native-macos.sh
+./etc/build-native-macos.sh
 ```
 
 This will:
-1. Detect the current platform and architecture
-2. Build native executables for your current OS (both x64 and ARM64 if supported)
-3. Create zip files ready for distribution
-4. Place all builds in the `native-build` directory
+1. Build native executables for your current OS (both x64 and ARM64 if supported)
+2. Place all builds in the `native-build` directory
 
 Note: Due to limitations with Native AOT, cross-OS compilation is not supported. You can only build executables for the OS you are currently running on.
 
@@ -376,16 +374,19 @@ Available platforms:
 
 #### Using Native Executables
 
-1. Download the appropriate zip file for your platform
-2. Extract the zip file
+1. Download the appropriate executable for your platform from the releases page
+2. Make the file executable (Linux/macOS only):
+   ```bash
+   chmod +x stellaris-sav-linux-x64  # or appropriate filename
+   ```
 3. Run the executable from the command line:
 
 ```bash
 # Windows
-stellaris-sav.exe list
+stellaris-sav-win-x64.exe list
 
 # Linux/macOS
-./stellaris-sav list
+./stellaris-sav-linux-x64 list
 ```
 
 ## Building Native Executables Locally
@@ -394,17 +395,16 @@ If you want to build the native executables yourself, you can use the provided s
 
 ```bash
 # Windows
-.\build-native.ps1
+.\etc\build-native-windows.ps1
 
 # Linux/macOS
-chmod +x build-native.sh
-./build-native.sh
+chmod +x ./etc/build-native-macos.sh
+./etc/build-native-macos.sh
 ```
 
 These scripts will:
 1. Detect your current platform and architecture
 2. Build native executables for your platform (both x64 and ARM64 if supported)
-3. Create zip files ready for distribution
-4. Place all builds in the `native-build` directory, organized by platform
+3. Place all builds in the `native-build` directory
 
 For more detailed information about the native build process, see [NATIVE-BUILDS.md](NATIVE-BUILDS.md).

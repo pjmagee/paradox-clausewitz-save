@@ -12,10 +12,6 @@ source_binary_array=("StellarisSaveParser.Cli" "StellarisSaveParser.Cli")
 # Function to install cross-compilation dependencies
 install_dependencies() {
     echo -e "\e[36mInstalling cross-compilation dependencies...\e[0m"
-    
-    # Install basic build tools
-    sudo apt-get update
-    sudo apt-get install -y clang zlib1g-dev zip
         
     # https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/cross-compile#linux
     sudo dpkg --add-architecture arm64    
@@ -29,6 +25,11 @@ EOF'
     sudo sed -i -e 's/deb mirror/deb [arch=amd64] mirror/g' /etc/apt/sources.list
     sudo apt update
     sudo apt install -y clang llvm binutils-aarch64-linux-gnu gcc-aarch64-linux-gnu zlib1g-dev:arm64
+
+    # Install basic build tools
+    sudo apt-get update
+    sudo apt-get install -y clang zlib1g-dev zip
+        
 }
 
 # Function to build a native executable for a specific runtime identifier
@@ -41,14 +42,6 @@ build_native_executable() {
     echo -e "\n========================================================"
     echo -e "\e[36mBuilding native executable for $rid...\e[0m"
     echo -e "========================================================"
-    
-    # For ARM64 builds, force the linker to the ARM64 cross-linker
-    if [ "$rid" == "linux-arm64" ]; then
-        echo -e "\e[33mSetting linker to aarch64-linux-gnu-ld for $rid\e[0m"
-        export LD="aarch64-linux-gnu-ld"
-        # Optionally, you can also add LLVM’s LLD flag:
-        # publish_args+=(-p:AdditionalLinkerArguments="-fuse-ld=lld")
-    fi
 
     # Create output directory
     local output_dir="./native-build/$rid"

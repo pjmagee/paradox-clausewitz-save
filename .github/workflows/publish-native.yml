@@ -18,56 +18,72 @@ jobs:
         with:
           dotnet-version: 9.0.x
       - name: Build native executables for Windows
-        run: .\etc\build-native-windows.ps1     
+        run: .\etc\build-native-windows.ps1
       - name: Upload Windows x64 artifact
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ./native-build/win-x64/stellaris-sav-win-x64.zip
-          asset_name: stellaris-sav-win-x64.zip
-          asset_content_type: application/zip
+          asset_path: ./native-build/stellaris-sav-win-x64.exe
+          asset_name: stellaris-sav-win-x64.exe
+          asset_content_type: application/octet-stream
       - name: Upload Windows ARM64 artifact
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ./native-build/win-arm64/stellaris-sav-win-arm64.zip
-          asset_name: stellaris-sav-win-arm64.zip
-          asset_content_type: application/zip
+          asset_path: ./native-build/stellaris-sav-win-arm64.exe
+          asset_name: stellaris-sav-win-arm64.exe
+          asset_content_type: application/octet-stream
 
   build-linux:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Linux x64
+        uses: docker/build-push-action@v5
         with:
-          dotnet-version: 9.0.x
-      - name: Build native executables for Linux
-        run: |
-          chmod +x ./etc/build-native-linux.sh
-          ./etc/build-native-linux.sh
+          context: .
+          file: ./etc/Dockerfile.linux-cross
+          build-args: |
+            TARGETARCH=x64
+          outputs: type=local,dest=./native-build
+          load: true
+
+      - name: Build Linux ARM64
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./etc/Dockerfile.linux-cross
+          build-args: |
+            TARGETARCH=arm64
+          outputs: type=local,dest=./native-build
+          load: true
+
       - name: Upload Linux x64 artifact
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ./native-build/linux-x64/stellaris-sav-linux-x64.zip
-          asset_name: stellaris-sav-linux-x64.zip
-          asset_content_type: application/zip
+          asset_path: ./native-build/stellaris-sav-linux-x64
+          asset_name: stellaris-sav-linux-x64
+          asset_content_type: application/octet-stream
       - name: Upload Linux ARM64 artifact
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ./native-build/linux-arm64/stellaris-sav-linux-arm64.zip
-          asset_name: stellaris-sav-linux-arm64.zip
-          asset_content_type: application/zip
+          asset_path: ./native-build/stellaris-sav-linux-arm64
+          asset_name: stellaris-sav-linux-arm64
+          asset_content_type: application/octet-stream
 
   build-macos:
     runs-on: macos-latest
@@ -89,15 +105,15 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ./native-build/osx-x64/stellaris-sav-osx-x64.zip
-          asset_name: stellaris-sav-osx-x64.zip
-          asset_content_type: application/zip
+          asset_path: ./native-build/stellaris-sav-osx-x64
+          asset_name: stellaris-sav-osx-x64
+          asset_content_type: application/octet-stream
       - name: Upload macOS ARM64 artifact
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ./native-build/osx-arm64/stellaris-sav-osx-arm64.zip
-          asset_name: stellaris-sav-osx-arm64.zip
-          asset_content_type: application/zip
+          asset_path: ./native-build/stellaris-sav-osx-arm64
+          asset_name: stellaris-sav-osx-arm64
+          asset_content_type: application/octet-stream

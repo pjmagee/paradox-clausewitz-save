@@ -1,0 +1,12 @@
+.git
+.gitignore
+.github
+.vscode
+bin/
+obj/
+native-build/
+*.md
+*.txt
+*.log
+*.dbg
+*.Development.json 

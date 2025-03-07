@@ -18,8 +18,8 @@ The following platforms are supported:
 
 There are two scripts provided to build native executables:
 
-- `etc/build-native.ps1` (PowerShell script for Windows)
-- `etc/build-native.sh` (Bash script for Linux/macOS)
+- `etc/build-native-windows.ps1` (PowerShell script for Windows)
+- `etc/build-native-macos.sh` (Bash script for macOS)
 
 ### Cross-Compilation Limitations
 
@@ -30,21 +30,7 @@ Native AOT does not support cross-OS compilation without emulation. This means y
 By default, the PowerShell script will only build for your current OS:
 
 ```powershell
-.\etc\build-native.ps1
-```
-
-To build for a specific platform only:
-
-```powershell
-.\etc\build-native.ps1 -Platform windows
-```
-
-Valid platform values are: `windows`, `linux`, `osx`.
-
-If you want to attempt building for all platforms (not recommended due to cross-compilation limitations):
-
-```powershell
-.\etc\build-native.ps1 -ForceAll
+.\etc\build-native-windows.ps1
 ```
 
 ### Using the Bash Script
@@ -52,48 +38,22 @@ If you want to attempt building for all platforms (not recommended due to cross-
 By default, the Bash script will only build for your current OS:
 
 ```bash
-chmod +x ./etc/build-native.sh
-./etc/build-native.sh
-```
-
-To build for a specific platform only:
-
-```bash
-./etc/build-native.sh linux
-```
-
-Valid platform values are: `linux`, `osx`.
-
-If you want to attempt building for all platforms (not recommended due to cross-compilation limitations):
-
-```bash
-./etc/build-native.sh --force-all
+chmod +x ./etc/build-native-macos.sh
+./etc/build-native-macos.sh
 ```
 
 ## Output
 
-The native executables will be created in the `native-build` directory, organized by runtime identifier:
+The native executables will be created in the `native-build` directory:
 
 ```
 native-build/
-├── win-x64/
-│   ├── stellaris-sav.exe
-│   └── stellaris-sav-win-x64.zip
-├── win-arm64/
-│   ├── stellaris-sav.exe
-│   └── stellaris-sav-win-arm64.zip
-├── linux-x64/
-│   ├── stellaris-sav
-│   └── stellaris-sav-linux-x64.zip
-├── linux-arm64/
-│   ├── stellaris-sav
-│   └── stellaris-sav-linux-arm64.zip
-├── osx-x64/
-│   ├── stellaris-sav
-│   └── stellaris-sav-osx-x64.zip
-└── osx-arm64/
-    ├── stellaris-sav
-    └── stellaris-sav-osx-arm64.zip
+├── stellaris-sav-win-x64.exe
+├── stellaris-sav-win-arm64.exe
+├── stellaris-sav-linux-x64
+├── stellaris-sav-linux-arm64
+├── stellaris-sav-osx-x64
+└── stellaris-sav-osx-arm64
 ```
 
 ## GitHub Actions Workflow
@@ -101,10 +61,8 @@ native-build/
 A GitHub Actions workflow is set up to automatically build native executables for all supported platforms when a new release is created. The workflow is defined in `.github/workflows/publish-native.yml`.
 
 The workflow will:
-
 1. Build native executables for all supported platforms (using the appropriate OS for each build)
-2. Create zip files for each executable
-3. Attach the zip files to the GitHub release
+2. Upload the executables directly to the GitHub release
 
 ## Requirements for Building
 
@@ -122,16 +80,19 @@ Note that some platforms may require additional dependencies for cross-compilati
 
 ## Using Native Executables
 
-1. Download the appropriate zip file for your platform from the [Releases](https://github.com/mageesoft/stellaris-sav-parser/releases) page
-2. Extract the zip file
+1. Download the appropriate executable for your platform from the [Releases](https://github.com/mageesoft/stellaris-sav-parser/releases) page
+2. Make the file executable (Linux/macOS only):
+   ```bash
+   chmod +x stellaris-sav-linux-x64  # or appropriate filename
+   ```
 3. Run the executable from the command line:
 
 ```bash
 # Windows
-stellaris-sav.exe list
+stellaris-sav-win-x64.exe list
 
 # Linux/macOS
-./stellaris-sav list
+./stellaris-sav-linux-x64 list
 ```
 
 ## Reflection Usage
