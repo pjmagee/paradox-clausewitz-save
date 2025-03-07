@@ -40,8 +40,7 @@ RUN dotnet publish ./StellarisSaveParser.Cli/StellarisSaveParser.Cli.csproj \
     -p:EnableCompressionInSingleFile=true \
     -o /app
 
-# Create output directory
-RUN mkdir -p /output
-
-# Copy the binary to output directory with proper name
-RUN cp /app/StellarisSaveParser.Cli /output/stellaris-sav-linux-$TARGETARCH 
+# Final stage for output
+FROM scratch AS output
+ARG TARGETARCH
+COPY --from=build /app/StellarisSaveParser.Cli /stellaris-sav-linux-$TARGETARCH 

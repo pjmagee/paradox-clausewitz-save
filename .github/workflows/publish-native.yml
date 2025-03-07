@@ -53,8 +53,7 @@ jobs:
           file: ./etc/Dockerfile.linux-cross
           build-args: |
             TARGETARCH=x64
-          outputs: type=local,dest=./native-build
-          load: true
+          outputs: type=local,dest=./native-build,from=output
 
       - name: Build Linux ARM64
         uses: docker/build-push-action@v5
@@ -63,8 +62,10 @@ jobs:
           file: ./etc/Dockerfile.linux-cross
           build-args: |
             TARGETARCH=arm64
-          outputs: type=local,dest=./native-build
-          load: true
+          outputs: type=local,dest=./native-build,from=output
+
+      - name: List build outputs
+        run: ls -la ./native-build/
 
       - name: Upload Linux x64 artifact
         uses: actions/upload-release-asset@v1
