@@ -61,6 +61,7 @@ native-build/
 A GitHub Actions workflow is set up to automatically build native executables for all supported platforms when a new release is created. The workflow is defined in `.github/workflows/publish-native.yml`.
 
 The workflow will:
+
 1. Build native executables for all supported platforms (using the appropriate OS for each build)
 2. Upload the executables directly to the GitHub release
 
@@ -82,9 +83,11 @@ Note that some platforms may require additional dependencies for cross-compilati
 
 1. Download the appropriate executable for your platform from the [Releases](https://github.com/mageesoft/stellaris-sav-parser/releases) page
 2. Make the file executable (Linux/macOS only):
+
    ```bash
    chmod +x stellaris-sav-linux-x64  # or appropriate filename
    ```
+
 3. Run the executable from the command line:
 
 ```bash
@@ -107,4 +110,4 @@ The native builds use the following .NET features:
 - `PublishTrimmed`: Removes unused code to reduce the size of the executable
 - `--self-contained`: Includes the .NET runtime in the executable
 
-For the GitHub Actions workflow, we build on the appropriate OS for each target platform, which is the recommended approach for producing native executables for multiple platforms. 
+For the GitHub Actions workflow, we build on the appropriate OS for each target platform, which is the recommended approach for producing native executables for multiple platforms.
