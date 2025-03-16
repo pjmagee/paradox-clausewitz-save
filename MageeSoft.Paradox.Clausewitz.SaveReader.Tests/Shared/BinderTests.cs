@@ -4,6 +4,7 @@ using MageeSoft.Paradox.Clausewitz.SaveReader.Model.Attributes;
 using MageeSoft.Paradox.Clausewitz.SaveReader.Parser;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 
 namespace MageeSoft.Paradox.Clausewitz.SaveReader.Tests.Shared;
@@ -13,49 +14,49 @@ public class BinderTests
 {
     public class TestModel
     {
-        [SaveProperty("name")]
+        [SaveScalar("name")]
         public string Name { get; set; } = string.Empty;
 
-        [SaveProperty("capital")]
+        [SaveScalar("capital")]
         public int Capital { get; set; }
 
-        [SaveProperty("start_date")]
+        [SaveScalar("start_date")]
         public DateOnly StartDate { get; set; }
 
         [SaveArray("achievement")]
-        public int[] Achievements { get; set; } = [];
+        public ImmutableList<int> Achievements { get; set; } = [];
 
-        [SaveProperty("ironman")]
+        [SaveScalar("ironman")]
         public bool Ironman { get; set; }
 
-        [SaveProperty("id")]
+        [SaveScalar("id")]
         public Guid Id { get; set; }
     }
 
     public class NestedModel
     {
-        [SaveProperty("energy")]
-        public int Energy { get; set; }
+        [SaveScalar("energy")]
+        public int Energy { get; init; }
 
-        [SaveProperty("minerals")]
-        public int Minerals { get; set; }
+        [SaveScalar("minerals")]
+        public int Minerals { get; init; }
 
-        [SaveProperty("name")]
-        public string Name { get; set; } = string.Empty;
+        [SaveScalar("name")]
+        public string Name { get; init; }
 
-        [SaveProperty("efficiency")]
-        public float Efficiency { get; set; }
+        [SaveScalar("efficiency")]
+        public float Efficiency { get; init; }
     }
 
     public class ComplexModel
     {
-        [SaveProperty("name")]
+        [SaveScalar("name")]
         public string Name { get; set; } = string.Empty;
 
-        [SaveProperty("capital")]
+        [SaveScalar("capital")]
         public int Capital { get; set; }
 
-        [SaveProperty("resources")]
+        [SaveObject("resources")]
         public NestedModel Resources { get; set; } = new();
 
         [SaveArray("planets")]
@@ -67,67 +68,67 @@ public class BinderTests
         [SaveArray("tags")]
         public string[] Tags { get; set; } = [];
 
-        [SaveProperty("enabled")]
+        [SaveScalar("enabled")]
         public bool Enabled { get; set; }
 
-        [SaveProperty("disabled")]
+        [SaveScalar("disabled")]
         public bool Disabled { get; set; }
 
-        [SaveProperty("start_date")]
+        [SaveScalar("start_date")]
         public DateOnly StartDate { get; set; }
 
-        [SaveProperty("nested")]
+        [SaveObject("nested")]
         public NestedModel Nested { get; set; } = new();
     }
 
     private class ExhibitSpecimen
     {
-        [SaveProperty("id")]
+        [SaveScalar("id")]
         public string Id { get; set; } = "";
 
-        [SaveProperty("origin")]
+        [SaveScalar("origin")]
         public string Origin { get; set; } = "";
     }
 
     private class Exhibit
     {
-        [SaveProperty("exhibit_state")]
+        [SaveScalar("exhibit_state")]
         public string State { get; set; } = "";
 
-        [SaveProperty("specimen")]
+        [SaveObject("specimen")]
         public ExhibitSpecimen? Specimen { get; set; }
 
-        [SaveProperty("owner")]
+        [SaveScalar("owner")]
         public string Owner { get; set; } = "";
 
-        [SaveProperty("date_added")]
+        [SaveScalar("date_added")]
         public DateOnly DateAdded { get; set; }
     }
 
     private class ExhibitsContainer
     {
-        [SaveProperty("exhibits")]
-        public Dictionary<int, Exhibit> Exhibits { get; set; } = new();
+        [SaveIndexedDictionary("exhibits")]
+        public ImmutableDictionary<int, Exhibit> Exhibits { get; set; }
     }
 
     private class WeaponData
     {
-        [SaveProperty("index")]
+        [SaveScalar("index")]
         public int Index { get; set; }
 
-        [SaveProperty("template")]
+        [SaveScalar("template")]
         public string Template { get; set; } = "";
 
-        [SaveProperty("component_slot")]
+        [SaveScalar("component_slot")]
         public string ComponentSlot { get; set; } = "";
     }
 
     private class SectionData
     {
-        [SaveProperty("design")]
+        [SaveScalar("design")]
         public string Design { get; set; } = "";
 
-        [SaveProperty("slot")]
+        [SaveScalar("slot")]
         public string Slot { get; set; } = "";
 
         [SaveArray("weapon")]
@@ -137,13 +138,34 @@ public class BinderTests
     private class ShipData
     {
         [SaveArray("section")]
-        public SectionData[] Sections { get; set; }
+        public ImmutableArray<SectionData> Sections { get; set; }
     }
 
     private class RepeatedPropertyModel
     {
-        [SaveProperty("section")]
-        public List<SectionData> Sections { get; set; } = [];
+        [SaveArray("section")]
+        public ImmutableList<SectionData> Sections { get; set; } = [];
+    }
+
+    private class ImmutableListModel
+    {
+        [SaveArray("values")]
+        public ImmutableList<int> Values { get; init; }
+
+        [SaveArray("strings")]
+        public ImmutableList<string> Strings { get; init; }
+
+        [SaveArray("nested")]
+        public ImmutableList<NestedModel> Nested { get; init; }
+    }
+
+    private class ImmutableDictionaryModel
+    {
+        [SaveObject("resources")]
+        public ImmutableDictionary<string, NestedModel> Resources { get; init; }
+
+        [SaveObject("scores")]
+        public ImmutableDictionary<int, float> Scores { get; init; }
     }
 
     [TestMethod]
@@ -430,5 +452,125 @@ public class BinderTests
         Assert.IsNotNull(result.Sections[3], "Fourth section should not be null");
         Assert.AreEqual("SECTION_3", result.Sections[3].Design, "Fourth section design mismatch");
         Assert.AreEqual("3", result.Sections[3].Slot, "Fourth section slot mismatch");
+    }
+
+    [TestMethod]
+    public void Bind_ImmutableList_ReturnsCorrectValues()
+    {
+        var input = """
+            values={ 1 2 3 4 5 }
+            strings={ "alpha" "beta" "gamma" }
+            nested={
+                {
+                    energy=100
+                    minerals=200
+                    name="Resource 1"
+                    efficiency=0.75
+                }
+                {
+                    energy=300
+                    minerals=400
+                    name="Resource 2"
+                    efficiency=0.85
+                }
+            }
+            """;
+
+        var parser = new Parser.Parser(input);
+        var saveObject = parser.Parse();
+        var result = Binder.Bind<ImmutableListModel>(saveObject);
+
+        // Check that we got ImmutableList instances
+        Assert.IsInstanceOfType(result.Values, typeof(ImmutableList<int>));
+        Assert.IsInstanceOfType(result.Strings, typeof(ImmutableList<string>));
+        Assert.IsInstanceOfType(result.Nested, typeof(ImmutableList<NestedModel>));
+
+        // Check values
+        CollectionAssert.AreEqual(new[] { 1, 2, 3, 4, 5 }, result.Values.ToArray());
+        CollectionAssert.AreEqual(new[] { "alpha", "beta", "gamma" }, result.Strings.ToArray());
+
+        // Check resources
+        Assert.AreEqual(2, result.Nested.Count);
+        
+        var resource1 = result.Nested[0];
+        Assert.AreEqual(100, resource1.Energy);
+        Assert.AreEqual(200, resource1.Minerals);
+        Assert.AreEqual("Resource 1", resource1.Name);
+        Assert.AreEqual(0.75f, resource1.Efficiency);
+
+        var resource2 = result.Nested[1];
+        Assert.AreEqual(300, resource2.Energy);
+        Assert.AreEqual(400, resource2.Minerals);
+        Assert.AreEqual("Resource 2", resource2.Name);
+        Assert.AreEqual(0.85f, resource2.Efficiency);
+
+        // Verify immutability
+        Assert.ThrowsException<NotSupportedException>(() => 
+        {
+            var list = result.Values as IList<int>;
+            list!.Add(6);
+        });
+    }
+
+    [TestMethod]
+    public void Bind_ImmutableDictionary_ReturnsCorrectValues()
+    {
+        var input = """
+            resources={
+                alpha={
+                    energy=100
+                    minerals=200
+                    name="Resource Alpha"
+                    efficiency=0.75
+                }
+                beta={
+                    energy=300
+                    minerals=400
+                    name="Resource Beta"
+                    efficiency=0.85
+                }
+            }
+            scores={
+                1=3.14
+                2=6.28
+                3=9.42
+            }
+            """;
+
+        var parser = new Parser.Parser(input);
+        var saveObject = parser.Parse();
+        var result = Binder.Bind<ImmutableDictionaryModel>(saveObject);
+
+        // Check that we got ImmutableDictionary instances
+        Assert.IsInstanceOfType(result.Resources, typeof(ImmutableDictionary<string, NestedModel>));
+        Assert.IsInstanceOfType(result.Scores, typeof(ImmutableDictionary<int, float>));
+
+        // Check resources
+        Assert.AreEqual(2, result.Resources.Count);
+        
+        var resourceAlpha = result.Resources["alpha"];
+        Assert.AreEqual(100, resourceAlpha.Energy);
+        Assert.AreEqual(200, resourceAlpha.Minerals);
+        Assert.AreEqual("Resource Alpha", resourceAlpha.Name);
+        Assert.AreEqual(0.75f, resourceAlpha.Efficiency);
+
+        var resourceBeta = result.Resources["beta"];
+        Assert.AreEqual(300, resourceBeta.Energy);
+        Assert.AreEqual(400, resourceBeta.Minerals);
+        Assert.AreEqual("Resource Beta", resourceBeta.Name);
+        Assert.AreEqual(0.85f, resourceBeta.Efficiency);
+
+        // Check scores
+        Assert.AreEqual(3, result.Scores.Count);
+        Assert.AreEqual(3.14f, result.Scores[1]);
+        Assert.AreEqual(6.28f, result.Scores[2]);
+        Assert.AreEqual(9.42f, result.Scores[3]);
+
+        // Verify immutability
+        Assert.ThrowsException<NotSupportedException>(() => 
+        {
+            var dict = result.Resources as IDictionary<string, NestedModel>;
+            dict!.Add("gamma", new NestedModel());
+        });
     }
 }

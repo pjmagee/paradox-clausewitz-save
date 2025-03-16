@@ -21,7 +21,7 @@ public class Scalar<T> : SaveElement
     /// <summary>
     /// Gets the type of the scalar value.
     /// </summary>
-    public override ValueType Type => GetValueType();
+    public override SaveType Type => GetValueType();
 
     /// <summary>
     /// Initializes a new instance of the <see cref="Scalar{T}"/> class.
@@ -34,17 +34,17 @@ public class Scalar<T> : SaveElement
         Value = value;
     }
 
-    private ValueType GetValueType()
+    private SaveType GetValueType()
     {
         return typeof(T) switch
         {
-            Type t when t == typeof(string) => ValueType.String,
-            Type t when t == typeof(int) => ValueType.Int32,
-            Type t when t == typeof(long) => ValueType.Int64,
-            Type t when t == typeof(float) => ValueType.Float,
-            Type t when t == typeof(bool) => ValueType.Boolean,
-            Type t when t == typeof(DateOnly) => ValueType.Date,
-            Type t when t == typeof(Guid) => ValueType.Guid,
+            Type t when t == typeof(string) => SaveType.String,
+            Type t when t == typeof(int) => SaveType.Int32,
+            Type t when t == typeof(long) => SaveType.Int64,
+            Type t when t == typeof(float) => SaveType.Float,
+            Type t when t == typeof(bool) => SaveType.Bool,
+            Type t when t == typeof(DateOnly) => SaveType.Date,
+            Type t when t == typeof(Guid) => SaveType.Guid,
             _ => throw new ArgumentException($"Unsupported scalar type: {typeof(T).Name}")
         };
     }

@@ -12,7 +12,7 @@ public abstract class SaveElement
     /// <summary>
     /// Gets the type of the element.
     /// </summary>
-    public abstract ValueType Type { get; }
+    public abstract SaveType Type { get; }
 
     /// <summary>
     /// Tries to get the value as a SaveObject.

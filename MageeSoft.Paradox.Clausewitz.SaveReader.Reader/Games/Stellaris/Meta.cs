@@ -4,57 +4,57 @@ namespace MageeSoft.Paradox.Clausewitz.SaveReader.Reader.Games.Stellaris;
 
 public class Meta
 {
-    [SaveProperty("version")]
+    [SaveScalar("version")]
     public string Version { get; set; }
 
-    [SaveProperty("version_control_revision")]
+    [SaveScalar("version_control_revision")]
     public int VersionControlRevision { get; set; }
     
-    [SaveProperty("name")]
+    [SaveScalar("name")]
     public string Name { get; set; }
     
-    [SaveProperty("player_portrait")]
+    [SaveScalar("player_portrait")]
     public string PlayerPortrait { get; set; } = string.Empty;
     
-	[SaveProperty("flag")]
+	[SaveObject("flag")]
     public MetaFlag Flag { get; set; }
     
-    [SaveProperty("meta_fleets")]
+    [SaveScalar("meta_fleets")]
     public int MetaFleets { get; set; }
     
-    [SaveProperty("meta_planets")]
+    [SaveScalar("meta_planets")]
     public int MetaPlanets { get; set; }
     
-    [SaveProperty("ironman")]
+    [SaveScalar("ironman")]
     public bool IsIronman { get; set; }
 }
 
 public class MetaFlag
 {
-	[SaveProperty("icon")]
+	[SaveObject("icon")]
 	public MetaIcon Icon { get; set; }
 
-	[SaveProperty("background")]
+	[SaveObject("background")]
 	public MetaBackground Background { get; set; }
 
-	[SaveProperty("colors")]
+	[SaveArray("colors")]
 	public List<string> Colors { get; set; } = new();
 }
 
 public class MetaBackground
 {
-	[SaveProperty("category")]
+	[SaveScalar("category")]
 	public string Category { get; set; } = string.Empty;
 
-	[SaveProperty("file")]
+	[SaveScalar("file")]
 	public string File { get; set; } = string.Empty;
 }
 	
 public class MetaIcon
 {
-	[SaveProperty("category")]
+	[SaveScalar("category")]
 	public string Category { get; set; } = string.Empty;
 
-	[SaveProperty("file")]
+	[SaveScalar("file")]
 	public string File { get; set; } = string.Empty;
 }

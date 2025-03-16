@@ -9,22 +9,22 @@ namespace MageeSoft.Paradox.Clausewitz.SaveReader.Reader.Games.Stellaris.Models;
 /// </summary>
 public class Formation
 {
-    [SaveProperty("scale")]
+    [SaveScalar("scale")]
     public float? Scale { get; set; }
 
-    [SaveProperty("angle")]
+    [SaveScalar("angle")]
     public float? Angle { get; set; }
 
-    [SaveProperty("type")]
+    [SaveScalar("type")]
     public string? Type { get; set; }
     
-    [SaveProperty("root")]
+    [SaveScalar("root")]
     public int? Root { get; set; }
     
-    [SaveProperty("ships")]
+    [SaveArray("ships")]
     public int[]? Ships { get; set; }
     
-    [SaveProperty("parent")]
+    [SaveArray("parent")]
     public int[]? Parent { get; set; }
 }
 

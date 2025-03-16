@@ -6,21 +6,21 @@ namespace MageeSoft.Paradox.Clausewitz.SaveReader.Reader.Games.Stellaris.Models;
 public class FormationPosition
 {
 
-    [SaveProperty("x")]
+    [SaveScalar("x")]
     public float X { get; set; }
 
-    [SaveProperty("y")]
+    [SaveScalar("y")]
     public float Y { get; set; }
 
-    [SaveProperty("speed")]
+    [SaveScalar("speed")]
     public float Speed { get; set; }
 
-    [SaveProperty("rotation")]
+    [SaveScalar("rotation")]
     public  float Rotation { get; set; }
 
-    [SaveProperty("forward_x")]
+    [SaveScalar("forward_x")]
     public  float ForwardX { get; set; }
 
-    [SaveProperty("forward_y")]
+    [SaveScalar("forward_y")]
     public float ForwardY { get; set; }
 }

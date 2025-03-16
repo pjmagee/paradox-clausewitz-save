@@ -6,6 +6,8 @@ project.lock.json
 *.pyc
 nupkg/
 
+Detailed/
+
 .cursor/
 
 # Visual Studio Code

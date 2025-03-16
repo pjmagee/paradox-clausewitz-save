@@ -7,18 +7,18 @@ namespace MageeSoft.Paradox.Clausewitz.SaveReader.Reader.Games.Stellaris.Models;
 /// </summary>
 public record Combat
 {
-    [SaveProperty("coordinate")]
+    [SaveObject("coordinate")]
     public required Position Coordinate { get; set; }
 
-    [SaveProperty("formation_pos")]
+    [SaveObject("formation_pos")]
     public required FormationPosition FormationPos { get; set; }
 
-    [SaveProperty("formation")]
+    [SaveObject("formation")]
     public required Formation Formation { get; set; }
 
-    [SaveProperty("start_coordinate")]
+    [SaveObject("start_coordinate")]
     public required Position StartCoordinate { get; set; }
 
-    [SaveProperty("start_date")]
+    [SaveScalar("start_date")]
     public required string StartDate { get; init; }
 } 

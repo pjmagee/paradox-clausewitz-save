@@ -15,7 +15,7 @@ public class SaveArray : SaveElement
     /// <summary>
     /// Gets the type of the element.
     /// </summary>
-    public override ValueType Type => ValueType.Array;
+    public override SaveType Type => SaveType.Array;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="SaveArray"/> class.

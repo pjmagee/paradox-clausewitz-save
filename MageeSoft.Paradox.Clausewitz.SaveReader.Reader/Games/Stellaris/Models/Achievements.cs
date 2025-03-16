@@ -7,8 +7,8 @@ namespace MageeSoft.Paradox.Clausewitz.SaveReader.Reader.Games.Stellaris.Models;
 
 public class Achievements
 {    
-    [SaveProperty("achievement")]
-    public int[] Values { get; init; }
+    [SaveArray("achievement")]
+    public ImmutableList<int> Values { get; init; }
 } 
 
 

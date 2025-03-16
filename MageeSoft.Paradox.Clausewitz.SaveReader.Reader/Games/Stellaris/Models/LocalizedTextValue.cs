@@ -4,6 +4,6 @@ namespace MageeSoft.Paradox.Clausewitz.SaveReader.Reader.Games.Stellaris.Models;
 
 public class LocalizedTextValue
 {
-    [SaveProperty("key")]
+    [SaveScalar("key")]
     public string Key { get; init; }
 }

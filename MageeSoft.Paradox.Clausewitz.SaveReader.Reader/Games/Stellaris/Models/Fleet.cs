@@ -9,55 +9,55 @@ namespace MageeSoft.Paradox.Clausewitz.SaveReader.Reader.Games.Stellaris.Models;
 /// </summary>
 public class Fleet
 {
-    [SaveProperty("name")]
+    [SaveObject("name")]
     public LocalizedText Name { get; init; }
     
-    [SaveProperty("ships")]
+    [SaveArray("ships")]
     public int[] Ships { get; init; }
 
-    [SaveProperty("combat")]
+    [SaveObject("combat")]
     public Combat Combat { get; init; }
 
-    [SaveProperty("fleet_stats")]
+    [SaveObject("fleet_stats")]
     public FleetStats FleetStats { get; init; }
 
-    [SaveProperty("station")]
+    [SaveScalar("station")]
     public required bool IsStation { get; init; }
 
-    [SaveProperty("ground_support_stance")]
+    [SaveScalar("ground_support_stance")]
     public required string GroundSupportStance { get; init; }
 
-    [SaveProperty("space_fauna_growth_stance")]
+    [SaveScalar("space_fauna_growth_stance")]
     public required string SpaceFaunaGrowthStance { get; init; }
 
-    [SaveProperty("mia_from")]
+    [SaveObject("mia_from")]
     public required Position MiaFrom { get; init; }
 
-    [SaveProperty("movement_manager")]
+    [SaveObject("movement_manager")]
     public required FleetMovementManager MovementManager { get; init; }
 
-    [SaveProperty("hit_points")]
+    [SaveScalar("hit_points")]
     public required float HitPoints { get; init; }
 
-    [SaveProperty("military_power")]
+    [SaveScalar("military_power")]
     public required float MilitaryPower { get; init; }
     
-    [SaveProperty("diplomacy_weight")]
+    [SaveScalar("diplomacy_weight")]
     public required float DiplomacyWeight { get; init; }
 
-    [SaveProperty("cached_killed_ships")]
+    [SaveScalar("cached_killed_ships")]
     public required int CachedKilledShips { get; init; }
 
-    [SaveProperty("cached_disabled_ships")]
+    [SaveScalar("cached_disabled_ships")]
     public required int CachedDisabledShips { get; init; }
 
-    [SaveProperty("cached_disengaged_ships")]
+    [SaveScalar("cached_disengaged_ships")]
     public required int CachedDisengagedShips { get; init; }
 
-    [SaveProperty("cached_combined_removed_ships")]
+    [SaveScalar("cached_combined_removed_ships")]
     public required int CachedCombinedRemovedShips { get; init; }
 
-    [SaveProperty("can_take_orders")]
+    [SaveScalar("can_take_orders")]
     public required bool CanTakeOrders { get; init; }
 }
 
