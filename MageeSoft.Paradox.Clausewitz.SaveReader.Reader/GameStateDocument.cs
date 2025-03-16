@@ -1,5 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics.Contracts;
 using MageeSoft.Paradox.Clausewitz.SaveReader.Parser;
 
 namespace MageeSoft.Paradox.Clausewitz.SaveReader.Reader;

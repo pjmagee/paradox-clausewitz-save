@@ -1,8 +1,5 @@
 using MageeSoft.Paradox.Clausewitz.SaveReader.Parser;
 using System.Collections.Immutable;
-using SaveArray = MageeSoft.Paradox.Clausewitz.SaveReader.Parser.SaveArray;
-using ValueType = MageeSoft.Paradox.Clausewitz.SaveReader.Parser.ValueType;
-using static MageeSoft.Paradox.Clausewitz.SaveReader.Reader.Games.Stellaris.Models.SaveObjectHelper;
 
 namespace MageeSoft.Paradox.Clausewitz.SaveReader.Reader.Games.Stellaris.Models;
 
@@ -10,54 +7,53 @@ public record Building
 {
     public required long Id { get; init; }
     public required string Type { get; init; }
-    public required int Planet { get; init; }
-    public required bool IsActive { get; init; }
-    public required float Health { get; init; }
-    public required float MaxHealth { get; init; }
+    public required int RuinTime { get; init; }
 
     public static ImmutableArray<Building> Load(SaveObject root)
     {
         var builder = ImmutableArray.CreateBuilder<Building>();
-        var buildingsElement = root.Properties
-            .FirstOrDefault(p => p.Key == "buildings");
 
-        var buildingsObj = buildingsElement.Value as SaveObject;
-        if (buildingsObj != null)
+        if (!root.TryGetSaveObject("buildings", out var buildingsObj))
         {
-            foreach (var buildingElement in buildingsObj.Properties)
+            return builder.ToImmutable();
+        }
+
+        foreach (var buildingElement in buildingsObj.Properties.ToDictionary(kvp => kvp.Key, kvp => kvp.Value).ToDictionary(kvp => kvp.Key, kvp => kvp.Value).ToDictionary(kvp => kvp.Key, kvp => kvp.Value).ToDictionary(kvp => kvp.Key, kvp => kvp.Value))
+        {
+            if (long.TryParse(buildingElement.Key, out var buildingId) && buildingElement.Value is SaveObject obj)
             {
-                if (long.TryParse(buildingElement.Key, out var buildingId))
+                var building = LoadSingle(obj);
+                if (building != null)
                 {
-                    var obj = buildingElement.Value as SaveObject;
-                    if (obj == null)
-                    {
-                        continue;
-                    }
-
-                    var type = GetScalarString(obj, "type");
-                    var planet = GetScalarInt(obj, "planet");
-                    var isActive = GetScalarBoolean(obj, "is_active");
-                    var health = GetScalarFloat(obj, "health");
-                    var maxHealth = GetScalarFloat(obj, "max_health");
-
-                    if (type == null)
-                    {
-                        continue;
-                    }
-
-                    builder.Add(new Building
-                    {
-                        Id = buildingId,
-                        Type = type,
-                        Planet = planet,
-                        IsActive = isActive,
-                        Health = health,
-                        MaxHealth = maxHealth
-                    });
+                    builder.Add(building with { Id = buildingId });
                 }
             }
         }
 
         return builder.ToImmutable();
     }
+
+    public static Building? LoadSingle(SaveObject obj)
+    {
+        string typeValue;
+        int ruinTimeValue;
+
+        if (!obj.TryGetString("type", out typeValue) || !obj.TryGetInt("ruin_time", out ruinTimeValue))
+        {
+            return null;
+        }
+
+        return new Building
+        {
+            Id = 0, // Will be set by the caller
+            Type = typeValue,
+            RuinTime = ruinTimeValue
+        };
+    }
 } 
+
+
+
+
+
+

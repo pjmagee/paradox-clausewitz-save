@@ -1,4 +1,5 @@
-﻿Microsoft Visual Studio Solution File, Format Version 12.00
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
@@ -9,6 +10,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MageeSoft.Paradox.Clausewitz.SaveReader.Cli", "MageeSoft.Paradox.Clausewitz.SaveReader.Cli\MageeSoft.Paradox.Clausewitz.SaveReader.Cli.csproj", "{F6297D7F-6833-44C5-B1F4-4B906842EEED}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MageeSoft.Paradox.Clausewitz.SaveReader.Reader", "MageeSoft.Paradox.Clausewitz.SaveReader.Reader\MageeSoft.Paradox.Clausewitz.SaveReader.Reader.csproj", "{B520B9AE-7990-4857-BE55-2EEC1CBCF16F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MageeSoft.Paradox.Clausewitz.SaveReader.Model", "MageeSoft.Paradox.Clausewitz.SaveReader.Model\MageeSoft.Paradox.Clausewitz.SaveReader.Model.csproj", "{D1C96F74-5F13-4EA1-A00A-11EB36EE6E53}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -68,6 +71,18 @@ Global
 		{B520B9AE-7990-4857-BE55-2EEC1CBCF16F}.Release|x64.Build.0 = Release|Any CPU
 		{B520B9AE-7990-4857-BE55-2EEC1CBCF16F}.Release|x86.ActiveCfg = Release|Any CPU
 		{B520B9AE-7990-4857-BE55-2EEC1CBCF16F}.Release|x86.Build.0 = Release|Any CPU
+		{D1C96F74-5F13-4EA1-A00A-11EB36EE6E53}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D1C96F74-5F13-4EA1-A00A-11EB36EE6E53}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D1C96F74-5F13-4EA1-A00A-11EB36EE6E53}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{D1C96F74-5F13-4EA1-A00A-11EB36EE6E53}.Debug|x64.Build.0 = Debug|Any CPU
+		{D1C96F74-5F13-4EA1-A00A-11EB36EE6E53}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{D1C96F74-5F13-4EA1-A00A-11EB36EE6E53}.Debug|x86.Build.0 = Debug|Any CPU
+		{D1C96F74-5F13-4EA1-A00A-11EB36EE6E53}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D1C96F74-5F13-4EA1-A00A-11EB36EE6E53}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D1C96F74-5F13-4EA1-A00A-11EB36EE6E53}.Release|x64.ActiveCfg = Release|Any CPU
+		{D1C96F74-5F13-4EA1-A00A-11EB36EE6E53}.Release|x64.Build.0 = Release|Any CPU
+		{D1C96F74-5F13-4EA1-A00A-11EB36EE6E53}.Release|x86.ActiveCfg = Release|Any CPU
+		{D1C96F74-5F13-4EA1-A00A-11EB36EE6E53}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

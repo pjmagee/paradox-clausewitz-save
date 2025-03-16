@@ -1,67 +1,104 @@
 using MageeSoft.Paradox.Clausewitz.SaveReader.Parser;
 using System.Collections.Immutable;
-using SaveArray = MageeSoft.Paradox.Clausewitz.SaveReader.Parser.SaveArray;
-using ValueType = MageeSoft.Paradox.Clausewitz.SaveReader.Parser.ValueType;
-using static MageeSoft.Paradox.Clausewitz.SaveReader.Reader.Games.Stellaris.Models.SaveObjectHelper;
 
 namespace MageeSoft.Paradox.Clausewitz.SaveReader.Reader.Games.Stellaris.Models;
 
+/// <summary>
+/// Represents a deposit in the game state.
+/// </summary>
 public record Deposit
 {
-    public required long Id { get; init; }
+    /// <summary>
+    /// Gets or sets the type.
+    /// </summary>
     public required string Type { get; init; }
-    public required int Planet { get; init; }
-    public required bool IsActive { get; init; }
-    public required ImmutableDictionary<string, float> Resources { get; init; }
 
-    public static ImmutableArray<Deposit> Load(GameSaveDocuments documents)
+    /// <summary>
+    /// Gets or sets the amount.
+    /// </summary>
+    public required int Amount { get; init; }
+
+    /// <summary>
+    /// Gets or sets whether the deposit is infinite.
+    /// </summary>
+    public required bool Infinite { get; init; }
+
+    /// <summary>
+    /// Gets or sets the position.
+    /// </summary>
+    public Position? Position { get; init; }
+
+    /// <summary>
+    /// Default instance of Deposit.
+    /// </summary>
+    public static Deposit Default => new()
     {
-        var builder = ImmutableArray.CreateBuilder<Deposit>();
-        var depositsElement = (documents.GameState.Root as SaveObject)?.Properties
-            .FirstOrDefault(p => p.Key == "deposits");
+        Type = string.Empty,
+        Amount = 0,
+        Infinite = false,
+        Position = null
+    };
 
-        if (depositsElement.HasValue)
+    /// <summary>
+    /// Loads all deposits from a game state root object.
+    /// </summary>
+    /// <param name="root">The game state root object.</param>
+    /// <returns>An immutable array of deposits.</returns>
+    public static ImmutableArray<Deposit> Load(SaveObject root)
+    {
+        SaveObject? depositsObj;
+        if (!root.TryGetSaveObject("deposits", out depositsObj))
         {
-            var depositsObj = depositsElement.Value.Value as SaveObject;
-            if (depositsObj != null)
-            {
-                foreach (var depositElement in depositsObj.Properties)
-                {
-                    if (long.TryParse(depositElement.Key, out var depositId))
-                    {
-                        var obj = depositElement.Value as SaveObject;
-                        if (obj == null)
-                        {
-                            continue;
-                        }
-
-                        var type = GetScalarString(obj, "type");
-                        var planet = GetScalarInt(obj, "planet");
-                        var isActive = GetScalarBoolean(obj, "is_active");
-                        
-                        var resources = GetObject(obj, "resources")?.Properties.ToImmutableDictionary(
-                            kvp => kvp.Key,
-                            kvp => (kvp.Value as Scalar<float>)?.Value ?? 0
-                        ) ?? ImmutableDictionary<string, float>.Empty;
-
-                        if (type == null)
-                        {
-                            continue;
-                        }
-
-                        builder.Add(new Deposit
-                        {
-                            Id = depositId,
-                            Type = type,
-                            Planet = planet,
-                            IsActive = isActive,
-                            Resources = resources
-                        });
-                    }
-                }
-            }
+            return ImmutableArray<Deposit>.Empty;
         }
 
-        return builder.ToImmutable();
+        var deposits = depositsObj.Properties
+            .Select(kvp => kvp.Value)
+            .OfType<SaveObject>()
+            .Select(LoadSingle)
+            .Where(x => x != null)
+            .ToImmutableArray();
+
+        return deposits!;
+    }
+
+    /// <summary>
+    /// Loads a single deposit from a SaveObject.
+    /// </summary>
+    /// <param name="obj">The SaveObject containing the deposit data.</param>
+    /// <returns>A new Deposit instance.</returns>
+    private static Deposit? LoadSingle(SaveObject obj)
+    {
+        string type;
+        int amount;
+        bool infinite;
+
+        if (!obj.TryGetString("type", out type) ||
+            !obj.TryGetInt("amount", out amount) ||
+            !obj.TryGetBool("infinite", out infinite))
+        {
+            return null;
+        }
+
+        Position? position = null;
+
+        if (obj.TryGetSaveObject("position", out var positionObj))
+        {
+            position = Position.Load(positionObj);
+        }
+
+        return new Deposit
+        {
+            Type = type,
+            Amount = amount,
+            Infinite = infinite,
+            Position = position
+        };
     }
 } 
+
+
+
+
+
+

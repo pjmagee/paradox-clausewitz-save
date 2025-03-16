@@ -10,10 +10,17 @@
   <ItemGroup>
     <ProjectReference Include="..\MageeSoft.Paradox.Clausewitz.SaveReader.Parser\MageeSoft.Paradox.Clausewitz.SaveReader.Parser.csproj" />
     <ProjectReference Include="..\MageeSoft.Paradox.Clausewitz.SaveReader.Reader\MageeSoft.Paradox.Clausewitz.SaveReader.Reader.csproj" />
+    <ProjectReference Include="..\MageeSoft.Paradox.Clausewitz.SaveReader.Model\MageeSoft.Paradox.Clausewitz.SaveReader.Model.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="Stellaris\TestData\**">
+    <Content Include="Stellaris\TestData\*">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Stellaris\Save\*.sav">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Stellaris\Save\*.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
@@ -28,8 +35,6 @@
 
   <ItemGroup>
     <Folder Include="CK3\" />
-    <Folder Include="Stellaris\" />
-    <Folder Include="Parser\" />
   </ItemGroup>
 
 </Project>

@@ -1,90 +1,77 @@
 using MageeSoft.Paradox.Clausewitz.SaveReader.Parser;
 using System.Collections.Immutable;
-using SaveArray = MageeSoft.Paradox.Clausewitz.SaveReader.Parser.SaveArray;
-using ValueType = MageeSoft.Paradox.Clausewitz.SaveReader.Parser.ValueType;
-using static MageeSoft.Paradox.Clausewitz.SaveReader.Reader.Games.Stellaris.Models.SaveObjectHelper;
 
 namespace MageeSoft.Paradox.Clausewitz.SaveReader.Reader.Games.Stellaris.Models;
 
 /// <summary>
 /// Represents an exhibit in the game state.
 /// </summary>
-public class Exhibit
+public record Exhibit
 {
     /// <summary>
-    /// Gets or sets the exhibit ID.
+    /// Gets or sets the type.
     /// </summary>
-    public int Id { get; init; }
+    public required string Type { get; init; }
 
     /// <summary>
-    /// Gets or sets the exhibit type.
+    /// Gets or sets the planet.
     /// </summary>
-    public string Type { get; init; } = string.Empty;
+    public required int Planet { get; init; }
 
     /// <summary>
-    /// Gets or sets the planet ID where the exhibit is located.
+    /// Gets or sets whether the exhibit is active.
     /// </summary>
-    public int Planet { get; init; }
-
-    /// <summary>
-    /// Gets or sets a value indicating whether the exhibit is active.
-    /// </summary>
-    public bool IsActive { get; init; }
+    public required bool IsActive { get; init; }
 
     /// <summary>
     /// Gets or sets the exhibit state.
     /// </summary>
-    public string ExhibitState { get; init; } = string.Empty;
+    public required string ExhibitState { get; init; }
 
     /// <summary>
-    /// Gets or sets the specimen information.
+    /// Gets or sets the owner.
     /// </summary>
-    public ExhibitSpecimen Specimen { get; init; } = new();
+    public required int Owner { get; init; }
 
     /// <summary>
-    /// Gets or sets the owner ID.
+    /// Gets or sets the specimen.
     /// </summary>
-    public int Owner { get; init; }
+    public required ExhibitSpecimen Specimen { get; init; }
 
     /// <summary>
-    /// Loads all exhibits from the game save documents.
+    /// Default instance of Exhibit.
     /// </summary>
-    /// <param name="documents">The game save documents to load from.</param>
-    /// <returns>An immutable array of exhibits.</returns>
-    public static ImmutableArray<Exhibit> Load(GameSaveDocuments documents)
+    public static Exhibit Default => new()
     {
-        var builder = ImmutableArray.CreateBuilder<Exhibit>();
-        var exhibitsElement = (documents.GameState.Root as SaveObject)?.Properties
-            .FirstOrDefault(p => p.Key == "exhibits");
+        Type = string.Empty,
+        Planet = 0,
+        IsActive = false,
+        ExhibitState = string.Empty,
+        Owner = 0,
+        Specimen = ExhibitSpecimen.Default
+    };
 
-        if (exhibitsElement.HasValue)
+    /// <summary>
+    /// Loads all exhibits from a game state root object.
+    /// </summary>
+    /// <param name="root">The game state root object.</param>
+    /// <returns>An immutable array of exhibits.</returns>
+    public static ImmutableArray<Exhibit> Load(SaveObject root)
+    {
+        if (!root.TryGetSaveObject("exhibits", out var exhibitsObj))
         {
-            var exhibitsObj = exhibitsElement.Value.Value as SaveObject;
-            if (exhibitsObj != null)
+            return ImmutableArray<Exhibit>.Empty;
+        }
+
+        var builder = ImmutableArray.CreateBuilder<Exhibit>();
+        foreach (var (_, value) in exhibitsObj.Properties)
+        {
+            if (value is SaveObject obj)
             {
-                foreach (var exhibitElement in exhibitsObj.Properties)
+                var exhibit = LoadSingle(obj);
+                if (exhibit != null)
                 {
-                    if (int.TryParse(exhibitElement.Key, out var exhibitId))
-                    {
-                        var obj = exhibitElement.Value as SaveObject;
-                        if (obj == null)
-                        {
-                            continue;
-                        }
-
-                        var exhibit = new Exhibit
-                        {
-                            Id = exhibitId,
-                            Type = GetScalarString(obj, "type"),
-                            Planet = GetScalarInt(obj, "planet"),
-                            IsActive = GetScalarBoolean(obj, "is_active"),
-                            ExhibitState = GetScalarString(obj, "exhibit_state"),
-                            Owner = GetScalarInt(obj, "owner"),
-                            Specimen = LoadSpecimen(GetObject(obj, "specimen"))
-                        };
-
-                        builder.Add(exhibit);
-                    }
+                    builder.Add(exhibit);
                 }
             }
         }
@@ -92,72 +79,94 @@ public class Exhibit
         return builder.ToImmutable();
     }
 
-    static ExhibitSpecimen LoadSpecimen(SaveObject? specimenObj)
+    /// <summary>
+    /// Loads a single exhibit from a SaveObject.
+    /// </summary>
+    /// <param name="obj">The SaveObject containing the exhibit data.</param>
+    /// <returns>A new Exhibit instance.</returns>
+    private static Exhibit? LoadSingle(SaveObject obj)
     {
-        if (specimenObj == null)
+        string type;
+        int planet;
+        bool isActive;
+        string exhibitState;
+        int owner;
+
+        if (!obj.TryGetString("type", out type) ||
+            !obj.TryGetInt("planet", out planet) ||
+            !obj.TryGetBool("is_active", out isActive) ||
+            !obj.TryGetString("exhibit_state", out exhibitState) ||
+            !obj.TryGetInt("owner", out owner))
         {
-            return new ExhibitSpecimen();
+            return null;
         }
 
-        var detailsArray = GetArray(specimenObj, "details_variables");
-        var shortArray = GetArray(specimenObj, "short_variables");
-        var nameArray = GetArray(specimenObj, "name_variables");
+        SaveObject? specimenObj;
+        var specimen = obj.TryGetSaveObject("specimen", out specimenObj) && specimenObj != null
+            ? LoadSpecimen(specimenObj)
+            : ExhibitSpecimen.Default;
 
-        var specimen = new ExhibitSpecimen
+        return new Exhibit
         {
-            Specimen = GetScalarString(specimenObj, "specimen") ?? string.Empty,
-            Origin = GetScalarString(specimenObj, "origin") ?? string.Empty,
-            DateAdded = GetScalarString(specimenObj, "date_added") ?? string.Empty,
-            DetailsVariables = detailsArray?.Items
-                .Select(i => i.TryGetScalar<string>(out var value) ? value : string.Empty)
-                .Where(s => !string.IsNullOrEmpty(s))
-                .ToList() ?? new List<string>(),
-            ShortVariables = shortArray?.Items
-                .Select(i => i.TryGetScalar<string>(out var value) ? value : string.Empty)
-                .Where(s => !string.IsNullOrEmpty(s))
-                .ToList() ?? new List<string>(),
-            NameVariables = nameArray?.Items
-                .Select(i => i.TryGetScalar<string>(out var value) ? value : string.Empty)
-                .Where(s => !string.IsNullOrEmpty(s))
-                .ToList() ?? new List<string>()
+            Type = type,
+            Planet = planet,
+            IsActive = isActive,
+            ExhibitState = exhibitState,
+            Owner = owner,
+            Specimen = specimen
         };
+    }
 
-        return specimen;
+    /// <summary>
+    /// Loads a specimen from a SaveObject.
+    /// </summary>
+    /// <param name="specimenObj">The SaveObject containing the specimen data.</param>
+    /// <returns>A new ExhibitSpecimen instance.</returns>
+    private static ExhibitSpecimen LoadSpecimen(SaveObject specimenObj)
+    {
+        if (!specimenObj.TryGetString("specimen", out var specimen) ||
+            !specimenObj.TryGetString("origin", out var origin) ||
+            !specimenObj.TryGetString("date_added", out var dateAdded))
+        {
+            return ExhibitSpecimen.Default;
+        }
+
+        var detailsVariables = ImmutableList<string>.Empty;
+        var shortVariables = ImmutableList<string>.Empty;
+        var nameVariables = ImmutableList<string>.Empty;
+
+        if (specimenObj.TryGetSaveArray("details_variables", out var detailsArray))
+        {
+            detailsVariables = detailsArray.Elements()
+                .OfType<Scalar<string>>()
+                .Select(s => s.Value)
+                .ToImmutableList();
+        }
+
+        if (specimenObj.TryGetSaveArray("short_variables", out var shortArray))
+        {
+            shortVariables = shortArray.Elements()
+                .OfType<Scalar<string>>()
+                .Select(s => s.Value)
+                .ToImmutableList();
+        }
+
+        if (specimenObj.TryGetSaveArray("name_variables", out var nameArray))
+        {
+            nameVariables = nameArray.Elements()
+                .OfType<Scalar<string>>()
+                .Select(s => s.Value)
+                .ToImmutableList();
+        }
+
+        return new ExhibitSpecimen
+        {
+            Specimen = specimen,
+            Origin = origin,
+            DateAdded = DateOnly.Parse(dateAdded),
+            DetailsVariables = detailsVariables,
+            ShortVariables = shortVariables,
+            NameVariables = nameVariables
+        };
     }
 }
-
-/// <summary>
-/// Represents specimen information for an exhibit.
-/// </summary>
-public class ExhibitSpecimen
-{
-    /// <summary>
-    /// Gets or sets the specimen identifier.
-    /// </summary>
-    public string Specimen { get; init; } = string.Empty;
-
-    /// <summary>
-    /// Gets or sets the origin of the specimen.
-    /// </summary>
-    public string Origin { get; init; } = string.Empty;
-
-    /// <summary>
-    /// Gets or sets the date the specimen was added.
-    /// </summary>
-    public string DateAdded { get; init; } = string.Empty;
-
-    /// <summary>
-    /// Gets or sets the details variables.
-    /// </summary>
-    public List<string> DetailsVariables { get; init; } = new();
-
-    /// <summary>
-    /// Gets or sets the short variables.
-    /// </summary>
-    public List<string> ShortVariables { get; init; } = new();
-
-    /// <summary>
-    /// Gets or sets the name variables.
-    /// </summary>
-    public List<string> NameVariables { get; init; } = new();
-} 

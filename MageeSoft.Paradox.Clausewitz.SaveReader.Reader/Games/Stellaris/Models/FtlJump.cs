@@ -5,80 +5,107 @@ namespace MageeSoft.Paradox.Clausewitz.SaveReader.Reader.Games.Stellaris.Models;
 /// <summary>
 /// Represents an FTL jump in the game state.
 /// </summary>
-public class FtlJump
+public record FtlJump
 {
     /// <summary>
-    /// Gets or sets the FTL jump type.
+    /// Gets or sets the origin coordinate.
     /// </summary>
-    public string Type { get; set; } = string.Empty;
+    public required Coordinate From { get; init; }
 
     /// <summary>
-    /// Gets or sets the FTL jump state.
+    /// Gets or sets the destination system ID.
     /// </summary>
-    public string State { get; set; } = string.Empty;
+    public long? To { get; init; }
 
     /// <summary>
-    /// Gets or sets the FTL jump progress.
+    /// Gets or sets the fleet ID.
     /// </summary>
-    public float Progress { get; set; }
+    public required long Fleet { get; init; }
 
     /// <summary>
-    /// Gets or sets the FTL jump target.
+    /// Gets or sets the jump method.
     /// </summary>
-    public MovementTarget Target { get; set; } = new();
+    public required string JumpMethod { get; init; }
 
     /// <summary>
-    /// Gets or sets the FTL jump path.
+    /// Gets or sets the bypass from ID.
     /// </summary>
-    public MovementPath Path { get; set; } = new();
+    public required long BypassFrom { get; init; }
 
     /// <summary>
-    /// Gets or sets the FTL jump formation.
+    /// Gets or sets the bypass to ID.
     /// </summary>
-    public MovementFormation Formation { get; set; } = new();
+    public required long BypassTo { get; init; }
 
     /// <summary>
-    /// Gets or sets the FTL jump position.
+    /// Creates a new instance of FtlJump with default values.
     /// </summary>
-    public FormationPosition Position { get; set; } = new();
+    public FtlJump()
+    {
+        From = Coordinate.Default;
+        To = null;
+        Fleet = 4294967295;
+        JumpMethod = "jump_count";
+        BypassFrom = 4294967295;
+        BypassTo = 4294967295;
+    }
+
+    /// <summary>
+    /// Default instance of FtlJump.
+    /// </summary>
+    public static FtlJump Default { get; } = new()
+    {
+        From = Coordinate.Default,
+        To = null,
+        Fleet = 4294967295,
+        JumpMethod = "jump_count",
+        BypassFrom = 4294967295,
+        BypassTo = 4294967295
+    };
 
     /// <summary>
     /// Loads an FTL jump from a SaveObject.
     /// </summary>
     /// <param name="saveObject">The SaveObject containing the FTL jump data.</param>
     /// <returns>A new FtlJump instance.</returns>
-    public static FtlJump Load(SaveObject saveObject)
+    public static FtlJump? Load(SaveObject saveObject)
     {
-        var ftlJump = new FtlJump();
-
-        foreach (var property in saveObject.Properties)
+        SaveObject? fromObj;
+        if (!saveObject.TryGetSaveObject("from", out fromObj) || fromObj == null)
         {
-            switch (property.Key)
-            {
-                case "type" when property.Value is Scalar<string> typeScalar:
-                    ftlJump.Type = typeScalar.Value;
-                    break;
-                case "state" when property.Value is Scalar<string> stateScalar:
-                    ftlJump.State = stateScalar.Value;
-                    break;
-                case "progress" when property.Value is Scalar<float> progressScalar:
-                    ftlJump.Progress = progressScalar.Value;
-                    break;
-                case "target" when property.Value is SaveObject targetObj:
-                    ftlJump.Target = MovementTarget.Load(targetObj);
-                    break;
-                case "path" when property.Value is SaveObject pathObj:
-                    ftlJump.Path = MovementPath.Load(pathObj);
-                    break;
-                case "formation" when property.Value is SaveObject formationObj:
-                    ftlJump.Formation = MovementFormation.Load(formationObj);
-                    break;
-                case "position" when property.Value is SaveObject positionObj:
-                    ftlJump.Position = FormationPosition.Load(positionObj);
-                    break;
-            }
+            return null;
         }
 
-        return ftlJump;
+        var from = Coordinate.Load(fromObj);
+        if (from == null)
+        {
+            return null;
+        }
+
+        if (!saveObject.TryGetLong("fleet", out var fleet))
+        {
+            return null;
+        }
+
+        if (!saveObject.TryGetString("jump_method", out var jumpMethod))
+        {
+            return null;
+        }
+
+        return new FtlJump
+        {
+            From = from,
+            To = saveObject.TryGetLong("to", out var to) ? to : null,
+            Fleet = fleet,
+            JumpMethod = jumpMethod,
+            BypassFrom = saveObject.TryGetLong("bypass_from", out var bypassFrom) ? bypassFrom : 4294967295,
+            BypassTo = saveObject.TryGetLong("bypass_to", out var bypassTo) ? bypassTo : 4294967295
+        };
     }
 }
+
+
+
+
+
+

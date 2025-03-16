@@ -2,28 +2,65 @@ using MageeSoft.Paradox.Clausewitz.SaveReader.Parser;
 
 namespace MageeSoft.Paradox.Clausewitz.SaveReader.Reader.Games.Stellaris.Models;
 
-public class SubjectConversionProcess
+/// <summary>
+/// Represents a subject conversion process in the game state.
+/// </summary>
+public record SubjectConversionProcess
 {
-    public float Progress { get; set; }
-    public bool InProgress { get; set; }
-    public bool Done { get; set; }
-    public bool Ignore { get; set; }
+    /// <summary>
+    /// Gets or sets the ID.
+    /// </summary>
+    public required long Id { get; init; }
 
     /// <summary>
-    /// Loads subject conversion process from a ClausewitzObject.
+    /// Gets or sets the type.
     /// </summary>
-    /// <param name="conversionObj">The ClausewitzObject containing the conversion process data.</param>
-    /// <returns>A new SubjectConversionProcess instance.</returns>
-    public static SubjectConversionProcess Load(SaveObject conversionObj)
-    {
-        var process = new SubjectConversionProcess
-        {
-            Progress = SaveObjectHelper.GetScalarFloat(conversionObj, "progress"),
-            InProgress = SaveObjectHelper.GetScalarBoolean(conversionObj, "in_progress"),
-            Done = SaveObjectHelper.GetScalarBoolean(conversionObj, "done"),
-            Ignore = SaveObjectHelper.GetScalarBoolean(conversionObj, "ignore")
-        };
+    public required string Type { get; init; }
 
-        return process;
+    /// <summary>
+    /// Gets or sets the progress.
+    /// </summary>
+    public required float Progress { get; init; }
+
+    /// <summary>
+    /// Default instance of SubjectConversionProcess.
+    /// </summary>
+    public static SubjectConversionProcess Default => new()
+    {
+        Id = 0,
+        Type = string.Empty,
+        Progress = 0f
+    };
+
+    /// <summary>
+    /// Loads a subject conversion process from a SaveObject.
+    /// </summary>
+    /// <param name="saveObject">The SaveObject containing the subject conversion process data.</param>
+    /// <returns>A new SubjectConversionProcess instance.</returns>
+    public static SubjectConversionProcess? Load(SaveObject saveObject)
+    {
+        long id;
+        string type;
+        float progress;
+
+        if (!saveObject.TryGetLong("id", out id) ||
+            !saveObject.TryGetString("type", out type) ||
+            !saveObject.TryGetFloat("progress", out progress))
+        {
+            return null;
+        }
+
+        return new SubjectConversionProcess
+        {
+            Id = id,
+            Type = type,
+            Progress = progress
+        };
     }
 }
+
+
+
+
+
+

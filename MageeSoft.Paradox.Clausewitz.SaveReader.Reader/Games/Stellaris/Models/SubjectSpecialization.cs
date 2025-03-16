@@ -2,36 +2,55 @@ using MageeSoft.Paradox.Clausewitz.SaveReader.Parser;
 
 namespace MageeSoft.Paradox.Clausewitz.SaveReader.Reader.Games.Stellaris.Models;
 
+/// <summary>
+/// Represents a subject specialization in the game state.
+/// </summary>
 public class SubjectSpecialization
 {
-    public float Level { get; set; }
-    public float Experience { get; set; }
-    public SubjectConversionProcess ConversionProcess { get; set; } = new();
+    /// <summary>
+    /// Gets or sets the level.
+    /// </summary>
+   
+    public float Level { get; init; }
 
     /// <summary>
-    /// Loads subject specialization from a ClausewitzObject.
+    /// Gets or sets the experience.
     /// </summary>
-    /// <param name="agreementObj">The ClausewitzObject containing the agreement data.</param>
+    public float Experience { get; init; }
+
+    /// <summary>
+    /// Gets or sets the conversion process.
+    /// </summary>
+    public ConversionProcess ConversionProcess { get; init; } = ConversionProcess.Default;
+
+    /// <summary>
+    /// Default instance of SubjectSpecialization.
+    /// </summary>
+    public static SubjectSpecialization Default { get; } = new();
+
+    /// <summary>
+    /// Loads a subject specialization from a SaveObject.
+    /// </summary>
+    /// <param name="saveObject">The SaveObject containing the subject specialization data.</param>
     /// <returns>A new SubjectSpecialization instance.</returns>
-    public static SubjectSpecialization Load(SaveObject agreementObj)
+    public static SubjectSpecialization? Load(SaveObject saveObject)
     {
-        var specialization = new SubjectSpecialization();
-        var specializationElement = agreementObj.Properties
-            .FirstOrDefault(p => p.Key == "subject_specialization");
-
-        if (specializationElement.Key != null && specializationElement.Value is SaveObject specializationObj)
+        if (!saveObject.TryGetFloat("level", out var level) ||
+            !saveObject.TryGetFloat("experience", out var experience))
         {
-            specialization.Level = SaveObjectHelper.GetScalarFloat(specializationObj, "level");
-            specialization.Experience = SaveObjectHelper.GetScalarFloat(specializationObj, "experience");
-
-            var conversionElement = specializationObj.Properties
-                .FirstOrDefault(p => p.Key == "subject_conversion_process");
-            if (conversionElement.Key != null && conversionElement.Value is SaveObject conversionObj)
-            {
-                specialization.ConversionProcess = SubjectConversionProcess.Load(conversionObj);
-            }
+            return null;
         }
 
-        return specialization;
+        SaveObject? conversionObj;
+        var conversion = saveObject.TryGetSaveObject("subject_conversion_process", out conversionObj) && conversionObj != null
+            ? ConversionProcess.Load(conversionObj) ?? ConversionProcess.Default
+            : ConversionProcess.Default;
+
+        return new SubjectSpecialization
+        {
+            Level = level,
+            Experience = experience,
+            ConversionProcess = conversion
+        };
     }
 }

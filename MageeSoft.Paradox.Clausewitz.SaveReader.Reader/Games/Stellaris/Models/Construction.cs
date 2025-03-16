@@ -1,70 +1,115 @@
 using MageeSoft.Paradox.Clausewitz.SaveReader.Parser;
 using System.Collections.Immutable;
-using SaveArray = MageeSoft.Paradox.Clausewitz.SaveReader.Parser.SaveArray;
-using ValueType = MageeSoft.Paradox.Clausewitz.SaveReader.Parser.ValueType;
-using static MageeSoft.Paradox.Clausewitz.SaveReader.Reader.Games.Stellaris.Models.SaveObjectHelper;
 
 namespace MageeSoft.Paradox.Clausewitz.SaveReader.Reader.Games.Stellaris.Models;
 
+/// <summary>
+/// Represents a construction in the game state.
+/// </summary>
 public record Construction
 {
-    public required long Id { get; init; }
+    /// <summary>
+    /// Gets or sets the type.
+    /// </summary>
     public required string Type { get; init; }
+
+    /// <summary>
+    /// Gets or sets the planet.
+    /// </summary>
     public required int Planet { get; init; }
+
+    /// <summary>
+    /// Gets or sets the progress.
+    /// </summary>
     public required float Progress { get; init; }
+
+    /// <summary>
+    /// Gets or sets whether the construction is active.
+    /// </summary>
     public required bool IsActive { get; init; }
-    public required ImmutableDictionary<string, float> Resources { get; init; }
 
-    public static ImmutableArray<Construction> Load(GameSaveDocuments documents)
+    /// <summary>
+    /// Gets or sets the resources.
+    /// </summary>
+    public ImmutableDictionary<string, float> Resources { get; init; } = ImmutableDictionary<string, float>.Empty;
+
+    /// <summary>
+    /// Default instance of Construction.
+    /// </summary>
+    public static Construction Default => new()
     {
-        var builder = ImmutableArray.CreateBuilder<Construction>();
-        var constructionsElement = (documents.GameState.Root as SaveObject)?.Properties
-            .FirstOrDefault(p => p.Key == "constructions");
+        Type = string.Empty,
+        Planet = 0,
+        Progress = 0f,
+        IsActive = false,
+        Resources = ImmutableDictionary<string, float>.Empty
+    };
 
-        if (constructionsElement.HasValue)
+    /// <summary>
+    /// Loads all constructions from a game state root object.
+    /// </summary>
+    /// <param name="root">The game state root object.</param>
+    /// <returns>An immutable array of constructions.</returns>
+    public static ImmutableArray<Construction> Load(SaveObject root)
+    {
+        SaveObject? constructionsObj;
+        if (!root.TryGetSaveObject("constructions", out constructionsObj))
         {
-            var constructionsObj = constructionsElement.Value.Value as SaveObject;
-            if (constructionsObj != null)
-            {
-                foreach (var constructionElement in constructionsObj.Properties)
-                {
-                    if (long.TryParse(constructionElement.Key, out var constructionId))
-                    {
-                        var obj = constructionElement.Value as SaveObject;
-                        if (obj == null)
-                        {
-                            continue;
-                        }
-
-                        var type = GetScalarString(obj, "type");
-                        var planet = GetScalarInt(obj, "planet");
-                        var progress = GetScalarFloat(obj, "progress");
-                        var isActive = GetScalarBoolean(obj, "is_active");
-                        
-                        var resources = GetObject(obj, "resources")?.Properties.ToImmutableDictionary(
-                            kvp => kvp.Key,
-                            kvp => (kvp.Value as Scalar<float>)?.Value ?? 0
-                        ) ?? ImmutableDictionary<string, float>.Empty;
-
-                        if (type == null)
-                        {
-                            continue;
-                        }
-
-                        builder.Add(new Construction
-                        {
-                            Id = constructionId,
-                            Type = type,
-                            Planet = planet,
-                            Progress = progress,
-                            IsActive = isActive,
-                            Resources = resources
-                        });
-                    }
-                }
-            }
+            return ImmutableArray<Construction>.Empty;
         }
 
-        return builder.ToImmutable();
+        var constructions = constructionsObj.Properties
+            .Select(kvp => kvp.Value)
+            .OfType<SaveObject>()
+            .Select(LoadSingle)
+            .Where(x => x != null)
+            .ToImmutableArray();
+
+        return constructions!;
+    }
+
+    /// <summary>
+    /// Loads a single construction from a SaveObject.
+    /// </summary>
+    /// <param name="obj">The SaveObject containing the construction data.</param>
+    /// <returns>A new Construction instance.</returns>
+    private static Construction? LoadSingle(SaveObject obj)
+    {
+        string type;
+        int planet;
+        float progress;
+        bool isActive;
+
+        if (!obj.TryGetString("type", out type) ||
+            !obj.TryGetInt("planet", out planet) ||
+            !obj.TryGetFloat("progress", out progress) ||
+            !obj.TryGetBool("is_active", out isActive))
+        {
+            return null;
+        }
+
+        SaveObject? resourcesObj;
+        var resources = obj.TryGetSaveObject("resources", out resourcesObj) && resourcesObj != null
+            ? resourcesObj.Properties
+                .Where(kvp => kvp.Value is Scalar<float>)
+                .ToImmutableDictionary(
+                    kvp => kvp.Key,
+                    kvp => ((Scalar<float>)kvp.Value).Value)
+            : ImmutableDictionary<string, float>.Empty;
+
+        return new Construction
+        {
+            Type = type,
+            Planet = planet,
+            Progress = progress,
+            IsActive = isActive,
+            Resources = resources
+        };
     }
 } 
+
+
+
+
+
+

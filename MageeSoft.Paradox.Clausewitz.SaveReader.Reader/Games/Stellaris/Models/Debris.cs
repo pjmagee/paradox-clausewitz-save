@@ -1,172 +1,131 @@
 using MageeSoft.Paradox.Clausewitz.SaveReader.Parser;
 using System.Collections.Immutable;
-using static MageeSoft.Paradox.Clausewitz.SaveReader.Reader.Games.Stellaris.Models.SaveObjectHelper;
 
 namespace MageeSoft.Paradox.Clausewitz.SaveReader.Reader.Games.Stellaris.Models;
 
 /// <summary>
 /// Represents debris in the game state.
 /// </summary>
-public class Debris
+public record Debris
 {
     /// <summary>
     /// Gets or sets the debris ID.
     /// </summary>
-    public long Id { get; init; }
+    public required long Id { get; init; }
 
     /// <summary>
     /// Gets or sets the country ID that owns the debris.
     /// </summary>
-    public int Country { get; init; }
-
-    /// <summary>
-    /// Gets or sets the country ID that the debris came from.
-    /// </summary>
-    public int FromCountry { get; init; }
+    public required long Owner { get; init; }
 
     /// <summary>
     /// Gets or sets the coordinate of the debris.
     /// </summary>
-    public Coordinate Coordinate { get; init; } = new();
+    public required Position Position { get; init; }
 
     /// <summary>
-    /// Gets or sets the resources in the debris.
+    /// Gets or sets the type of the debris.
     /// </summary>
-    public ImmutableDictionary<string, int> Resources { get; init; } = ImmutableDictionary<string, int>.Empty;
+    public required string Type { get; init; }
 
     /// <summary>
-    /// Gets or sets the ship sizes in the debris.
+    /// Gets or sets whether the debris is active.
     /// </summary>
-    public ImmutableArray<string> ShipSizes { get; init; } = ImmutableArray<string>.Empty;
+    public required bool IsActive { get; init; }
 
     /// <summary>
-    /// Gets or sets the components in the debris.
+    /// Gets or sets whether the debris is visible.
     /// </summary>
-    public ImmutableArray<string> Components { get; init; } = ImmutableArray<string>.Empty;
+    public required bool IsVisible { get; init; }
 
     /// <summary>
-    /// Gets or sets the date of the debris.
+    /// Gets or sets whether the debris is hostile.
     /// </summary>
-    public string Date { get; init; } = string.Empty;
+    public required bool IsHostile { get; init; }
 
     /// <summary>
-    /// Gets or sets whether the debris must be scavenged.
+    /// Default instance of Debris.
     /// </summary>
-    public bool MustScavenge { get; init; }
-
-    /// <summary>
-    /// Gets or sets whether the debris must be reanimated.
-    /// </summary>
-    public bool MustReanimate { get; init; }
-
-    /// <summary>
-    /// Gets or sets whether the debris must be researched.
-    /// </summary>
-    public bool MustResearch { get; init; }
+    public static Debris Default => new()
+    {
+        Id = 0,
+        Owner = 0,
+        Position = Position.Default,
+        Type = string.Empty,
+        IsActive = false,
+        IsVisible = false,
+        IsHostile = false
+    };
 
     /// <summary>
     /// Loads all debris from the game state.
     /// </summary>
-    /// <param name="gameState">The game state root object to load from.</param>
+    /// <param name="root">The game state root object to load from.</param>
     /// <returns>An immutable array of debris.</returns>
-    public static ImmutableArray<Debris> Load(SaveObject gameState)
+    public static ImmutableArray<Debris> Load(SaveObject root)
     {
-        ArgumentNullException.ThrowIfNull(gameState, nameof(gameState));
-        
         var builder = ImmutableArray.CreateBuilder<Debris>();
 
-        var debrisElement = gameState.Properties.FirstOrDefault(p => p.Key == "debris");
-        if (debrisElement.Value is not SaveObject debrisObj)
+        if (!root.TryGetSaveObject("debris", out var debrisObj))
         {
-            System.Console.WriteLine("No debris object found in root properties");
-            return ImmutableArray<Debris>.Empty;
+            return builder.ToImmutable();
         }
 
-        System.Console.WriteLine($"Found debris object with {debrisObj.Properties.Length} properties");
-
-        foreach (var debrisItem in debrisObj.Properties)
+        foreach (var debrisElement in debrisObj.Properties)
         {
-            if (long.TryParse(debrisItem.Key, out var debrisId))
+            if (long.TryParse(debrisElement.Key, out var debrisId) && debrisElement.Value is SaveObject obj)
             {
-                // Skip 'none' values
-                if (debrisItem.Value is Scalar<string> scalar && scalar.Value == "none")
+                var debris = LoadSingle(obj, debrisId);
+                if (debris != null)
                 {
-                    System.Console.WriteLine($"Skipping debris {debrisId} (none)");
-                    continue;
-                }
-
-                if (debrisItem.Value is SaveObject properties)
-                {
-                    var resourcesBuilder = ImmutableDictionary.CreateBuilder<string, int>();
-                    var shipSizesBuilder = ImmutableArray.CreateBuilder<string>();
-                    var componentsBuilder = ImmutableArray.CreateBuilder<string>();
-
-                    var debris = new Debris
-                    {
-                        Id = debrisId,
-                        Country = GetScalarInt(properties, "country"),
-                        FromCountry = GetScalarInt(properties, "from_country"),
-                        Coordinate = Coordinate.Load(GetObject(properties, "coordinate")),
-                        Date = GetScalarString(properties, "date") ?? string.Empty,
-                        MustScavenge = GetScalarBoolean(properties, "must_scavenge"),
-                        MustReanimate = GetScalarBoolean(properties, "must_reanimate"),
-                        MustResearch = GetScalarBoolean(properties, "must_research")
-                    };
-
-                    // Load resources
-                    var resourcesObj = GetObject(properties, "resources");
-                    if (resourcesObj != null)
-                    {
-                        foreach (var resource in resourcesObj.Properties)
-                        {
-                            if (resource.Value is SaveObject resourceObj)
-                            {
-                                foreach (var resourceProperty in resourceObj.Properties)
-                                {
-                                    if (resourceProperty.Value?.TryGetScalar<string>(out var resourceText) == true)
-                                    {
-                                        var parts = resourceText.Split(' ');
-                                        if (parts.Length >= 2 && int.TryParse(parts[1], out var amount))
-                                        {
-                                            resourcesBuilder[parts[0]] = amount;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    // Load ship sizes and components
-                    foreach (var property in properties.Properties)
-                    {
-                        if (property.Key == "ship_size" && property.Value?.TryGetScalar<string>(out var shipSize) == true)
-                        {
-                            shipSizesBuilder.Add(shipSize);
-                        }
-                        else if (property.Key == "component" && property.Value?.TryGetScalar<string>(out var component) == true)
-                        {
-                            componentsBuilder.Add(component);
-                        }
-                    }
-
-                    // debris = debris with
-                    // {
-                    //     Resources = resourcesBuilder.ToImmutable(),
-                    //     ShipSizes = shipSizesBuilder.ToImmutable(),
-                    //     Components = componentsBuilder.ToImmutable()
-                    // };
-
                     builder.Add(debris);
-                    System.Console.WriteLine($"Added debris with ID {debrisId}, Country: {debris.Country}, FromCountry: {debris.FromCountry}");
-                }
-                else
-                {
-                    System.Console.WriteLine($"Skipping debris {debrisId} (not a SaveObject)");
                 }
             }
         }
 
-        System.Console.WriteLine($"Total debris loaded: {builder.Count}");
         return builder.ToImmutable();
     }
+
+    public static Debris? LoadSingle(SaveObject obj, long id)
+    {
+        SaveObject? positionObj;
+        long ownerValue;
+        string typeValue;
+        bool isActiveValue;
+        bool isVisibleValue;
+        bool isHostileValue;
+
+        if (!obj.TryGetSaveObject("position", out positionObj) ||
+            !obj.TryGetLong("owner", out ownerValue) ||
+            !obj.TryGetString("type", out typeValue) ||
+            !obj.TryGetBool("is_active", out isActiveValue) ||
+            !obj.TryGetBool("is_visible", out isVisibleValue) ||
+            !obj.TryGetBool("is_hostile", out isHostileValue))
+        {
+            return null;
+        }
+
+        var position = positionObj != null ? Position.Load(positionObj) : null;
+        if (position == null)
+        {
+            return null;
+        }
+
+        return new Debris
+        {
+            Id = id,
+            Owner = ownerValue,
+            Position = position,
+            Type = typeValue,
+            IsActive = isActiveValue,
+            IsVisible = isVisibleValue,
+            IsHostile = isHostileValue
+        };
+    }
 } 
+
+
+
+
+
+

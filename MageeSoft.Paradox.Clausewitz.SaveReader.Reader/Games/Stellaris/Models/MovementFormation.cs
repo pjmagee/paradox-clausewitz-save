@@ -5,51 +5,66 @@ namespace MageeSoft.Paradox.Clausewitz.SaveReader.Reader.Games.Stellaris.Models;
 /// <summary>
 /// Represents a movement formation in the game state.
 /// </summary>
-public class MovementFormation
+public record MovementFormation
 {
     /// <summary>
     /// Gets or sets the scale.
     /// </summary>
-    public float Scale { get; set; }
+    public required float Scale { get; init; }
 
     /// <summary>
     /// Gets or sets the angle.
     /// </summary>
-    public float Angle { get; set; }
+    public required float Angle { get; init; }
 
     /// <summary>
     /// Gets or sets the type.
     /// </summary>
-    public string Type { get; set; } = string.Empty;
+    public required string Type { get; init; }
 
     /// <summary>
-    /// Loads a movement formation from a SaveElement.
+    /// Creates a new instance of MovementFormation with default values.
     /// </summary>
-    /// <param name="clausewitzElement">The SaveElement containing the movement formation data.</param>
-    /// <returns>A new MovementFormation instance.</returns>
-    public static MovementFormation Load(SaveElement clausewitzElement)
+    public MovementFormation()
     {
-        var formation = new MovementFormation();
-        var formationObj = clausewitzElement as SaveObject;
-        if (formationObj != null)
+        Scale = 1f;
+        Angle = -0.78561f;
+        Type = "wedge";
+    }
+
+    /// <summary>
+    /// Default instance of MovementFormation.
+    /// </summary>
+    public static MovementFormation Default { get; } = new()
+    {
+        Scale = 1f,
+        Angle = -0.78561f,
+        Type = "wedge"
+    };
+
+    /// <summary>
+    /// Loads a movement formation from a SaveObject.
+    /// </summary>
+    /// <param name="saveObject">The SaveObject containing the movement formation data.</param>
+    /// <returns>A new MovementFormation instance.</returns>
+    public static MovementFormation? Load(SaveObject saveObject)
+    {
+        if (!saveObject.TryGetString("type", out var type))
         {
-            foreach (var property in formationObj.Properties)
-            {
-                switch (property.Key)
-                {
-                    case "scale" when property.Value is Scalar<float> scaleScalar:
-                        formation.Scale = scaleScalar.Value;
-                        break;
-                    case "angle" when property.Value is Scalar<float> angleScalar:
-                        formation.Angle = angleScalar.Value;
-                        break;
-                    case "type" when property.Value is Scalar<string> typeScalar:
-                        formation.Type = typeScalar.Value;
-                        break;
-                }
-            }
+            return null;
         }
 
-        return formation;
+        return new MovementFormation
+        {
+            Scale = saveObject.TryGetFloat("scale", out var scale) ? scale : 1f,
+            Angle = saveObject.TryGetFloat("angle", out var angle) ? angle : -0.78561f,
+            Type = type
+        };
     }
 }
+
+
+
+
+
+

@@ -1,52 +1,66 @@
 using MageeSoft.Paradox.Clausewitz.SaveReader.Parser;
+using System.Collections.Immutable;
 
 namespace MageeSoft.Paradox.Clausewitz.SaveReader.Reader.Games.Stellaris.Models;
 
 /// <summary>
 /// Represents a movement path in the game state.
 /// </summary>
-public class MovementPath
+public record MovementPath
 {
     /// <summary>
     /// Gets or sets the date.
     /// </summary>
-    public string Date { get; set; } = string.Empty;
+    public required string Date { get; init; }
 
     /// <summary>
-    /// Gets or sets the path points.
+    /// Gets or sets the nodes.
     /// </summary>
-    public List<long> Points { get; set; } = new();
+    public required ImmutableArray<MovementPathNode> Nodes { get; init; }
 
     /// <summary>
-    /// Loads a movement path from a SaveElement.
+    /// Creates a new instance of MovementPath with default values.
     /// </summary>
-    /// <param name="clausewitzElement">The SaveElement containing the movement path data.</param>
-    /// <returns>A new MovementPath instance.</returns>
-    public static MovementPath Load(SaveElement clausewitzElement)
+    public MovementPath()
     {
-        var path = new MovementPath();
-        var pathObj = clausewitzElement as SaveObject;
-        if (pathObj != null)
-        {
-            var dateElement = pathObj.Properties.FirstOrDefault(p => p.Key == "date");
-            if (dateElement.Key != null && dateElement.Value is Scalar<string> dateScalar)
-            {
-                path.Date = dateScalar.Value;
-            }
+        Date = "0.01.01";
+        Nodes = ImmutableArray<MovementPathNode>.Empty;
+    }
 
-            var pointsElement = pathObj.Properties.FirstOrDefault(p => p.Key == "points");
-            if (pointsElement.Key != null && pointsElement.Value is SaveArray pointsArray)
-            {
-                foreach (var point in pointsArray.Items)
-                {
-                    if (point is Scalar<long> pointScalar)
-                    {
-                        path.Points.Add(pointScalar.Value);
-                    }
-                }
-            }
+    /// <summary>
+    /// Default instance of MovementPath.
+    /// </summary>
+    public static MovementPath Default { get; } = new()
+    {
+        Date = "0.01.01",
+        Nodes = ImmutableArray<MovementPathNode>.Empty
+    };
+
+    /// <summary>
+    /// Loads a movement path from a SaveObject.
+    /// </summary>
+    /// <param name="saveObject">The SaveObject containing the movement path data.</param>
+    /// <returns>A new MovementPath instance.</returns>
+    public static MovementPath? Load(SaveObject saveObject)
+    {
+        if (!saveObject.TryGetString("date", out var date))
+        {
+            return null;
         }
 
-        return path;
+        SaveArray? nodeArray;
+        var nodes = saveObject.TryGetSaveArray("node", out nodeArray) && nodeArray != null
+            ? nodeArray.Elements()
+                .OfType<SaveObject>()
+                .Select(MovementPathNode.Load)
+                .Where(x => x != null)
+                .ToImmutableArray()
+            : ImmutableArray<MovementPathNode>.Empty;
+
+        return new MovementPath
+        {
+            Date = date,
+            Nodes = nodes!
+        };
     }
 }

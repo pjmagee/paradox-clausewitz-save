@@ -1,22 +1,57 @@
+using MageeSoft.Paradox.Clausewitz.SaveReader.Parser;
 namespace MageeSoft.Paradox.Clausewitz.SaveReader.Reader.Games.Stellaris.Models;
 
 /// <summary>
-/// Represents a section of a ship's hull.
+/// Represents a ship hull section in the game state.
 /// </summary>
-public class ShipHullSection
+public record ShipHullSection
 {
     /// <summary>
-    /// Gets or sets the design of the section.
+    /// Gets or sets the template.
     /// </summary>
-    public string Design { get; set; } = string.Empty;
+    public required string Template { get; init; }
 
     /// <summary>
-    /// Gets or sets the slot where this section is placed.
+    /// Gets or sets the slot.
     /// </summary>
-    public string SectionSlot { get; set; } = string.Empty;
+    public required string Slot { get; init; }
 
     /// <summary>
-    /// Gets or sets the weapons in this section.
+    /// Default instance of ShipHullSection.
     /// </summary>
-    public IReadOnlyList<ShipWeapon> Weapons { get; set; } = new List<ShipWeapon>();
+    public static ShipHullSection Default => new()
+    {
+        Template = string.Empty,
+        Slot = string.Empty
+    };
+
+    /// <summary>
+    /// Loads a ship hull section from a SaveObject.
+    /// </summary>
+    /// <param name="saveObject">The SaveObject containing the ship hull section data.</param>
+    /// <returns>A new ShipHullSection instance.</returns>
+    public static ShipHullSection? Load(SaveObject saveObject)
+    {
+        string template;
+        string slot;
+
+        if (!saveObject.TryGetString("template", out template) ||
+            !saveObject.TryGetString("slot", out slot))
+        {
+            return null;
+        }
+
+        return new ShipHullSection
+        {
+            Template = template,
+            Slot = slot
+        };
+    }
 }
+
+
+
+
+
+
+

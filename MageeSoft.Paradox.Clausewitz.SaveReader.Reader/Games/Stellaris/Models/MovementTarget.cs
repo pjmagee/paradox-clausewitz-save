@@ -5,43 +5,57 @@ namespace MageeSoft.Paradox.Clausewitz.SaveReader.Reader.Games.Stellaris.Models;
 /// <summary>
 /// Represents a movement target in the game state.
 /// </summary>
-public class MovementTarget
+public record MovementTarget
 {
     /// <summary>
-    /// Gets or sets the target ID.
+    /// Gets or sets the coordinate.
     /// </summary>
-    public long Target { get; set; }
+    public required Coordinate Coordinate { get; init; }
 
     /// <summary>
-    /// Gets or sets the target type.
+    /// Creates a new instance of MovementTarget with default values.
     /// </summary>
-    public string Type { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Loads a movement target from a SaveElement.
-    /// </summary>
-    /// <param name="clausewitzElement">The SaveElement containing the movement target data.</param>
-    /// <returns>A new MovementTarget instance.</returns>
-    public static MovementTarget Load(SaveElement clausewitzElement)
+    public MovementTarget()
     {
-        var target = new MovementTarget();
-        var targetObj = clausewitzElement as SaveObject;
-        if (targetObj != null)
+        Coordinate = Coordinate.Default;
+    }
+
+    /// <summary>
+    /// Default instance of MovementTarget.
+    /// </summary>
+    public static MovementTarget Default { get; } = new()
+    {
+        Coordinate = Coordinate.Default
+    };
+
+    /// <summary>
+    /// Loads a movement target from a SaveObject.
+    /// </summary>
+    /// <param name="saveObject">The SaveObject containing the movement target data.</param>
+    /// <returns>A new MovementTarget instance.</returns>
+    public static MovementTarget? Load(SaveObject saveObject)
+    {
+        SaveObject? coordinateObj;
+        if (!saveObject.TryGetSaveObject("coordinate", out coordinateObj) || coordinateObj == null)
         {
-            foreach (var property in targetObj.Properties)
-            {
-                switch (property.Key)
-                {
-                    case "target" when property.Value is Scalar<long> targetScalar:
-                        target.Target = targetScalar.Value;
-                        break;
-                    case "type" when property.Value is Scalar<string> typeScalar:
-                        target.Type = typeScalar.Value;
-                        break;
-                }
-            }
+            return null;
         }
 
-        return target;
+        var coordinate = Coordinate.Load(coordinateObj);
+        if (coordinate == null)
+        {
+            return null;
+        }
+
+        return new MovementTarget
+        {
+            Coordinate = coordinate
+        };
     }
 }
+
+
+
+
+
+

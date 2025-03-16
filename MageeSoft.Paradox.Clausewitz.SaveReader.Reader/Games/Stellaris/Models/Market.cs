@@ -1,78 +1,133 @@
 using MageeSoft.Paradox.Clausewitz.SaveReader.Parser;
 using System.Collections.Immutable;
-using SaveArray = MageeSoft.Paradox.Clausewitz.SaveReader.Parser.SaveArray;
-using ValueType = MageeSoft.Paradox.Clausewitz.SaveReader.Parser.ValueType;
-using static MageeSoft.Paradox.Clausewitz.SaveReader.Reader.Games.Stellaris.Models.SaveObjectHelper;
 
 namespace MageeSoft.Paradox.Clausewitz.SaveReader.Reader.Games.Stellaris.Models;
 
+/// <summary>
+/// Represents a market in the game state.
+/// </summary>
 public record Market
 {
+    /// <summary>
+    /// Gets or sets the ID.
+    /// </summary>
     public required long Id { get; init; }
+
+    /// <summary>
+    /// Gets or sets the type.
+    /// </summary>
     public required string Type { get; init; }
-    public required int Owner { get; init; }
-    public required ImmutableDictionary<string, float> Resources { get; init; }
-    public required ImmutableDictionary<string, float> Prices { get; init; }
-    public required ImmutableDictionary<string, float> Demand { get; init; }
 
-    public static ImmutableArray<Market> Load(GameStateDocument document)
+    /// <summary>
+    /// Gets or sets the owner.
+    /// </summary>
+    public required Owner Owner { get; init; }
+
+    /// <summary>
+    /// Gets or sets the resources.
+    /// </summary>
+    public required ImmutableArray<MarketResource> Resources { get; init; }
+
+    /// <summary>
+    /// Gets or sets the orders.
+    /// </summary>
+    public required ImmutableArray<MarketOrder> Orders { get; init; }
+
+    /// <summary>
+    /// Gets or sets the history.
+    /// </summary>
+    public required ImmutableArray<MarketHistory> History { get; init; }
+
+    /// <summary>
+    /// Default instance of Market.
+    /// </summary>
+    public static Market Default => new()
     {
-        var builder = ImmutableArray.CreateBuilder<Market>();
-        
-        var marketsElement = (document.Root as SaveObject)?.Properties.FirstOrDefault(p => p.Key == "galactic_market");
+        Id = 0,
+        Type = string.Empty,
+        Owner = Owner.Default,
+        Resources = ImmutableArray<MarketResource>.Empty,
+        Orders = ImmutableArray<MarketOrder>.Empty,
+        History = ImmutableArray<MarketHistory>.Empty
+    };
 
-        if (marketsElement.HasValue)
+    /// <summary>
+    /// Loads a market from a SaveObject.
+    /// </summary>
+    /// <param name="saveObject">The SaveObject containing the market data.</param>
+    /// <returns>A new Market instance.</returns>
+    public static Market? Load(SaveObject saveObject)
+    {
+        long id;
+        string type;
+        Owner? owner;
+
+        if (!saveObject.TryGetLong("id", out id) ||
+            !saveObject.TryGetString("type", out type))
         {
-            var marketsObj = marketsElement.Value.Value as SaveObject;
-            if (marketsObj != null)
-            {
-                foreach (var marketElement in marketsObj.Properties)
-                {
-                    if (long.TryParse(marketElement.Key, out var marketId))
-                    {
-                        var obj = marketElement.Value as SaveObject;
-                        if (obj == null)
-                        {
-                            continue;
-                        }
-
-                        var type = GetScalarString(obj, "type");
-                        var owner = GetScalarInt(obj, "owner");
-
-                        var resources = GetObject(obj, "resources")?.Properties.ToImmutableDictionary(
-                            kvp => kvp.Key,
-                            kvp => (kvp.Value as Scalar<float>)?.Value ?? 0
-                        ) ?? ImmutableDictionary<string, float>.Empty;
-
-                        var prices = GetObject(obj, "prices")?.Properties.ToImmutableDictionary(
-                            kvp => kvp.Key,
-                            kvp => (kvp.Value as Scalar<float>)?.Value ?? 0
-                        ) ?? ImmutableDictionary<string, float>.Empty;
-
-                        var demand = GetObject(obj, "demand")?.Properties.ToImmutableDictionary(
-                            kvp => kvp.Key,
-                            kvp => (kvp.Value as Scalar<float>)?.Value ?? 0
-                        ) ?? ImmutableDictionary<string, float>.Empty;
-
-                        if (type == null)
-                        {
-                            continue;
-                        }
-
-                        builder.Add(new Market
-                        {
-                            Id = marketId,
-                            Type = type,
-                            Owner = owner,
-                            Resources = resources,
-                            Prices = prices,
-                            Demand = demand
-                        });
-                    }
-                }
-            }
+            return null;
         }
 
-        return builder.ToImmutable();
+        SaveObject? ownerObj;
+        if (!saveObject.TryGetSaveObject("owner", out ownerObj) || ownerObj == null ||
+            (owner = Owner.Load(ownerObj)) == null)
+        {
+            return null;
+        }
+
+        SaveObject? resourcesObj;
+        if (!saveObject.TryGetSaveObject("resources", out resourcesObj))
+        {
+            return null;
+        }
+
+        var resources = resourcesObj?.Properties
+            .Select(kvp => kvp.Value)
+            .OfType<SaveObject>()
+            .Select(MarketResource.Load)
+            .Where(resource => resource != null)
+            .ToImmutableArray() ?? ImmutableArray<MarketResource>.Empty;
+
+        SaveObject? ordersObj;
+        if (!saveObject.TryGetSaveObject("orders", out ordersObj))
+        {
+            return null;
+        }
+
+        var orders = ordersObj?.Properties
+            .Select(kvp => kvp.Value)
+            .OfType<SaveObject>()
+            .Select(MarketOrder.Load)
+            .Where(order => order != null)
+            .ToImmutableArray() ?? ImmutableArray<MarketOrder>.Empty;
+
+        SaveObject? historyObj;
+        if (!saveObject.TryGetSaveObject("history", out historyObj))
+        {
+            return null;
+        }
+
+        var history = historyObj?.Properties
+            .Select(kvp => kvp.Value)
+            .OfType<SaveObject>()
+            .Select(MarketHistory.Load)
+            .Where(history => history != null)
+            .ToImmutableArray() ?? ImmutableArray<MarketHistory>.Empty;
+
+        return new Market
+        {
+            Id = id,
+            Type = type,
+            Owner = owner,
+            Resources = resources!,
+            Orders = orders!,
+            History = history!
+        };
     }
 } 
+
+
+
+
+
+

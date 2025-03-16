@@ -5,101 +5,131 @@ namespace MageeSoft.Paradox.Clausewitz.SaveReader.Reader.Games.Stellaris.Models;
 /// <summary>
 /// Represents a fleet movement manager in the game state.
 /// </summary>
-public class FleetMovementManager
+public record FleetMovementManager
 {
     /// <summary>
     /// Gets or sets the movement target.
     /// </summary>
-    public MovementTarget MovementTarget { get; set; } = new();
+    public required MovementTarget MovementTarget { get; init; }
 
     /// <summary>
     /// Gets or sets the movement path.
     /// </summary>
-    public MovementPath MovementPath { get; set; } = new();
+    public required MovementPath MovementPath { get; init; }
 
     /// <summary>
     /// Gets or sets the movement formation.
     /// </summary>
-    public MovementFormation MovementFormation { get; set; } = new();
+    public required MovementFormation MovementFormation { get; init; }
 
     /// <summary>
     /// Gets or sets the formation position.
     /// </summary>
-    public FormationPosition FormationPosition { get; set; } = new();
+    public required FormationPosition FormationPosition { get; init; }
 
     /// <summary>
     /// Gets or sets the coordinate.
     /// </summary>
-    public Coordinate Coordinate { get; set; } = new();
+    public required Coordinate Coordinate { get; init; }
 
     /// <summary>
     /// Gets or sets the target.
     /// </summary>
-    public MovementTarget Target { get; set; } = new();
+    public required MovementTarget Target { get; init; }
 
     /// <summary>
     /// Gets or sets the target coordinate.
     /// </summary>
-    public Coordinate TargetCoordinate { get; set; } = new();
+    public required Coordinate TargetCoordinate { get; init; }
 
     /// <summary>
     /// Gets or sets the movement state.
     /// </summary>
-    public string State { get; set; } = string.Empty;
+    public required string State { get; init; }
 
     /// <summary>
     /// Gets or sets the orbit information.
     /// </summary>
-    public Orbit Orbit { get; set; } = new();
+    public required Orbit Orbit { get; init; }
 
     /// <summary>
     /// Gets or sets the last FTL jump information.
     /// </summary>
-    public FtlJump LastFtlJump { get; set; } = new();
-
-    public string MovementState { get; set; } = string.Empty;
-    public string MovementType { get; set; } = string.Empty;
-    public string MovementMode { get; set; } = string.Empty;
-    public string MovementAction { get; set; } = string.Empty;
-    public string MovementActionState { get; set; } = string.Empty;
-    public string MovementActionType { get; set; } = string.Empty;
-    public string MovementActionTarget { get; set; } = string.Empty;
-    public string MovementActionTargetType { get; set; } = string.Empty;
-    public string MovementActionTargetMode { get; set; } = string.Empty;
-    public string MovementActionTargetState { get; set; } = string.Empty;
-    public string MovementActionTargetAction { get; set; } = string.Empty;
-    public string MovementActionTargetActionType { get; set; } = string.Empty;
-    public string MovementActionTargetActionMode { get; set; } = string.Empty;
-    public string MovementActionTargetActionState { get; set; } = string.Empty;
+    public required FtlJump LastFtlJump { get; init; }
 
     /// <summary>
-    /// Loads a fleet movement manager from a SaveObject.
+    /// Gets or sets the movement state.
     /// </summary>
-    /// <param name="saveObject">The SaveObject containing the fleet movement manager data.</param>
-    /// <returns>A new FleetMovementManager instance.</returns>
-    public static FleetMovementManager Load(SaveObject saveObject)
-    {
-        var manager = new FleetMovementManager();
+    public required string MovementState { get; init; }
 
-        foreach (var property in saveObject.Properties)
-        {
-            switch (property.Key)
-            {
-                case "movement_target" when property.Value is SaveObject targetObj:
-                    manager.MovementTarget = MovementTarget.Load(targetObj);
-                    break;
-                case "movement_path" when property.Value is SaveObject pathObj:
-                    manager.MovementPath = MovementPath.Load(pathObj);
-                    break;
-                case "movement_formation" when property.Value is SaveObject formationObj:
-                    manager.MovementFormation = MovementFormation.Load(formationObj);
-                    break;
-                case "formation_position" when property.Value is SaveObject positionObj:
-                    manager.FormationPosition = FormationPosition.Load(positionObj);
-                    break;
-            }
-        }
+    /// <summary>
+    /// Gets or sets the movement type.
+    /// </summary>
+    public required string MovementType { get; init; }
 
-        return manager;
-    }
+    /// <summary>
+    /// Gets or sets the movement mode.
+    /// </summary>
+    public required string MovementMode { get; init; }
+
+    /// <summary>
+    /// Gets or sets the movement action.
+    /// </summary>
+    public required string MovementAction { get; init; }
+
+    /// <summary>
+    /// Gets or sets the movement action state.
+    /// </summary>
+    public required string MovementActionState { get; init; }
+
+    /// <summary>
+    /// Gets or sets the movement action type.
+    /// </summary>
+    public required string MovementActionType { get; init; }
+
+    /// <summary>
+    /// Gets or sets the movement action target.
+    /// </summary>
+    public required string MovementActionTarget { get; init; }
+
+    /// <summary>
+    /// Gets or sets the movement action target type.
+    /// </summary>
+    public required string MovementActionTargetType { get; init; }
+
+    /// <summary>
+    /// Gets or sets the movement action target mode.
+    /// </summary>
+    public required string MovementActionTargetMode { get; init; }
+
+    /// <summary>
+    /// Gets or sets the movement action target state.
+    /// </summary>
+    public required string MovementActionTargetState { get; init; }
+
+    /// <summary>
+    /// Gets or sets the movement action target action.
+    /// </summary>
+    public required string MovementActionTargetAction { get; init; }
+
+    /// <summary>
+    /// Gets or sets the movement action target action type.
+    /// </summary>
+    public required string MovementActionTargetActionType { get; init; }
+
+    /// <summary>
+    /// Gets or sets the movement action target action mode.
+    /// </summary>
+    public required string MovementActionTargetActionMode { get; init; }
+
+    /// <summary>
+    /// Gets or sets the movement action target action state.
+    /// </summary>
+    public required string MovementActionTargetActionState { get; init; }
 }
+
+
+
+
+
+

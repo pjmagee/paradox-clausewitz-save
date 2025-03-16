@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>MageeSoft.Paradox.Clausewitz.SaveReader.Model</AssemblyName>
+    <RootNamespace>MageeSoft.Paradox.Clausewitz.SaveReader.Model</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MageeSoft.Paradox.Clausewitz.SaveReader.Parser\MageeSoft.Paradox.Clausewitz.SaveReader.Parser.csproj" />
+  </ItemGroup>
+
+</Project> 

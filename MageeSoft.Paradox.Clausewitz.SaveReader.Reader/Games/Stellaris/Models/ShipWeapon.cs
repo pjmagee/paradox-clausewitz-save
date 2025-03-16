@@ -1,22 +1,58 @@
+using MageeSoft.Paradox.Clausewitz.SaveReader.Parser;
+
 namespace MageeSoft.Paradox.Clausewitz.SaveReader.Reader.Games.Stellaris.Models;
 
 /// <summary>
-/// Represents a weapon in a ship section.
+/// Represents a ship weapon in the game state.
 /// </summary>
-public class ShipWeapon
+public record ShipWeapon
 {
     /// <summary>
-    /// Gets or sets the index of the weapon.
+    /// Gets or sets the name.
     /// </summary>
-    public int Index { get; set; }
+    public required string Name { get; init; }
 
     /// <summary>
-    /// Gets or sets the template of the weapon.
+    /// Gets or sets the template.
     /// </summary>
-    public string Template { get; set; } = string.Empty;
+    public required string Template { get; init; }
 
     /// <summary>
-    /// Gets or sets the component slot where this weapon is placed.
+    /// Default instance of ShipWeapon.
     /// </summary>
-    public string WeaponSlot { get; set; } = string.Empty;
+    public static ShipWeapon Default => new()
+    {
+        Name = string.Empty,
+        Template = string.Empty
+    };
+
+    /// <summary>
+    /// Loads a ship weapon from a SaveObject.
+    /// </summary>
+    /// <param name="saveObject">The SaveObject containing the ship weapon data.</param>
+    /// <returns>A new ShipWeapon instance.</returns>
+    public static ShipWeapon? Load(SaveObject saveObject)
+    {
+        string name;
+        string template;
+
+        if (!saveObject.TryGetString("name", out name) ||
+            !saveObject.TryGetString("template", out template))
+        {
+            return null;
+        }
+
+        return new ShipWeapon
+        {
+            Name = name,
+            Template = template
+        };
+    }
 }
+
+
+
+
+
+
+

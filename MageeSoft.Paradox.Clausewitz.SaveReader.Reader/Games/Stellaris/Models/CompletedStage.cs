@@ -5,46 +5,44 @@ namespace MageeSoft.Paradox.Clausewitz.SaveReader.Reader.Games.Stellaris.Models;
 /// <summary>
 /// Represents a completed stage in first contact.
 /// </summary>
-public class CompletedStage
+public record CompletedStage
 {
     /// <summary>
     /// Gets or sets the date when the stage was completed.
     /// </summary>
-    public string Date { get; set; } = string.Empty;
+    public required string Date { get; init; }
 
     /// <summary>
     /// Gets or sets the stage name.
     /// </summary>
-    public string Stage { get; set; } = string.Empty;
+    public required string Stage { get; init; }
 
     /// <summary>
-    /// Loads a completed stage from a ClausewitzObject.
+    /// Default instance of CompletedStage.
     /// </summary>
-    /// <param name="element">The ClausewitzObject containing the completed stage data.</param>
-    /// <returns>A new CompletedStage instance.</returns>
-    public static CompletedStage Load(SaveObject element)
+    public static CompletedStage Default => new()
     {
-        var stage = new CompletedStage();
+        Date = "2200.01.01",
+        Stage = string.Empty
+    };
 
-        foreach (var property in element.Properties)
+    /// <summary>
+    /// Loads a completed stage from a SaveObject.
+    /// </summary>
+    /// <param name="saveObject">The SaveObject containing the completed stage data.</param>
+    /// <returns>A new CompletedStage instance with default values if properties are missing. The date defaults to "2200.01.01" and stage defaults to empty string.</returns>
+    public static CompletedStage Load(SaveObject saveObject)
+    {
+        return new CompletedStage
         {
-            switch (property.Key)
-            {
-                case "date" when property.Value is Scalar<string> dateScalar:
-                    stage.Date = dateScalar.RawText;
-                    break;
-                case "stage" when property.Value is Scalar<string> stageScalar:
-                    stage.Stage = stageScalar.Value;
-                    break;
-            }
-        }
-
-        // Set a default date if it's empty
-        if (string.IsNullOrEmpty(stage.Date))
-        {
-            stage.Date = "2200.01.01";
-        }
-
-        return stage;
+            Date = saveObject.TryGetString("date", out var date) ? date : "2200.01.01",
+            Stage = saveObject.TryGetString("stage", out var stage) ? stage : string.Empty
+        };
     }
 }
+
+
+
+
+
+

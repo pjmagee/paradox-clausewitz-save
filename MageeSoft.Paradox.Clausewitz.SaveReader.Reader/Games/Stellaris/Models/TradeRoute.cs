@@ -1,67 +1,90 @@
 using MageeSoft.Paradox.Clausewitz.SaveReader.Parser;
 using System.Collections.Immutable;
-using SaveArray = MageeSoft.Paradox.Clausewitz.SaveReader.Parser.SaveArray;
-using ValueType = MageeSoft.Paradox.Clausewitz.SaveReader.Parser.ValueType;
-using static MageeSoft.Paradox.Clausewitz.SaveReader.Reader.Games.Stellaris.Models.SaveObjectHelper;
 
 namespace MageeSoft.Paradox.Clausewitz.SaveReader.Reader.Games.Stellaris.Models;
 
+/// <summary>
+/// Represents a trade route in the game state.
+/// </summary>
 public record TradeRoute
 {
+    /// <summary>
+    /// Gets or sets the ID.
+    /// </summary>
     public required long Id { get; init; }
-    public required string Type { get; init; }
-    public required int Source { get; init; }
-    public required int Destination { get; init; }
-    public required ImmutableDictionary<string, int> Resources { get; init; }
 
-    public static ImmutableArray<TradeRoute> Load(GameSaveDocuments documents)
+    /// <summary>
+    /// Gets or sets the owner.
+    /// </summary>
+    public required Owner Owner { get; init; }
+
+    /// <summary>
+    /// Gets or sets the path.
+    /// </summary>
+    public required ImmutableArray<Position> Path { get; init; }
+
+    /// <summary>
+    /// Default instance of TradeRoute.
+    /// </summary>
+    public static TradeRoute Default => new()
     {
-        var builder = ImmutableArray.CreateBuilder<TradeRoute>();
-        var routesElement = (documents.GameState.Root as SaveObject)?.Properties
-            .FirstOrDefault(p => p.Key == "trade_routes");
+        Id = 0,
+        Owner = Owner.Default,
+        Path = ImmutableArray<Position>.Empty
+    };
 
-        if (routesElement.HasValue)
+    /// <summary>
+    /// Loads a trade route from a SaveObject.
+    /// </summary>
+    /// <param name="saveObject">The SaveObject containing the trade route data.</param>
+    /// <returns>A new TradeRoute instance.</returns>
+    public static TradeRoute? Load(SaveObject saveObject)
+    {
+        if (!saveObject.TryGetLong("id", out var id))
         {
-            var routesObj = routesElement.Value.Value as SaveObject;
-            if (routesObj != null)
+            return null;
+        }
+
+        if (!saveObject.TryGetSaveObject("owner", out var ownerObj))
+        {
+            return null;
+        }
+
+        var owner = Owner.Load(ownerObj);
+        if (owner == null)
+        {
+            return null;
+        }
+
+        var path = ImmutableArray<Position>.Empty;
+        if (saveObject.TryGetSaveArray("path", out var pathArray))
+        {
+            var builder = ImmutableArray.CreateBuilder<Position>();
+            foreach (var element in pathArray.Elements())
             {
-                foreach (var routeElement in routesObj.Properties)
+                if (element is SaveObject obj)
                 {
-                    if (long.TryParse(routeElement.Key, out var routeId))
+                    var position = Position.Load(obj);
+                    if (position != null)
                     {
-                        var obj = routeElement.Value as SaveObject;
-                        if (obj == null)
-                        {
-                            continue;
-                        }
-
-                        var type = GetScalarString(obj, "type");
-                        var source = GetScalarInt(obj, "source");
-                        var destination = GetScalarInt(obj, "destination");
-                        
-                        var resources = GetObject(obj, "resources")?.Properties.ToImmutableDictionary(
-                            kvp => kvp.Key,
-                            kvp => (kvp.Value as Scalar<int>)?.Value ?? 0
-                        ) ?? ImmutableDictionary<string, int>.Empty;
-
-                        if (type == null)
-                        {
-                            continue;
-                        }
-
-                        builder.Add(new TradeRoute
-                        {
-                            Id = routeId,
-                            Type = type,
-                            Source = source,
-                            Destination = destination,
-                            Resources = resources
-                        });
+                        builder.Add(position);
                     }
                 }
             }
+            path = builder.ToImmutable();
         }
 
-        return builder.ToImmutable();
+        return new TradeRoute
+        {
+            Id = id,
+            Owner = owner,
+            Path = path
+        };
     }
 } 
+
+
+
+
+
+

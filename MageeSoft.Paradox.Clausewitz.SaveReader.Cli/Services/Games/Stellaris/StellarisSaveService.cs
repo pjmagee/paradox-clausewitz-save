@@ -37,7 +37,7 @@ public class StellarisSaveService(ILogger<StellarisSaveService> logger) : BaseGa
             var documents = zip.GetDocuments();
             
             // Extract meta information
-            var meta = documents.Meta.Root as SaveObject;
+            var meta = documents.MetaDocument.Root as SaveObject;
             var version = GetPropertyValue(meta, "version");
             var date = GetPropertyValue(meta, "date");
             var name = GetPropertyValue(meta, "name");
@@ -46,7 +46,7 @@ public class StellarisSaveService(ILogger<StellarisSaveService> logger) : BaseGa
             var metaPlanets = GetPropertyValue(meta, "meta_planets");
             
             // Extract gamestate information
-            var gamestate = documents.GameState.Root as SaveObject;
+            var gamestate = documents.GameStateDocument.Root as SaveObject;
             var topLevelKeys = gamestate?.Properties.Select(p => p.Key).ToList() ?? new List<string>();
             
             return new StellarisSaveSummary

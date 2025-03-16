@@ -5,51 +5,66 @@ namespace MageeSoft.Paradox.Clausewitz.SaveReader.Reader.Games.Stellaris.Models;
 /// <summary>
 /// Represents an orbit in the game state.
 /// </summary>
-public class Orbit
+public record Orbit
 {
     /// <summary>
-    /// Gets or sets the orbitable ID.
+    /// Gets or sets the orbitable.
     /// </summary>
-    public long Orbitable { get; set; }
+    public required Orbitable Orbitable { get; init; }
 
     /// <summary>
-    /// Gets or sets the planet ID.
+    /// Gets or sets the index.
     /// </summary>
-    public long Planet { get; set; }
+    public required int Index { get; init; }
 
     /// <summary>
-    /// Gets or sets the orbit index.
+    /// Default instance of Orbit.
     /// </summary>
-    public int Index { get; set; }
-
-    /// <summary>
-    /// Loads an orbit from a SaveElement.
-    /// </summary>
-    /// <param name="clausewitzElement">The SaveElement containing the orbit data.</param>
-    /// <returns>A new Orbit instance.</returns>
-    public static Orbit Load(SaveElement clausewitzElement)
+    public static Orbit Default => new()
     {
-        var orbit = new Orbit();
-        var orbitObj = clausewitzElement as SaveObject;
-        if (orbitObj != null)
+        Orbitable = Orbitable.Default,
+        Index = -1
+    };
+
+    /// <summary>
+    /// Loads an orbit from a SaveObject.
+    /// </summary>
+    /// <param name="saveObject">The SaveObject containing the orbit data.</param>
+    /// <returns>A new Orbit instance.</returns>
+    public static Orbit? Load(SaveObject saveObject)
+    {
+        if (saveObject.Properties.Length == 0)
         {
-            foreach (var property in orbitObj.Properties)
-            {
-                switch (property.Key)
-                {
-                    case "orbitable" when property.Value is Scalar<long> orbitableScalar:
-                        orbit.Orbitable = orbitableScalar.Value;
-                        break;
-                    case "planet" when property.Value is Scalar<long> planetScalar:
-                        orbit.Planet = planetScalar.Value;
-                        break;
-                    case "index" when property.Value is Scalar<int> indexScalar:
-                        orbit.Index = indexScalar.Value;
-                        break;
-                }
-            }
+            return Default;
         }
 
-        return orbit;
+        SaveObject? orbitableObj;
+        if (!saveObject.TryGetSaveObject("orbitable", out orbitableObj) || orbitableObj == null)
+        {
+            return null;
+        }
+        var orbitable = Orbitable.Load(orbitableObj);
+        if (orbitable == null)
+        {
+            return null;
+        }
+
+        int index = -1;
+        if (!saveObject.TryGetInt("index", out index))
+        {
+            index = -1;
+        }
+
+        return new Orbit
+        {
+            Orbitable = orbitable,
+            Index = index
+        };
     }
 }
+
+
+
+
+
+

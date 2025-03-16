@@ -1,92 +1,68 @@
 using MageeSoft.Paradox.Clausewitz.SaveReader.Parser;
 using System.Collections.Immutable;
-using SaveArray = MageeSoft.Paradox.Clausewitz.SaveReader.Parser.SaveArray;
-using ValueType = MageeSoft.Paradox.Clausewitz.SaveReader.Parser.ValueType;
-using static MageeSoft.Paradox.Clausewitz.SaveReader.Reader.Games.Stellaris.Models.SaveObjectHelper;
+using MageeSoft.Paradox.Clausewitz.SaveReader.Model.Attributes;
 
 namespace MageeSoft.Paradox.Clausewitz.SaveReader.Reader.Games.Stellaris.Models;
 
 /// <summary>
 /// Represents a fleet in the game state.
 /// </summary>
-public record Fleet
+public class Fleet
 {
-    /// <summary>
-    /// Gets or sets the fleet ID.
-    /// </summary>
-    public required long Id { get; init; }
+    [SaveProperty("name")]
+    public LocalizedText Name { get; init; }
+    
+    [SaveProperty("ships")]
+    public int[] Ships { get; init; }
 
-    /// <summary>
-    /// Gets or sets the type of the fleet.
-    /// </summary>
-    public required string Type { get; init; }
+    [SaveProperty("combat")]
+    public Combat Combat { get; init; }
 
-    /// <summary>
-    /// Gets or sets the owner ID of the fleet.
-    /// </summary>
-    public required int OwnerId { get; init; }
+    [SaveProperty("fleet_stats")]
+    public FleetStats FleetStats { get; init; }
 
-    /// <summary>
-    /// Gets or sets the position of the fleet.
-    /// </summary>
-    public required Coordinate Position { get; init; }
+    [SaveProperty("station")]
+    public required bool IsStation { get; init; }
 
-    /// <summary>
-    /// Gets or sets the ships in the fleet.
-    /// </summary>
-    public required ImmutableArray<Ship> Ships { get; init; }
+    [SaveProperty("ground_support_stance")]
+    public required string GroundSupportStance { get; init; }
 
-    /// <summary>
-    /// Loads all fleets from the game state.
-    /// </summary>
-    /// <param name="gameState">The game state root object to load from.</param>
-    /// <returns>An immutable array of fleets.</returns>
-    public static ImmutableArray<Fleet> Load(SaveObject gameState)
-    {
-        ArgumentNullException.ThrowIfNull(gameState, nameof(gameState));
-        
-        var builder = ImmutableArray.CreateBuilder<Fleet>();
-        var fleetsElement = gameState.Properties.FirstOrDefault(p => p.Key == "fleets");
+    [SaveProperty("space_fauna_growth_stance")]
+    public required string SpaceFaunaGrowthStance { get; init; }
 
-        var fleetsObj = fleetsElement.Value as SaveObject;
-        if (fleetsObj != null)
-        {
-            foreach (var fleetElement in fleetsObj.Properties)
-            {
-                if (long.TryParse(fleetElement.Key, out var fleetId))
-                {
-                    var obj = fleetElement.Value as SaveObject;
-                    if (obj == null)
-                    {
-                        continue;
-                    }
+    [SaveProperty("mia_from")]
+    public required Position MiaFrom { get; init; }
 
-                    var type = GetScalarString(obj, "type");
-                    var ownerId = GetScalarInt(obj, "owner");
-                    var position = Coordinate.Load(GetObject(obj, "coordinate"));
-                        
-                    var ships = GetArray(obj, "ships")?.Items
-                        .OfType<Scalar<int>>()
-                        .Select(s => Ship.Load(gameState).First(ship => ship.Id == s.Value))
-                        .ToImmutableArray() ?? ImmutableArray<Ship>.Empty;
+    [SaveProperty("movement_manager")]
+    public required FleetMovementManager MovementManager { get; init; }
 
-                    if (type == null || position == null)
-                    {
-                        continue;
-                    }
+    [SaveProperty("hit_points")]
+    public required float HitPoints { get; init; }
 
-                    builder.Add(new Fleet
-                    {
-                        Id = fleetId,
-                        Type = type,
-                        OwnerId = ownerId,
-                        Position = position,
-                        Ships = ships
-                    });
-                }
-            }
-        }
+    [SaveProperty("military_power")]
+    public required float MilitaryPower { get; init; }
+    
+    [SaveProperty("diplomacy_weight")]
+    public required float DiplomacyWeight { get; init; }
 
-        return builder.ToImmutable();
-    }
+    [SaveProperty("cached_killed_ships")]
+    public required int CachedKilledShips { get; init; }
+
+    [SaveProperty("cached_disabled_ships")]
+    public required int CachedDisabledShips { get; init; }
+
+    [SaveProperty("cached_disengaged_ships")]
+    public required int CachedDisengagedShips { get; init; }
+
+    [SaveProperty("cached_combined_removed_ships")]
+    public required int CachedCombinedRemovedShips { get; init; }
+
+    [SaveProperty("can_take_orders")]
+    public required bool CanTakeOrders { get; init; }
 }
+
+
+
+
+
+
