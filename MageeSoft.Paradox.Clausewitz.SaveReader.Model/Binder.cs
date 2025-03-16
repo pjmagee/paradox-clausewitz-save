@@ -37,39 +37,36 @@ public static class Binder
                         .Select(kvp => kvp.Value)
                         .ToList();
 
-                    if (matchingProperties.Any())
+                    var elementType = prop.PropertyType.IsArray
+                        ? prop.PropertyType.GetElementType()
+                        : prop.PropertyType.GetGenericArguments().FirstOrDefault();
+
+                    if (elementType != null)
                     {
-                        var elementType = prop.PropertyType.IsArray
-                            ? prop.PropertyType.GetElementType()
-                            : prop.PropertyType.GetGenericArguments().FirstOrDefault();
+                        var list = (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(elementType))!;
 
-                        if (elementType != null)
+                        foreach (var item in matchingProperties)
                         {
-                            var list = (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(elementType))!;
-
-                            foreach (var item in matchingProperties)
+                            if (item is SaveObject itemObject)
                             {
-                                if (item is SaveObject itemObject)
-                                {
-                                    var bindMethod = typeof(Binder).GetMethod(nameof(Bind))!;
-                                    var nestedItem = bindMethod.MakeGenericMethod(elementType).Invoke(null, [itemObject]);
-                                    list.Add(nestedItem);
-                                }
-                                else if (item is Scalar<string> strScalar && strScalar.Value == "none")
-                                {
-                                    // Handle "none" value by creating an empty instance
-                                    var emptyInstance = Activator.CreateInstance(elementType);
-                                    list.Add(emptyInstance);
-                                }
+                                var bindMethod = typeof(Binder).GetMethod(nameof(Bind))!;
+                                var nestedItem = bindMethod.MakeGenericMethod(elementType).Invoke(null, [itemObject]);
+                                list.Add(nestedItem);
                             }
-
-                            if (prop.PropertyType.IsArray)
-                                prop.SetValue(instance, list.GetType().GetMethod("ToArray")!.Invoke(list, null));
-                            else
-                                prop.SetValue(instance, list);
+                            else if (item is Scalar<string> strScalar && strScalar.Value == "none")
+                            {
+                                // Handle "none" value by creating an empty instance
+                                var emptyInstance = Activator.CreateInstance(elementType);
+                                list.Add(emptyInstance);
+                            }
                         }
-                        continue;
+
+                        if (prop.PropertyType.IsArray)
+                            prop.SetValue(instance, list.GetType().GetMethod("ToArray")!.Invoke(list, null));
+                        else
+                            prop.SetValue(instance, list);
                     }
+                    continue;
                 }
 
                 if (saveObject.TryGetSaveObject(propertyName, out var nestedObject))
@@ -144,8 +141,9 @@ public static class Binder
                 }
             }
 
-            if (saveArrayAttribute != null && saveObject.TryGetSaveArray(saveArrayAttribute.Name, out var array))
+            if (saveArrayAttribute != null)
             {
+                string arrayName = saveArrayAttribute.Name;
                 var elementType = prop.PropertyType.IsArray
                     ? prop.PropertyType.GetElementType()
                     : prop.PropertyType.GetGenericArguments().FirstOrDefault();
@@ -154,29 +152,57 @@ public static class Binder
                 {
                     var list = (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(elementType))!;
 
-                    foreach (var item in array.Items)
+                    // First try to get it as a SaveArray
+                    if (saveObject.TryGetSaveArray(arrayName, out var array))
                     {
-                        if (item is Scalar<int> intScalar)
+                        foreach (var item in array.Items)
                         {
-                            list.Add(Convert.ChangeType(intScalar.Value, elementType));
+                            if (item is Scalar<int> intScalar)
+                            {
+                                list.Add(Convert.ChangeType(intScalar.Value, elementType));
+                            }
+                            else if (item is Scalar<long> longScalar)
+                            {
+                                list.Add(Convert.ChangeType(longScalar.Value, elementType));
+                            }
+                            else if (item is Scalar<float> floatScalar)
+                            {
+                                list.Add(Convert.ChangeType(floatScalar.Value, elementType));
+                            }
+                            else if (item is Scalar<string> strScalar)
+                            {
+                                list.Add(Convert.ChangeType(strScalar.Value, elementType));
+                            }
+                            else if (item is SaveObject objItem)
+                            {
+                                var bindMethod = typeof(Binder).GetMethod(nameof(Bind))!;
+                                var nestedItem = bindMethod.MakeGenericMethod(elementType).Invoke(null, [objItem]);
+                                list.Add(nestedItem);
+                            }
                         }
-                        else if (item is Scalar<long> longScalar)
+                    }
+                    // If not found as SaveArray, try to get multiple properties with the same name
+                    else
+                    {
+                        var matchingProperties = saveObject.Properties
+                            .Where(kvp => kvp.Key == arrayName)
+                            .Select(kvp => kvp.Value)
+                            .ToList();
+
+                        foreach (var item in matchingProperties)
                         {
-                            list.Add(Convert.ChangeType(longScalar.Value, elementType));
-                        }
-                        else if (item is Scalar<float> floatScalar)
-                        {
-                            list.Add(Convert.ChangeType(floatScalar.Value, elementType));
-                        }
-                        else if (item is Scalar<string> strScalar)
-                        {
-                            list.Add(Convert.ChangeType(strScalar.Value, elementType));
-                        }
-                        else if (item is SaveObject objItem)
-                        {
-                            var bindMethod = typeof(Binder).GetMethod(nameof(Bind))!;
-                            var nestedItem = bindMethod.MakeGenericMethod(elementType).Invoke(null, [objItem]);
-                            list.Add(nestedItem);
+                            if (item is SaveObject objItem)
+                            {
+                                var bindMethod = typeof(Binder).GetMethod(nameof(Bind))!;
+                                var nestedItem = bindMethod.MakeGenericMethod(elementType).Invoke(null, [objItem]);
+                                list.Add(nestedItem);
+                            }
+                            else if (item is Scalar<string> strScalar && strScalar.Value == "none")
+                            {
+                                // Handle "none" value by creating an empty instance
+                                var emptyInstance = Activator.CreateInstance(elementType);
+                                list.Add(emptyInstance);
+                            }
                         }
                     }
 

@@ -131,13 +131,13 @@ public class BinderTests
         public string Slot { get; set; } = "";
 
         [SaveArray("weapon")]
-        public List<WeaponData> Weapons { get; set; } = [];
+        public WeaponData[] Weapons { get; set; }
     }
 
     private class ShipData
     {
         [SaveArray("section")]
-        public List<SectionData> Sections { get; set; } = [];
+        public SectionData[] Sections { get; set; }
     }
 
     private class RepeatedPropertyModel
@@ -338,13 +338,13 @@ public class BinderTests
         var result = Binder.Bind<ShipData>(saveObject);
 
         Assert.IsNotNull(result);
-        Assert.AreEqual(3, result.Sections.Count);
+        Assert.AreEqual(3, result.Sections.Length);
 
         // Check first section
         var section1 = result.Sections[0];
         Assert.AreEqual("STARHOLD_STARBASE_SECTION", section1.Design);
         Assert.AreEqual("core", section1.Slot);
-        Assert.AreEqual(2, section1.Weapons.Count);
+        Assert.AreEqual(2, section1.Weapons.Length);
 
         var weapon1 = section1.Weapons[0];
         Assert.AreEqual(47, weapon1.Index);
@@ -360,13 +360,13 @@ public class BinderTests
         var section2 = result.Sections[1];
         Assert.AreEqual("ASSEMBLYYARD_STARBASE_SECTION", section2.Design);
         Assert.AreEqual("1", section2.Slot);
-        Assert.AreEqual(0, section2.Weapons.Count);
+        Assert.AreEqual(0, section2.Weapons.Length);
 
         // Check third section
         var section3 = result.Sections[2];
         Assert.AreEqual("REFINERY_STARBASE_SECTION", section3.Design);
         Assert.AreEqual("2", section3.Slot);
-        Assert.AreEqual(0, section3.Weapons.Count);
+        Assert.AreEqual(0, section3.Weapons.Length);
     }
 
     [TestMethod]

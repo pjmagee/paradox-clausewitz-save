@@ -1,7 +1,7 @@
 using MageeSoft.Paradox.Clausewitz.SaveReader.Parser;
 using MageeSoft.Paradox.Clausewitz.SaveReader.Reader;
 
-namespace MageeSoft.Paradox.Clausewitz.SaveReader.Tests.Stellaris.GameState;
+namespace MageeSoft.Paradox.Clausewitz.SaveReader.Tests.Stellaris.Common;
 
 [TestClass]
 public class GameStateDocumentTests

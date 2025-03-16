@@ -2,7 +2,7 @@ using System.IO.Compression;
 using MageeSoft.Paradox.Clausewitz.SaveReader.Parser;
 using MageeSoft.Paradox.Clausewitz.SaveReader.Reader.Games.Stellaris;
 
-namespace MageeSoft.Paradox.Clausewitz.SaveReader.Tests.Stellaris.Zip;
+namespace MageeSoft.Paradox.Clausewitz.SaveReader.Tests.Stellaris.Common;
 
 [TestClass]
 public class GameSaveZipTests
