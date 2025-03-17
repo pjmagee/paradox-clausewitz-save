@@ -3,6 +3,8 @@ using System.Collections.Immutable;
 using System.Reflection;
 using MageeSoft.Paradox.Clausewitz.SaveReader.Model.Attributes;
 using MageeSoft.Paradox.Clausewitz.SaveReader.Parser;
+using System.Globalization;
+using System.Text.RegularExpressions;
 
 namespace MageeSoft.Paradox.Clausewitz.SaveReader.Model;
 
@@ -17,32 +19,81 @@ public static class Binder
             );
     }
 
-    private static object? BindScalar(SaveObject saveObject, string propertyName, Type propertyType)
+    private static object? BindScalar(SaveElement element, Type targetType)
     {
-        var element = saveObject.Properties.FirstOrDefault(p => p.Key == propertyName).Value;
-        if (element == null)
-            return null;
+        // For nullable types, get the underlying type
+        Type nullableUnderlyingType = Nullable.GetUnderlyingType(targetType) ?? targetType;
 
-        if (element is SaveObject obj)
+        if (element is Scalar<string> stringScalar)
         {
-            var bindMethod = typeof(Binder).GetMethod(nameof(Bind))!;
-            return bindMethod.MakeGenericMethod(propertyType).Invoke(null, [obj]);
+            if (stringScalar.Value == "none")
+                return null;
+            if (nullableUnderlyingType == typeof(string))
+                return stringScalar.Value;           
         }
-        else if (element is SaveArray array)
+        else if (element is Scalar<int> intScalar)
         {
-            return BindArray(array, propertyType);
+            if (nullableUnderlyingType == typeof(int))
+                return intScalar.Value;
+            if (nullableUnderlyingType == typeof(float))
+                return (float)intScalar.Value;
+            if (nullableUnderlyingType == typeof(long))
+                return (long)intScalar.Value;
         }
-        else if (element is SaveElement scalar)
+        else if (element is Scalar<long> longScalar)
         {
-            return BindScalar(scalar, propertyType);
+            if (nullableUnderlyingType == typeof(long))
+                return longScalar.Value;
+            if (nullableUnderlyingType == typeof(int) && longScalar.Value <= int.MaxValue)
+                return (int)longScalar.Value;
+            if (nullableUnderlyingType == typeof(float))
+                return (float)longScalar.Value;
+        }
+        else if (element is Scalar<float> floatScalar)
+        {
+            if (nullableUnderlyingType == typeof(float))
+                return floatScalar.Value;
+            if (nullableUnderlyingType == typeof(int) && floatScalar.Value % 1 == 0)
+                return (int)floatScalar.Value;
+            if (nullableUnderlyingType == typeof(long) && floatScalar.Value % 1 == 0)
+                return (long)floatScalar.Value;
+        }
+        else if (element is Scalar<bool> boolScalar)
+        {
+            if (nullableUnderlyingType == typeof(bool))
+                return boolScalar.Value;
+        }
+        else if (element is Scalar<DateOnly> dateScalar)
+        {
+            if (nullableUnderlyingType == typeof(DateOnly))
+                return dateScalar.Value;
+        }
+        else if (element is Scalar<Guid> guidScalar)
+        {
+            if (nullableUnderlyingType == typeof(Guid))
+                return guidScalar.Value;
         }
 
         return null;
     }
 
+    private static object? BindScalar(SaveObject saveObject, string propertyName, Type targetType)
+    {
+        var prop = saveObject.Properties.FirstOrDefault(p => p.Key == propertyName);
+        if (prop.Value is SaveElement element)
+            return BindScalar(element, targetType);
+        return null;
+    }
+
     private static object? BindObject(SaveObject saveObject, string propertyName, Type propertyType)
     {
-        var obj = saveObject.Properties.FirstOrDefault(p => p.Key == propertyName).Value as SaveObject;
+        var prop = saveObject.Properties.FirstOrDefault(p => p.Key == propertyName);
+        
+        // Handle 'none' value
+        if (prop.Value != null && prop.Value.ToString() == "none")
+            return null;
+        
+        var obj = prop.Value as SaveObject;
         if (obj == null)
             return null;
 
@@ -56,23 +107,29 @@ public static class Binder
 
         foreach (var prop in saveObject.Properties)
         {
-            if (prop.Value is SaveObject itemObject)
+            if (prop.Value is SaveObject obj)
             {
                 var bindMethod = typeof(Binder).GetMethod(nameof(Bind))!;
-                var nestedItem = bindMethod.MakeGenericMethod(elementType).Invoke(null, [itemObject]);
-                if (nestedItem != null)
-                    list.Add(nestedItem);
+                var boundObject = bindMethod.MakeGenericMethod(elementType).Invoke(null, [obj]);
+                if (boundObject != null)
+                    list.Add(boundObject);
             }
-            else if (prop.Value is Scalar<string> strScalar && strScalar.Value == "none")
+            else if (prop.Value is SaveArray array)
             {
-                // Handle "none" value by creating an empty instance
-                var emptyInstance = Activator.CreateInstance(elementType);
-                if (emptyInstance != null)
-                    list.Add(emptyInstance);
+                var arrayValue = BindArray(array, elementType);
+                if (arrayValue != null)
+                    list.Add(arrayValue);
+            }
+            else
+            {
+                var scalarValue = BindScalar(prop.Value, elementType);
+                if (scalarValue != null)
+                    list.Add(scalarValue);
             }
         }
 
-        var toImmutableMethod = GetCreateRangeMethod(typeof(ImmutableList))
+        var toImmutableMethod = typeof(ImmutableList).GetMethods()
+            .First(m => m.Name == "CreateRange" && m.IsGenericMethod)
             .MakeGenericMethod(elementType);
 
         return toImmutableMethod.Invoke(null, [list]);
@@ -80,145 +137,57 @@ public static class Binder
 
     private static object? BindImmutableDictionary(SaveObject saveObject, Type keyType, Type valueType)
     {
-        var dictionary = (IDictionary)Activator.CreateInstance(typeof(Dictionary<,>).MakeGenericType(keyType, valueType))!;
+        var dictionaryType = typeof(Dictionary<,>).MakeGenericType(keyType, valueType);
+        var dictionary = (IDictionary)Activator.CreateInstance(dictionaryType)!;
 
         foreach (var prop in saveObject.Properties)
         {
-            if (prop.Value is SaveObject itemObject)
+            object? key = null;
+            try
             {
-                try
-                {
-                    var key = Convert.ChangeType(prop.Key, keyType);
-                    var bindMethod = typeof(Binder).GetMethod(nameof(Bind))!;
-                    var value = bindMethod.MakeGenericMethod(valueType).Invoke(null, [itemObject]);
-
-                    if (key != null && value != null)
-                        dictionary.Add(key, value);
-                }
-                catch (Exception)
-                {
-                    // Skip invalid conversions
-                    continue;
-                }
+                key = keyType == typeof(string) ? prop.Key : Convert.ChangeType(prop.Key, keyType);
             }
-            else if (prop.Value is Scalar<float> floatScalar)
+            catch
             {
-                try
-                {
-                    var key = Convert.ChangeType(prop.Key, keyType);
-                    var value = Convert.ChangeType(floatScalar.Value, valueType);
-
-                    if (key != null && value != null)
-                        dictionary.Add(key, value);
-                }
-                catch (Exception)
-                {
-                    // Skip invalid conversions
-                    continue;
-                }
+                continue; // Skip if key cannot be converted
             }
-            else if (prop.Value is Scalar<int> intScalar)
+
+            object? value = null;
+
+            if (prop.Value is SaveObject obj)
             {
-                try
-                {
-                    var key = Convert.ChangeType(prop.Key, keyType);
-                    var value = Convert.ChangeType(intScalar.Value, valueType);
-
-                    if (key != null && value != null)
-                        dictionary.Add(key, value);
-                }
-                catch (Exception)
-                {
-                    // Skip invalid conversions
-                    continue;
-                }
+                var bindMethod = typeof(Binder).GetMethod(nameof(Bind))!;
+                value = bindMethod.MakeGenericMethod(valueType).Invoke(null, [obj]);
             }
-            else if (prop.Value is Scalar<string> strScalar)
+            else if (prop.Value is SaveArray array)
             {
-                try
-                {
-                    var key = Convert.ChangeType(prop.Key, keyType);
-                    var value = Convert.ChangeType(strScalar.Value, valueType);
-
-                    if (key != null && value != null)
-                        dictionary.Add(key, value);
-                }
-                catch (Exception)
-                {
-                    // Skip invalid conversions
-                    continue;
-                }
+                value = BindArray(array, valueType);
             }
+            else if (prop.Value is SaveElement scalar)
+            {
+                value = BindScalar(scalar, valueType);
+            }
+
+            if (key != null && value != null)
+                dictionary.Add(key, value);
         }
 
-        var toImmutableMethod = GetCreateRangeMethod(typeof(ImmutableDictionary))
+        var toImmutableMethod = typeof(ImmutableDictionary).GetMethods()
+            .First(m => m.Name == "CreateRange" && m.IsGenericMethod)
             .MakeGenericMethod(keyType, valueType);
 
         return toImmutableMethod.Invoke(null, [dictionary]);
     }
 
-    private static object? BindScalar(SaveElement element, Type propertyType)
+    private static object? BindArray(SaveArray saveArray, Type targetType)
     {
-        switch (element.Type)
-        {
-            case SaveType.String:
-                if (element is Scalar<string> strScalar)
-                {
-                    var stringValue = strScalar.Value.Trim('"');
-                    if (propertyType == typeof(Guid))
-                    {
-                        if (Guid.TryParse(stringValue, out var guidValue))
-                            return guidValue;
-                        throw new InvalidCastException($"Cannot convert '{stringValue}' to GUID.");
-                    }
-                    return stringValue;
-                }
-                break;
-            case SaveType.Int32:
-                if (element is Scalar<int> intScalar)
-                    return intScalar.Value;
-
-                break;
-            case SaveType.Int64:
-                if (element is Scalar<long> longScalar)
-                    return longScalar.Value;
-
-                break;
-            case SaveType.Float:
-                if (element is Scalar<float> floatScalar)
-                    return floatScalar.Value;
-
-                break;
-            case SaveType.Bool:
-                if (element is Scalar<bool> boolScalar)
-                    return boolScalar.Value;
-
-                break;
-            case SaveType.Date:
-                if (element is Scalar<DateOnly> dateScalar)
-                    return dateScalar.Value;
-
-                break;
-                
-            case SaveType.Guid:
-                if (element is Scalar<Guid> guidScalar)
-                    return guidScalar.Value;
-                
-                break;
-        }
-
-        return null;
-    }
-
-    private static object? BindArray(SaveArray array, Type propertyType)
-    {
-        var elementType = propertyType.IsArray ? propertyType.GetElementType()! :
-            propertyType.IsGenericType ? propertyType.GetGenericArguments()[0] :
-            propertyType;
-
+        var elementType = targetType.IsArray ? targetType.GetElementType()! : targetType.GetGenericArguments()[0];
         var list = (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(elementType))!;
+        
+        // Check if this is a nullable reference type
+        bool isNullableElementType = !elementType.IsValueType || Nullable.GetUnderlyingType(elementType) != null;
 
-        foreach (var element in array.Elements())
+        foreach (var element in saveArray.Items)
         {
             if (element is SaveObject obj)
             {
@@ -226,276 +195,221 @@ public static class Binder
                 var boundObject = bindMethod.MakeGenericMethod(elementType).Invoke(null, [obj]);
                 if (boundObject != null)
                     list.Add(boundObject);
+                else if (isNullableElementType)
+                    list.Add(null!); // Add null for nullable types
             }
-            else if (element is SaveArray nestedArray)
+            else if (element is SaveArray array)
             {
-                var arrayValue = BindArray(nestedArray, elementType);
-                if (arrayValue != null)
-                    list.Add(arrayValue);
+                var value = BindArray(array, elementType);
+                if (value != null)
+                {
+                    if (value is IEnumerable enumerable && value.GetType() != elementType)
+                    {
+                        foreach (var item in enumerable)
+                            list.Add(item);
+                    }
+                    else
+                    {
+                        list.Add(value);
+                    }
+                }
             }
             else if (element is SaveElement scalar)
             {
-                var scalarValue = BindScalar(scalar, elementType);
-                if (scalarValue != null)
-                    list.Add(scalarValue);
+                if (scalar.ToString() == "none" && isNullableElementType)
+                {
+                    list.Add(null!); // Add null for 'none' with nullable element types
+                }
+                else if (scalar.ToString() != "none")
+                {
+                    var scalarValue = BindScalar(scalar, elementType);
+                    if (scalarValue != null)
+                        list.Add(scalarValue);
+                    else if (isNullableElementType)
+                        list.Add(null!);
+                }
+            }
+        }
+
+        if (targetType.IsArray)
+        {
+            var array = Array.CreateInstance(elementType, list.Count);
+            list.CopyTo(array, 0);
+            return array;
+        }
+        else if (targetType.IsGenericType)
+        {
+            var genericTypeDef = targetType.GetGenericTypeDefinition();
+            if (genericTypeDef == typeof(ImmutableArray<>))
+            {
+                var toImmutableMethod = typeof(ImmutableArray).GetMethods()
+                    .First(m => m.Name == "CreateRange" && m.IsGenericMethod)
+                    .MakeGenericMethod(elementType);
+                return toImmutableMethod.Invoke(null, [list]);
+            }
+            else if (genericTypeDef == typeof(ImmutableList<>))
+            {
+                var toImmutableMethod = typeof(ImmutableList).GetMethods()
+                    .First(m => m.Name == "CreateRange" && m.IsGenericMethod)
+                    .MakeGenericMethod(elementType);
+                return toImmutableMethod.Invoke(null, [list]);
+            }
+            else if (genericTypeDef == typeof(List<>))
+            {
+                return list;
+            }
+        }
+
+        return null;
+    }
+
+    private static object? BindArray(SaveObject saveObject, string propertyName, Type propertyType)
+    {
+        var elementType = propertyType.IsArray ? propertyType.GetElementType()! : propertyType.GetGenericArguments()[0];
+        var list = (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(elementType))!;
+        
+        // Check if this is a nullable reference type
+        bool isNullableElementType = !elementType.IsValueType || Nullable.GetUnderlyingType(elementType) != null;
+
+        foreach (var prop in saveObject.Properties.Where(p => p.Key == propertyName))
+        {
+            if (prop.Value is SaveObject obj)
+            {
+                var bindMethod = typeof(Binder).GetMethod(nameof(Bind))!;
+                var boundObject = bindMethod.MakeGenericMethod(elementType).Invoke(null, [obj]);
+                if (boundObject != null)
+                    list.Add(boundObject);
+                else if (isNullableElementType)
+                    list.Add(null!); // Add null for nullable types
+            }
+            else if (prop.Value is SaveArray array)
+            {
+                var value = BindArray(array, propertyType);
+                if (value != null)
+                {
+                    if (value is IEnumerable enumerable && value.GetType() != elementType)
+                    {
+                        foreach (var item in enumerable)
+                            list.Add(item);
+                    }
+                    else
+                    {
+                        list.Add(value);
+                    }
+                }
+            }
+            else if (prop.Value is SaveElement scalar)
+            {
+                if (scalar.ToString() == "none" && isNullableElementType)
+                {
+                    list.Add(null!); // Add null for 'none' with nullable element types
+                }
+                else if (scalar.ToString() != "none")
+                {
+                    var scalarValue = BindScalar(scalar, elementType);
+                    if (scalarValue != null)
+                        list.Add(scalarValue);
+                    else if (isNullableElementType)
+                        list.Add(null!);
+                }
             }
         }
 
         if (propertyType.IsArray)
         {
-            var arrayInstance = Array.CreateInstance(elementType, list.Count);
-
-            for (int i = 0; i < list.Count; i++)
-            {
-                arrayInstance.SetValue(list[i], i);
-            }
-
-            return arrayInstance;
+            var array = Array.CreateInstance(elementType, list.Count);
+            list.CopyTo(array, 0);
+            return array;
         }
         else if (propertyType.IsGenericType)
         {
             var genericTypeDef = propertyType.GetGenericTypeDefinition();
-
-            if (genericTypeDef == typeof(ImmutableList<>))
+            if (genericTypeDef == typeof(ImmutableArray<>))
             {
-                var createRangeMethod = typeof(ImmutableList).GetMethods()
-                    .First(m => m.Name == "CreateRange" && m.IsGenericMethod)
-                    .MakeGenericMethod(elementType);
-
-                var castMethod = typeof(Enumerable).GetMethod(nameof(Enumerable.Cast))!.MakeGenericMethod(elementType);
-                var castedItems = castMethod.Invoke(null, [
-                        list,
-                    ]
-                );
-
-                return createRangeMethod.Invoke(null, [
-                        castedItems,
-                    ]
-                );
-            }
-            else if (genericTypeDef == typeof(ImmutableArray<>))
-            {
-                var createRangeMethod = typeof(ImmutableArray)
-                    .GetMethods()
-                    .First(m => m.Name == "CreateRange" && m.IsGenericMethod)
-                    .MakeGenericMethod(elementType);
-
-                var castMethod = typeof(Enumerable).GetMethod(nameof(Enumerable.Cast))!.MakeGenericMethod(elementType);
-                var castedItems = castMethod.Invoke(null, [list,]);
-                return createRangeMethod.Invoke(null, [castedItems,]);
-            }
-            else if (genericTypeDef == typeof(ImmutableDictionary<,>))
-            {
-                var keyType = propertyType.GetGenericArguments()[0];
-                var valueType = propertyType.GetGenericArguments()[1];
-                var dictionary = new Dictionary<object, object>();
-
-                foreach (var item in list)
-                {
-                    if (item is SaveObject itemObj)
-                    {
-                        var key = itemObj.Properties.FirstOrDefault(p => p.Key == "key").Value;
-                        var value = itemObj.Properties.FirstOrDefault(p => p.Key == "value").Value;
-
-                        if (key != null && value != null)
-                        {
-                            var keyValue = BindScalar(key, keyType);
-                            var bindMethod = typeof(Binder).GetMethod(nameof(Bind))!;
-                            var boundValue = bindMethod.MakeGenericMethod(valueType).Invoke(null, [value]);
-
-                            if (keyValue != null && boundValue != null)
-                                dictionary[keyValue] = boundValue;
-                        }
-                    }
-                }
-
-                var toImmutableMethod = typeof(ImmutableDictionary).GetMethods()
-                    .First(m => m.Name == "CreateRange" && m.IsGenericMethod)
-                    .MakeGenericMethod(keyType, valueType);
-
-                var castMethod = typeof(Enumerable)
-                    .GetMethod(nameof(Enumerable.Cast))!
-                    .MakeGenericMethod(typeof(KeyValuePair<,>)
-                        .MakeGenericType(keyType, valueType));
-                
-                var castedItems = castMethod.Invoke(null, [dictionary,]);
-                return toImmutableMethod.Invoke(null, [castedItems,]);
-            }
-        }
-
-        return list;
-    }
-
-    private static object? BindArray(SaveObject saveObject, string propertyName, Type propertyType)
-    {
-        if (saveObject.Properties.FirstOrDefault(p => p.Key == propertyName).Value is not SaveArray array) return null;
-        return BindArray(array, propertyType);
-    }
-
-    public static T Bind<T>(SaveObject saveObject)
-    {
-        if (typeof(T).IsGenericType)
-        {
-            var genericTypeDef = typeof(T).GetGenericTypeDefinition();
-
-            if (genericTypeDef == typeof(ImmutableDictionary<,>))
-            {
-                var keyType = typeof(T).GetGenericArguments()[0];
-                var valueType = typeof(T).GetGenericArguments()[1];
-                var dictionary = new Dictionary<object, object>();
-
-                foreach (var prop in saveObject.Properties)
-                {
-                    if (prop.Value is SaveObject obj)
-                    {
-                        var bindMethod = typeof(Binder).GetMethod(nameof(Bind))!;
-                        var boundValue = bindMethod.MakeGenericMethod(valueType).Invoke(null, [obj]);
-
-                        if (boundValue != null)
-                        {
-                            var convertedKey = Convert.ChangeType(prop.Key, keyType);
-                            dictionary[convertedKey] = boundValue;
-                        }
-                    }
-                }
-
-                var toImmutableMethod = typeof(ImmutableDictionary).GetMethods()
-                    .First(m => m.Name == "CreateRange" && m.IsGenericMethod)
-                    .MakeGenericMethod(keyType, valueType);
-
-                var castMethod = typeof(Enumerable).GetMethod(nameof(Enumerable.Cast))!.MakeGenericMethod(typeof(KeyValuePair<,>).MakeGenericType(keyType, valueType));
-                var castedItems = castMethod.Invoke(null, [dictionary]);
-                return (T)toImmutableMethod.Invoke(null, [castedItems])!;
-            }
-            else if (genericTypeDef == typeof(ImmutableList<>))
-            {
-                var elementType = typeof(T).GetGenericArguments()[0];
-                var list = (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(elementType))!;
-
-                foreach (var prop in saveObject.Properties)
-                {
-                    if (prop.Value is SaveObject obj)
-                    {
-                        var bindMethod = typeof(Binder).GetMethod(nameof(Bind))!;
-                        var boundObject = bindMethod.MakeGenericMethod(elementType).Invoke(null, [obj]);
-                        if (boundObject != null)
-                            list.Add(boundObject);
-                    }
-                    else if (prop.Value is SaveArray array)
-                    {
-                        var arrayValue = BindArray(array, elementType);
-                        if (arrayValue != null)
-                            list.Add(arrayValue);
-                    }
-                    else if (prop.Value is SaveElement scalar)
-                    {
-                        var scalarValue = BindScalar(scalar, elementType);
-                        if (scalarValue != null)
-                            list.Add(scalarValue);
-                    }
-                }
-
-                var toImmutableMethod = typeof(ImmutableList)
-                    .GetMethods()
-                    .First(m => m.Name == "CreateRange" && m.IsGenericMethod)
-                    .MakeGenericMethod(elementType);
-
-                var castMethod = typeof(Enumerable).GetMethod(nameof(Enumerable.Cast))!.MakeGenericMethod(elementType);
-                var castedItems = castMethod.Invoke(null, [list]);
-
-                return (T)toImmutableMethod.Invoke(null, [castedItems])!;
-            }
-            else if (genericTypeDef == typeof(ImmutableArray<>))
-            {
-                var elementType = typeof(T).GetGenericArguments()[0];
-                var list = (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(elementType))!;
-
-                foreach (var prop in saveObject.Properties)
-                {
-                    if (prop.Value is SaveObject obj)
-                    {
-                        var bindMethod = typeof(Binder).GetMethod(nameof(Bind))!;
-                        var boundObject = bindMethod.MakeGenericMethod(elementType).Invoke(null, [obj]);
-                        if (boundObject != null)
-                            list.Add(boundObject);
-                    }
-                    else if (prop.Value is SaveArray array)
-                    {
-                        var arrayValue = BindArray(array, elementType);
-                        if (arrayValue != null)
-                            list.Add(arrayValue);
-                    }
-                    else if (prop.Value is SaveElement scalar)
-                    {
-                        var scalarValue = BindScalar(scalar, elementType);
-                        if (scalarValue != null)
-                            list.Add(scalarValue);
-                    }
-                }
-
                 var toImmutableMethod = typeof(ImmutableArray).GetMethods()
                     .First(m => m.Name == "CreateRange" && m.IsGenericMethod)
                     .MakeGenericMethod(elementType);
-
-                var castMethod = typeof(Enumerable).GetMethod(nameof(Enumerable.Cast))!.MakeGenericMethod(elementType);
-                var castedItems = castMethod.Invoke(null, [list,]);
-                return (T)toImmutableMethod.Invoke(null, [castedItems,])!;
+                return toImmutableMethod.Invoke(null, [list]);
+            }
+            else if (genericTypeDef == typeof(ImmutableList<>))
+            {
+                var toImmutableMethod = typeof(ImmutableList).GetMethods()
+                    .First(m => m.Name == "CreateRange" && m.IsGenericMethod)
+                    .MakeGenericMethod(elementType);
+                return toImmutableMethod.Invoke(null, [list]);
+            }
+            else if (genericTypeDef == typeof(List<>))
+            {
+                return list;
             }
         }
 
-        T instance = (T)Activator.CreateInstance(typeof(T))!;
+        return null;
+    }
 
-        foreach (var prop in typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance))
+    public static T? Bind<T>(SaveObject saveObject) where T : new()
+    {
+        var result = new T();
+        var type = typeof(T);
+        var properties = type.GetProperties();
+
+        foreach (var property in properties)
         {
-            var scalarAttr = prop.GetCustomAttribute<SaveScalarAttribute>();
-            var objectAttr = prop.GetCustomAttribute<SaveObjectAttribute>();
-            var arrayAttr = prop.GetCustomAttribute<SaveArrayAttribute>();
+            var scalarAttribute = property.GetCustomAttribute<SaveScalarAttribute>();
+            var arrayAttribute = property.GetCustomAttribute<SaveArrayAttribute>();
+            var objectAttribute = property.GetCustomAttribute<SaveObjectAttribute>();
+            var indexedDictionaryAttribute = property.GetCustomAttribute<SaveIndexedDictionaryAttribute>();
 
-            if (scalarAttr != null)
+            try
             {
-                var value = BindScalar(saveObject, scalarAttr.Name, prop.PropertyType);
-                if (value != null)
-                    prop.SetValue(instance, value);
-            }
-            else if (objectAttr != null)
-            {
-                var value = BindObject(saveObject, objectAttr.Name, prop.PropertyType);
-                if (value != null)
-                    prop.SetValue(instance, value);
-            }
-            else if (arrayAttr != null)
-            {
-                var value = BindArray(saveObject, arrayAttr.Name, prop.PropertyType);
-                if (value != null)
-                    prop.SetValue(instance, value);
-            }
-
-            if (prop.GetCustomAttribute<SaveIndexedDictionaryAttribute>() is SaveIndexedDictionaryAttribute indexedAttr)
-            {
-                var indexedObject = saveObject[indexedAttr.PropertyName] as SaveObject;
-                if (indexedObject != null)
+                if (scalarAttribute != null)
                 {
-                    var dictionaryType = prop.PropertyType;
-                    var keyType = dictionaryType.GenericTypeArguments[0];
-                    var valueType = dictionaryType.GenericTypeArguments[1];
-
-                    var dictionary = Activator.CreateInstance(typeof(Dictionary<,>).MakeGenericType(keyType, valueType)) as IDictionary;
-
-                    foreach (var kvp in indexedObject.Properties)
+                    var propertyName = scalarAttribute.Name ?? property.Name.ToLower();
+                    var value = BindScalar(saveObject, propertyName, property.PropertyType);
+                    if (value != null)
+                        property.SetValue(result, value);
+                }
+                else if (arrayAttribute != null)
+                {
+                    var propertyName = arrayAttribute.Name ?? property.Name.ToLower();
+                    var value = BindArray(saveObject, propertyName, property.PropertyType);
+                    if (value != null)
+                        property.SetValue(result, value);
+                    else if (property.PropertyType.IsArray)
                     {
-                        var key = Convert.ChangeType(kvp.Key, keyType);
-                        var bindMethod = typeof(Binder).GetMethod(nameof(Bind))!.MakeGenericMethod(valueType);
-                        var value = bindMethod.Invoke(null, new object[] { kvp.Value });
-                        dictionary.Add(key, value);
+                        // Initialize empty arrays to avoid null references
+                        var elementType = property.PropertyType.GetElementType()!;
+                        var emptyArray = Array.CreateInstance(elementType, 0);
+                        property.SetValue(result, emptyArray);
                     }
-
-                    prop.SetValue(instance, dictionaryType.IsAssignableTo(typeof(ImmutableDictionary<,>).MakeGenericType(keyType, valueType))
-                        ? dictionaryType.GetMethod("ToImmutableDictionary", Type.EmptyTypes)!.Invoke(dictionary, null)
-                        : dictionary);
+                }
+                else if (objectAttribute != null)
+                {
+                    var propertyName = objectAttribute.Name ?? property.Name.ToLower();
+                    var value = BindObject(saveObject, propertyName, property.PropertyType);
+                    if (value != null)
+                        property.SetValue(result, value);
+                }
+                else if (indexedDictionaryAttribute != null)
+                {
+                    var propertyName = indexedDictionaryAttribute.Name ?? property.Name.ToLower();
+                    var obj = saveObject.Properties.FirstOrDefault(p => p.Key == propertyName).Value as SaveObject;
+                    if (obj != null)
+                    {
+                        var keyType = property.PropertyType.GetGenericArguments()[0];
+                        var valueType = property.PropertyType.GetGenericArguments()[1];
+                        var value = BindImmutableDictionary(obj, keyType, valueType);
+                        if (value != null)
+                            property.SetValue(result, value);
+                    }
                 }
             }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error binding property {property.Name}: {ex.Message}");
+            }
         }
 
-        return instance;
+        return result;
     }
 }

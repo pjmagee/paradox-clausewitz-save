@@ -144,7 +144,7 @@ public class BinderTests
     private class RepeatedPropertyModel
     {
         [SaveArray("section")]
-        public ImmutableList<SectionData> Sections { get; set; } = [];
+        public ImmutableList<SectionData?> Sections { get; set; } = [];
     }
 
     private class ImmutableListModel
@@ -161,10 +161,10 @@ public class BinderTests
 
     private class ImmutableDictionaryModel
     {
-        [SaveObject("resources")]
+        [SaveIndexedDictionary("resources")]
         public ImmutableDictionary<string, NestedModel> Resources { get; init; }
 
-        [SaveObject("scores")]
+        [SaveIndexedDictionary("scores")]
         public ImmutableDictionary<int, float> Scores { get; init; }
     }
 
@@ -289,7 +289,7 @@ public class BinderTests
                         origin="earth"
                     }
                     owner="museum_1"
-                    date_added=2300.1.1
+                    date_added="2300.1.1"
                 }
                 2={
                     exhibit_state="inactive"
@@ -298,7 +298,7 @@ public class BinderTests
                         origin="mars"
                     }
                     owner="museum_2"
-                    date_added=2300.2.1
+                    date_added="2300.2.1"
                 }
             }
             """;
