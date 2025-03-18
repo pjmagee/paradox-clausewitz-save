@@ -1,0 +1,45 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    
+    <!-- NuGet Package Metadata -->
+    <PackageId>MageeSoft.Paradox.Clausewitz.Save.Reader</PackageId>
+    <Authors>Patrick Magee</Authors>
+    <Company>MageeSoft</Company>
+    <Description>A high-level API for reading save files, providing easy access to game state information.</Description>
+    <PackageTags>stellaris;ck3;clauswitz;paradox;parser;gamestate;save;sav</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/pjmagee/stellaris-sav-parser</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/pjmagee/stellaris-sav-parser</PackageProjectUrl>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\README.md" Pack="true" PackagePath="\" />
+    <None Include="..\LICENSE" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MageeSoft.Paradox.Clausewitz.Save.Binder.Reflection\MageeSoft.Paradox.Clausewitz.Save.Binder.Reflection.csproj" />
+    <ProjectReference Include="..\MageeSoft.Paradox.Clausewitz.Save.Parser\MageeSoft.Paradox.Clausewitz.Save.Parser.csproj" />
+    <ProjectReference Include="..\MageeSoft.Paradox.Clausewitz.Save.Models\MageeSoft.Paradox.Clausewitz.Save.Models.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Games\CK3\" />
+  </ItemGroup>
+
+</Project>

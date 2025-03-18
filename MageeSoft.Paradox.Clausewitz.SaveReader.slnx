@@ -4,31 +4,49 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
-  <Project Path="MageeSoft.Paradox.Clausewitz.SaveReader.Cli\MageeSoft.Paradox.Clausewitz.SaveReader.Cli.csproj" Type="Classic C#">
+  <Project Path="MageeSoft.Paradox.Clausewitz.Save.Binder.Aot\MageeSoft.Paradox.Clausewitz.Save.Binder.Aot.csproj">
     <Configuration Solution="Debug|x64" Project="Debug|Any CPU" />
     <Configuration Solution="Debug|x86" Project="Debug|Any CPU" />
     <Configuration Solution="Release|x64" Project="Release|Any CPU" />
     <Configuration Solution="Release|x86" Project="Release|Any CPU" />
   </Project>
-  <Project Path="MageeSoft.Paradox.Clausewitz.SaveReader.Model\MageeSoft.Paradox.Clausewitz.SaveReader.Model.csproj" Type="Classic C#">
+  <Project Path="MageeSoft.Paradox.Clausewitz.Save.Binder.Reflection\MageeSoft.Paradox.Clausewitz.Save.Binder.Reflection.csproj">
     <Configuration Solution="Debug|x64" Project="Debug|Any CPU" />
     <Configuration Solution="Debug|x86" Project="Debug|Any CPU" />
     <Configuration Solution="Release|x64" Project="Release|Any CPU" />
     <Configuration Solution="Release|x86" Project="Release|Any CPU" />
   </Project>
-  <Project Path="MageeSoft.Paradox.Clausewitz.SaveReader.Parser\MageeSoft.Paradox.Clausewitz.SaveReader.Parser.csproj" Type="Classic C#">
+  <Project Path="MageeSoft.Paradox.Clausewitz.Save.Cli\MageeSoft.Paradox.Clausewitz.Save.Cli.csproj">
     <Configuration Solution="Debug|x64" Project="Debug|Any CPU" />
     <Configuration Solution="Debug|x86" Project="Debug|Any CPU" />
     <Configuration Solution="Release|x64" Project="Release|Any CPU" />
     <Configuration Solution="Release|x86" Project="Release|Any CPU" />
   </Project>
-  <Project Path="MageeSoft.Paradox.Clausewitz.SaveReader.Reader\MageeSoft.Paradox.Clausewitz.SaveReader.Reader.csproj" Type="Classic C#">
+  <Project Path="MageeSoft.Paradox.Clausewitz.Save.Models\MageeSoft.Paradox.Clausewitz.Save.Models.csproj" Type="Classic C#">
     <Configuration Solution="Debug|x64" Project="Debug|Any CPU" />
     <Configuration Solution="Debug|x86" Project="Debug|Any CPU" />
     <Configuration Solution="Release|x64" Project="Release|Any CPU" />
     <Configuration Solution="Release|x86" Project="Release|Any CPU" />
   </Project>
-  <Project Path="MageeSoft.Paradox.Clausewitz.SaveReader.Tests\MageeSoft.Paradox.Clausewitz.SaveReader.Tests.csproj" Type="Classic C#">
+  <Project Path="MageeSoft.Paradox.Clausewitz.Save.Parser\MageeSoft.Paradox.Clausewitz.Save.Parser.csproj">
+    <Configuration Solution="Debug|x64" Project="Debug|Any CPU" />
+    <Configuration Solution="Debug|x86" Project="Debug|Any CPU" />
+    <Configuration Solution="Release|x64" Project="Release|Any CPU" />
+    <Configuration Solution="Release|x86" Project="Release|Any CPU" />
+  </Project>
+  <Project Path="MageeSoft.Paradox.Clausewitz.Save.Reader\MageeSoft.Paradox.Clausewitz.Save.Reader.csproj">
+    <Configuration Solution="Debug|x64" Project="Debug|Any CPU" />
+    <Configuration Solution="Debug|x86" Project="Debug|Any CPU" />
+    <Configuration Solution="Release|x64" Project="Release|Any CPU" />
+    <Configuration Solution="Release|x86" Project="Release|Any CPU" />
+  </Project>
+  <Project Path="MageeSoft.Paradox.Clausewitz.Save.SourceGen\MageeSoft.Paradox.Clausewitz.Save.SourceGen.csproj">
+    <Configuration Solution="Debug|x64" Project="Debug|Any CPU" />
+    <Configuration Solution="Debug|x86" Project="Debug|Any CPU" />
+    <Configuration Solution="Release|x64" Project="Release|Any CPU" />
+    <Configuration Solution="Release|x86" Project="Release|Any CPU" />
+  </Project>
+  <Project Path="MageeSoft.Paradox.Clausewitz.Save.Tests\MageeSoft.Paradox.Clausewitz.Save.Tests.csproj">
     <Configuration Solution="Debug|x64" Project="Debug|Any CPU" />
     <Configuration Solution="Debug|x86" Project="Debug|Any CPU" />
     <Configuration Solution="Release|x64" Project="Release|Any CPU" />

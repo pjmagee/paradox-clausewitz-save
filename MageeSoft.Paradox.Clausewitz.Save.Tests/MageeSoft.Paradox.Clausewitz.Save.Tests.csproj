@@ -1,0 +1,45 @@
+﻿<Project Sdk="MSTest.Sdk/3.8.2">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MageeSoft.Paradox.Clausewitz.Save.Binder.Reflection\MageeSoft.Paradox.Clausewitz.Save.Binder.Reflection.csproj" />
+    <ProjectReference Include="..\MageeSoft.Paradox.Clausewitz.Save.Models\MageeSoft.Paradox.Clausewitz.Save.Models.csproj" />
+    <ProjectReference Include="..\MageeSoft.Paradox.Clausewitz.Save.Parser\MageeSoft.Paradox.Clausewitz.Save.Parser.csproj" />
+    <ProjectReference Include="..\MageeSoft.Paradox.Clausewitz.Save.Reader\MageeSoft.Paradox.Clausewitz.Save.Reader.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Stellaris\TestData\*">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Stellaris\Save\*.sav">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Stellaris\Save\*.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.msbuild" Version="6.0.4">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="System.Collections.Immutable" Version="9.0.2" />
+    <PackageReference Update="Microsoft.Testing.Extensions.CodeCoverage" Version="17.14.2" />
+    <PackageReference Update="Microsoft.Testing.Extensions.TrxReport" Version="1.6.3" />
+    <PackageReference Update="MSTest.TestFramework" Version="3.8.3" />
+    <PackageReference Update="MSTest.TestAdapter" Version="3.8.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="CK3\" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <PackageId>MageeSoft.Paradox.Clausewitz.Save.Binder.Reflection</PackageId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MageeSoft.Paradox.Clausewitz.Save.Models\MageeSoft.Paradox.Clausewitz.Save.Models.csproj" />
+    <ProjectReference Include="..\MageeSoft.Paradox.Clausewitz.Save.Parser\MageeSoft.Paradox.Clausewitz.Save.Parser.csproj" />
+  </ItemGroup>
+
+</Project> 
