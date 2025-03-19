@@ -6,8 +6,8 @@ namespace MageeSoft.Paradox.Clausewitz.Save.Models.Stellaris;
 public partial class ShipSection
 {
     [SaveScalar("design")]
-    public required string Design { get; set; }
+    public string Design { get; set; }
 
     [SaveScalar("slot")] 
-    public required string Slot { get; set; }
+    public string Slot { get; set; }
 }

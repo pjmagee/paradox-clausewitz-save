@@ -10,29 +10,29 @@ public partial class ClusterPosition
     /// Gets or sets the X coordinate.
     /// </summary>
     [SaveScalar("x")]
-    public required float X { get;set; }
+    public float X { get;set; }
 
     /// <summary>
     /// Gets or sets the Y coordinate.
     /// </summary>
     [SaveScalar("y")]
-    public required float Y { get;set; }
+    public float Y { get;set; }
 
     /// <summary>
     /// Gets or sets the origin ID.
     /// </summary>
     [SaveScalar("origin")]
-    public required long Origin { get;set; }
+    public long Origin { get;set; }
 
     /// <summary>
     /// Gets or sets whether the position is randomized.
     /// </summary>
     [SaveScalar("randomized")]
-    public required bool Randomized { get;set; }
+    public bool Randomized { get;set; }
 
     /// <summary>
     /// Gets or sets the visual height.
     /// </summary>
     [SaveScalar("visual_height")]
-    public required float VisualHeight { get;set; }
+    public float VisualHeight { get;set; }
 }

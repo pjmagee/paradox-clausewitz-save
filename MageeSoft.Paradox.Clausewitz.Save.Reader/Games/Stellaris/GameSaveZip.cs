@@ -1,5 +1,4 @@
 using System.IO.Compression;
-using MageeSoft.Paradox.Clausewitz.Save.Models.Stellaris;
 
 namespace MageeSoft.Paradox.Clausewitz.Save.Reader.Games.Stellaris;
 

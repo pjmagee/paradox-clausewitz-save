@@ -5,21 +5,16 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <IsAotCompatible>true</IsAotCompatible>
-        <!-- Source generation is temporarily disabled until issues are fixed -->
-        <!--
         <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
         <CompilerGeneratedFilesOutputPath>$(BaseIntermediateOutputPath)\GeneratedFiles</CompilerGeneratedFilesOutputPath>
-        -->
     </PropertyGroup>
 
-    <ItemGroup>
-        <!-- Source generator is temporarily disabled -->
-        <!--
+    <ItemGroup>       
         <ProjectReference Include="..\MageeSoft.Paradox.Clausewitz.Save.SourceGen\MageeSoft.Paradox.Clausewitz.Save.SourceGen.csproj" 
                     OutputItemType="Analyzer" 
                     ReferenceOutputAssembly="false" />
-        -->
         <ProjectReference Include="..\MageeSoft.Paradox.Clausewitz.Save.Parser\MageeSoft.Paradox.Clausewitz.Save.Parser.csproj" />
+        <ProjectReference Include="..\MageeSoft.Paradox.Clausewitz.Save.SourceGen\MageeSoft.Paradox.Clausewitz.Save.SourceGen.csproj" />
     </ItemGroup>
 
 </Project>

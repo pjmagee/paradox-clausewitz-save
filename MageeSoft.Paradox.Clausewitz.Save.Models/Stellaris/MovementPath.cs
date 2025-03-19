@@ -11,11 +11,11 @@ public partial class MovementPath
     /// <summary>
     /// Gets or sets the date.
     /// </summary>
-    public required string Date { get;set; }
+    public string Date { get;set; }
 
     /// <summary>
     /// Gets or sets the nodes.
     /// </summary>
-    public required ImmutableArray<MovementPathNode> Nodes { get;set; }
+    public ImmutableArray<MovementPathNode> Nodes { get;set; }
 
 }

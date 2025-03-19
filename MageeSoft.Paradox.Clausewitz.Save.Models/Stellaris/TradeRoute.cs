@@ -11,17 +11,17 @@ public partial class TradeRoute
     /// <summary>
     /// Gets or sets the ID.
     /// </summary>
-    public required long Id { get;set; }
+    public long Id { get;set; }
 
     /// <summary>
     /// Gets or sets the owner.
     /// </summary>
-    public required Owner Owner { get;set; }
+    public Owner Owner { get;set; }
 
     /// <summary>
     /// Gets or sets the path.
     /// </summary>
-    public required ImmutableArray<Position> Path { get;set; }
+    public ImmutableArray<Position> Path { get;set; }
 } 
 
 

@@ -11,27 +11,27 @@ public partial class AstralRiftEventScope
     /// <summary>
     /// Gets or sets the type.
     /// </summary>
-    public required string Type { get;set; }
+    public string Type { get;set; }
 
     /// <summary>
     /// Gets or sets the ID.
     /// </summary>
-    public required long Id { get;set; }
+    public long Id { get;set; }
 
     /// <summary>
     /// Gets or sets the opener ID.
     /// </summary>
-    public required long OpenerId { get;set; }
+    public long OpenerId { get;set; }
 
     /// <summary>
     /// Gets or sets the random values.
     /// </summary>
-    public required ImmutableArray<long> Random { get;set; }
+    public ImmutableArray<long> Random { get;set; }
 
     /// <summary>
     /// Gets or sets whether random is allowed.
     /// </summary>
-    public required bool RandomAllowed { get;set; }
+    public bool RandomAllowed { get;set; }
 
     /// <summary>
     /// Default instance of AstralRiftEventScope.

@@ -11,17 +11,17 @@ public partial class Cluster
     /// <summary>
     /// Gets or sets the cluster ID.
     /// </summary>
-    public required long Id { get;set; }
+    public long Id { get;set; }
 
     /// <summary>
     /// Gets or sets the position of the cluster.
     /// </summary>
-    public required ClusterPosition Position { get;set; }
+    public ClusterPosition Position { get;set; }
 
     /// <summary>
     /// Gets or sets the radius of the cluster.
     /// </summary>
-    public required float Radius { get;set; }
+    public float Radius { get;set; }
 
     /// <summary>
     /// Gets or sets the object IDs in the cluster.

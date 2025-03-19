@@ -1,9 +1,7 @@
 using MageeSoft.Paradox.Clausewitz.Save.Models;
 
-namespace MageeSoft.Paradox.Clausewitz.Save.Tests.Models;
+namespace MageeSoft.Paradox.Clausewitz.Save.Test.Models;
 
-// Moved to SimpleTestModel.cs
-/*
 [SaveModel]
 public partial class SimpleTestModel
 {
@@ -27,5 +25,8 @@ public partial class SimpleTestModel
 
     [SaveScalar("guid_value")]
     public Guid GuidValue { get; set; }
+    
+    
+    [SaveArray("array_value")]
+    public int[] ArrayValue { get; set; } = Array.Empty<int>();
 }
-*/ 

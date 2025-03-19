@@ -14,12 +14,12 @@ public partial class Storm
     /// <summary>
     /// Gets or sets the type of the storm.
     /// </summary>
-    public required string Type { get;set; }
+    public string Type { get;set; }
 
     /// <summary>
     /// Gets or sets the position of the storm.
     /// </summary>
-    public required Position Position { get;set; }
+    public Position Position { get;set; }
 } 
 
 

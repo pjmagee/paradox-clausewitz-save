@@ -21,17 +21,17 @@ public partial class PopFaction
     /// <summary>
     /// Gets or sets the type.
     /// </summary>
-    public required string Type { get;set; }
+    public string Type { get;set; }
 
     /// <summary>
     /// Gets or sets the support.
     /// </summary>
-    public required float Support { get;set; }
+    public float Support { get;set; }
 
     /// <summary>
     /// Gets or sets the approval.
     /// </summary>
-    public required float Approval { get;set; }
+    public float Approval { get;set; }
 }
 
 

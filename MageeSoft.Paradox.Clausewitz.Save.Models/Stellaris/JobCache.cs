@@ -18,10 +18,10 @@ public partial class JobCache
     /// <summary>
     /// Gets or sets the job.
     /// </summary>
-    public required string Job { get;set; }
+    public string Job { get;set; }
 
     /// <summary>
     /// Gets or sets the count.
     /// </summary>
-    public required int Count { get;set; }
+    public int Count { get;set; }
 }

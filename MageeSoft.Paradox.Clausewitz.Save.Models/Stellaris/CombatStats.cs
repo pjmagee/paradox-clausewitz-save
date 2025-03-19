@@ -9,22 +9,22 @@ public partial class CombatStats
     /// <summary>
     /// Gets or sets the damage dealt.
     /// </summary>
-    public required float DamageDealt { get;set; }
+    public float DamageDealt { get;set; }
 
     /// <summary>
     /// Gets or sets the damage taken.
     /// </summary>
-    public required float DamageTaken { get;set; }
+    public float DamageTaken { get;set; }
 
     /// <summary>
     /// Gets or sets the ships lost.
     /// </summary>
-    public required int ShipsLost { get;set; }
+    public int ShipsLost { get;set; }
 
     /// <summary>
     /// Gets or sets the armies lost.
     /// </summary>
-    public required int ArmiesLost { get;set; }
+    public int ArmiesLost { get;set; }
 }
 
 

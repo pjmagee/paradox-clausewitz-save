@@ -9,17 +9,20 @@ public partial class Position
     /// <summary>
     /// Gets or sets the X coordinate.
     /// </summary>
-    public required float X { get;set; }
+    [SaveScalar("x")]
+    public float X { get; set; }
 
     /// <summary>
     /// Gets or sets the Y coordinate.
     /// </summary>
-    public required float Y { get;set; }
+    [SaveScalar("y")]
+    public float Y { get; set; }
 
     /// <summary>
     /// Gets or sets the Z coordinate.
     /// </summary>
-    public required float Z { get;set; }
+    [SaveScalar("z")]
+    public float Z { get; set; }
 
 } 
 

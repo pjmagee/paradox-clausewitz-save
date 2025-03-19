@@ -8,6 +8,6 @@ namespace MageeSoft.Paradox.Clausewitz.Save.Models.Stellaris;
 [SaveModel]
 public partial class Planets
 {
-    [SaveArray("planet")]
+    [SaveIndexedDictionary("planet")]
     public Dictionary<long, Planet> Values { get; set; } = new();
 }

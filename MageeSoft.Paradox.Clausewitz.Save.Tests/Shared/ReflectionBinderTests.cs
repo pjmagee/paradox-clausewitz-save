@@ -1,196 +1,13 @@
 using System.Collections.Immutable;
 using MageeSoft.Paradox.Clausewitz.Save.Binder.Reflection;
-// Using qualified attribute names below
-// 
-using MageeSoft.Paradox.Clausewitz.Save.Models;
 using MageeSoft.Paradox.Clausewitz.Save.Parser;
+using MageeSoft.Paradox.Clausewitz.Save.Test.Models;
 
 namespace MageeSoft.Paradox.Clausewitz.Save.Tests.Shared;
 
 [TestClass]
 public class ReflectionBinderTests
 {
-    public class TestModel
-    {
-        [MageeSoft.Paradox.Clausewitz.Save.Models.SaveScalarAttribute("name")]
-        public string Name { get; set; } = string.Empty;
-
-        [MageeSoft.Paradox.Clausewitz.Save.Models.SaveScalarAttribute("capital")]
-        public int Capital { get; set; }
-
-        [MageeSoft.Paradox.Clausewitz.Save.Models.SaveScalarAttribute("start_date")]
-        public DateOnly StartDate { get; set; }
-
-        [MageeSoft.Paradox.Clausewitz.Save.Models.SaveArrayAttribute("achievement")]
-        public ImmutableList<int> Achievements { get; set; } = [];
-
-        [MageeSoft.Paradox.Clausewitz.Save.Models.SaveScalarAttribute("ironman")]
-        public bool Ironman { get; set; }
-
-        [MageeSoft.Paradox.Clausewitz.Save.Models.SaveScalarAttribute("id")]
-        public Guid Id { get; set; }
-    }
-
-    public class NestedModel
-    {
-        [SaveScalar("energy")]
-        public int Energy { get;set; }
-
-        [SaveScalar("minerals")]
-        public int Minerals { get;set; }
-
-        [SaveScalar("name")]
-        public string Name { get;set; }
-
-        [SaveScalar("efficiency")]
-        public float Efficiency { get;set; }
-    }
-
-    public class ComplexModel
-    {
-        [SaveScalar("name")]
-        public string Name { get; set; } = string.Empty;
-
-        [SaveScalar("capital")]
-        public int Capital { get; set; }
-
-        [SaveObject("resources")]
-        public NestedModel Resources { get; set; } = new();
-
-        [SaveArray("planets")]
-        public List<NestedModel> Planets { get; set; } = new();
-
-        [SaveArray("values")]
-        public float[] Values { get; set; } = [];
-
-        [SaveArray("tags")]
-        public string[] Tags { get; set; } = [];
-
-        [SaveScalar("enabled")]
-        public bool Enabled { get; set; }
-
-        [SaveScalar("disabled")]
-        public bool Disabled { get; set; }
-
-        [SaveScalar("start_date")]
-        public DateOnly StartDate { get; set; }
-
-        [SaveObject("nested")]
-        public NestedModel Nested { get; set; } = new();
-    }
-
-    private class ExhibitSpecimen
-    {
-        [SaveScalar("id")]
-        public string Id { get; set; } = "";
-
-        [SaveScalar("origin")]
-        public string Origin { get; set; } = "";
-    }
-
-    private class Exhibit
-    {
-        [SaveScalar("exhibit_state")]
-        public string State { get; set; } = "";
-
-        [SaveObject("specimen")]
-        public ExhibitSpecimen? Specimen { get; set; }
-
-        [SaveScalar("owner")]
-        public string Owner { get; set; } = "";
-
-        [SaveScalar("date_added")]
-        public DateOnly DateAdded { get; set; }
-    }
-
-    private class ExhibitsContainer
-    {
-        [SaveIndexedDictionary("exhibits")]
-        public ImmutableDictionary<int, Exhibit> Exhibits { get; set; }
-    }
-
-    private class WeaponData
-    {
-        [SaveScalar("index")]
-        public int Index { get; set; }
-
-        [SaveScalar("template")]
-        public string Template { get; set; } = "";
-
-        [SaveScalar("component_slot")]
-        public string ComponentSlot { get; set; } = "";
-    }
-
-    private class SectionData
-    {
-        [SaveScalar("design")]
-        public string Design { get; set; } = "";
-
-        [SaveScalar("slot")]
-        public string Slot { get; set; } = "";
-
-        [SaveArray("weapon")]
-        public ImmutableList<WeaponData> Weapons { get; set; }
-    }
-
-    private class ShipData
-    {
-        [SaveArray("section")]
-        public ImmutableList<SectionData> Sections { get; set; }
-    }
-
-    private class RepeatedPropertyModel
-    {
-        [SaveArray("section")]
-        public ImmutableList<SectionData?> Sections { get; set; } = [];
-    }
-
-    private class ImmutableListModel
-    {
-        [SaveArray("values")]
-        public ImmutableList<int> Values { get;set; }
-
-        [SaveArray("strings")]
-        public ImmutableList<string> Strings { get;set; }
-
-        [SaveArray("nested")]
-        public ImmutableList<NestedModel?> Nested { get;set; }
-    }
-
-    private class ImmutableDictionaryModel
-    {
-        [SaveIndexedDictionary("resources")]
-        public ImmutableDictionary<string, NestedModel?> Resources { get;set; }
-
-        [SaveIndexedDictionary("scores")]
-        public ImmutableDictionary<int, float> Scores { get;set; }
-    }
-
-    [SaveModel]
-    public partial class SimpleTestModel
-    {
-        [SaveScalar("int_value")]
-        public int IntValue { get; set; }
-
-        [SaveScalar("string_value")]
-        public string StringValue { get; set; }
-
-        [SaveScalar("bool_value")]
-        public bool BoolValue { get; set; }
-
-        [SaveScalar("float_value")]
-        public float FloatValue { get; set; }
-
-        [SaveScalar("long_value")]
-        public long LongValue { get; set; }
-
-        [SaveScalar("date_value")]
-        public DateOnly DateValue { get; set; }
-
-        [SaveScalar("guid_value")]
-        public Guid GuidValue { get; set; }
-    }
-
     [TestMethod]
     public void Bind_SimpleProperties_ReturnsCorrectValues()
     {
@@ -537,15 +354,16 @@ public class ReflectionBinderTests
     [TestMethod]
     public void Bind_ImmutableDictionary_ReturnsCorrectValues()
     {
+        // Arrange
         var input = """
             resources={
-                alpha={
+                1={
                     energy=100
                     minerals=200
                     name="Resource Alpha"
                     efficiency=0.75
                 }
-                beta={
+                2={
                     energy=300
                     minerals=400
                     name="Resource Beta"
@@ -559,24 +377,26 @@ public class ReflectionBinderTests
             }
             """;
 
+        #pragma warning disable CS0618 // Type or member is obsolete
         var parser = new Parser.Parser(input);
         var saveObject = parser.Parse();
         var result = ReflectionBinder.Bind<ImmutableDictionaryModel>(saveObject);
+        #pragma warning restore CS0618 // Type or member is obsolete
 
         // Check that we got ImmutableDictionary instances
-        Assert.IsInstanceOfType(result.Resources, typeof(ImmutableDictionary<string, NestedModel>));
+        Assert.IsInstanceOfType(result.Resources, typeof(ImmutableDictionary<int, NestedModel?>));
         Assert.IsInstanceOfType(result.Scores, typeof(ImmutableDictionary<int, float>));
 
         // Check resources
         Assert.AreEqual(2, result.Resources.Count);
         
-        var resourceAlpha = result.Resources["alpha"];
+        var resourceAlpha = result.Resources[1];
         Assert.AreEqual(100, resourceAlpha.Energy);
         Assert.AreEqual(200, resourceAlpha.Minerals);
         Assert.AreEqual("Resource Alpha", resourceAlpha.Name);
         Assert.AreEqual(0.75f, resourceAlpha.Efficiency);
 
-        var resourceBeta = result.Resources["beta"];
+        var resourceBeta = result.Resources[2];
         Assert.AreEqual(300, resourceBeta.Energy);
         Assert.AreEqual(400, resourceBeta.Minerals);
         Assert.AreEqual("Resource Beta", resourceBeta.Name);
@@ -591,8 +411,10 @@ public class ReflectionBinderTests
         // Verify immutability
         Assert.ThrowsException<NotSupportedException>(() => 
         {
-            var dict = result.Resources as IDictionary<string, NestedModel>;
-            dict!.Add("gamma", new NestedModel());
+            #pragma warning disable CS8974 // Converting method group to non-delegate type
+            var dict = result.Resources as IDictionary<int, NestedModel>;
+            dict.Add(3, new NestedModel { Energy = 500, Minerals = 600, Name = "Resource Gamma", Efficiency = 0.95f });
+            #pragma warning restore CS8974 // Converting method group to non-delegate type
         });
     }
 }

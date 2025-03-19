@@ -7,32 +7,17 @@ namespace MageeSoft.Paradox.Clausewitz.Save.Models.Stellaris;
 public partial class Megastructure
 {
     /// <summary>
-    /// Gets or sets the ID.
-    /// </summary>
-    public long Id { get;set; }
-
-    /// <summary>
     /// Gets or sets the type.
     /// </summary>
+    [SaveScalar("type")]
     public string Type { get;set; }
-
-    /// <summary>
-    /// Gets or sets the stage.
-    /// </summary>
-    public string Stage { get;set; }
 
     /// <summary>
     /// Gets or sets the coordinate.
     /// </summary>
+    [SaveObject("coordinate")]
     public Coordinate Coordinate { get;set; }
-
-    /// <summary>
-    /// Gets or sets the progress.
-    /// </summary>
-    public float Progress { get;set; }
-
-    /// <summary>
-    /// Gets or sets whether the megastructure is active.
-    /// </summary>
-    public bool IsActive { get;set; }
+    
+    [SaveScalar("owner")]
+    public int Owner { get; set; }
 }

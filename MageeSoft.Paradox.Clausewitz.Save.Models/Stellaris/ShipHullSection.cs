@@ -9,12 +9,12 @@ public partial class ShipHullSection
     /// <summary>
     /// Gets or sets the template.
     /// </summary>
-    public required string Template { get;set; }
+    public string Template { get;set; }
 
     /// <summary>
     /// Gets or sets the slot.
     /// </summary>
-    public required string Slot { get;set; }
+    public string Slot { get;set; }
 }
 
 

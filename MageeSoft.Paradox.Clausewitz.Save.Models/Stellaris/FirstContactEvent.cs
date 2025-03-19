@@ -19,7 +19,7 @@ public partial class FirstContactEvent
     /// <summary>
     /// Gets or sets the event scope.
     /// </summary>
-    public required FirstContactScope Scope { get;set; }
+    public FirstContactScope Scope { get;set; }
 
     /// <summary>
     /// Gets or sets the event picture.

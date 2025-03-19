@@ -9,30 +9,30 @@ public partial class AmbientObject
     /// <summary>
     /// Gets or sets the ambient object ID.
     /// </summary>
-    public required long Id { get;set; }
+    public long Id { get;set; }
 
     /// <summary>
     /// Gets or sets the type of the ambient object.
     /// </summary>
-    public required string Type { get;set; }
+    public string Type { get;set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether the ambient object is active.
     /// </summary>
-    public required bool IsActive { get;set; }
+    public bool IsActive { get;set; }
 
     /// <summary>
     /// Gets or sets the coordinate of the ambient object.
     /// </summary>
-    public required Coordinate Coordinate { get;set; }
+    public Coordinate Coordinate { get;set; }
 
     /// <summary>
     /// Gets or sets the data type of the ambient object.
     /// </summary>
-    public required string Data { get;set; }
+    public string Data { get;set; }
 
     /// <summary>
     /// Gets or sets the properties of the ambient object.
     /// </summary>
-    public required AmbientObjectProperties Properties { get;set; }
+    public AmbientObjectProperties Properties { get;set; }
 }

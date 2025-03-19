@@ -1,7 +1,5 @@
 using MageeSoft.Paradox.Clausewitz.Save.Parser;
-using MageeSoft.Paradox.Clausewitz.Save.Tests.Models;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-
+using MageeSoft.Paradox.Clausewitz.Save.Test.Models;
 namespace MageeSoft.Paradox.Clausewitz.Save.Tests.Shared;
 
 /// <summary>
@@ -11,17 +9,13 @@ namespace MageeSoft.Paradox.Clausewitz.Save.Tests.Shared;
 public class SourceGeneratedBinderTests
 {
     [TestMethod]
-    [Ignore("Source generation is temporarily disabled")]
     public void SimpleTestModel_Bind_ReturnsCorrectValues()
     {
-        // This test is temporarily disabled until source generation is fixed
-
-        /*
         // Arrange
         var obj = new SaveObject(
             [
-                new("int_value", new Scalar<int>("int_value", 42)),
-                new("string_value", new Scalar<string>("string_value", "hello")),
+                new("int_val", new Scalar<int>("int_val", 42)),
+                new("string_val", new Scalar<string>("string_val", "hello")),
                 new("date_value", new Scalar<DateOnly>("date_value", new DateOnly(2020, 01, 01))),
                 new("array_value", new SaveArray([ 
                         new Scalar<int>("0", 1), 
@@ -33,7 +27,7 @@ public class SourceGeneratedBinderTests
 
         // Act
         // Use the source-generated Bind method
-        var result = SimpleTestModel.Bind(obj);
+        var result = TestModelForSourceGen.Bind(obj);
 
         // Assert
         Assert.IsNotNull(result);
@@ -41,16 +35,11 @@ public class SourceGeneratedBinderTests
         Assert.AreEqual("hello", result.StringValue);
         Assert.AreEqual(new DateOnly(2020, 01, 01), result.DateValue);
         CollectionAssert.AreEqual(new[] { 1, 2, 3 }, result.ArrayValue);
-        */
     }
     
     [TestMethod]
-    [Ignore("Source generation is temporarily disabled")]
     public void TestSaveModel_WithDictionary_BindsCorrectly()
     {
-        // This test is temporarily disabled until source generation is fixed
-
-        /*
         // Arrange
         var obj = new SaveObject(
             [
@@ -74,16 +63,12 @@ public class SourceGeneratedBinderTests
         Assert.AreEqual("one", result.DictValue[1]);
         Assert.AreEqual("two", result.DictValue[2]);
         Assert.AreEqual("three", result.DictValue[3]);
-        */
+        
     }
     
     [TestMethod]
-    [Ignore("Source generation is temporarily disabled")]
     public void ComplexNestedModel_Bind_CascadesCorrectly()
     {
-        // This test is temporarily disabled until source generation is fixed
-
-        /*
         // Arrange - create a hierarchy of objects
         var nestedObj = new SaveObject(
             [
@@ -131,6 +116,5 @@ public class SourceGeneratedBinderTests
         Assert.AreEqual("first", result.ItemArray[0].Description);
         Assert.AreEqual(2, result.ItemArray[1].Id);
         Assert.AreEqual("second", result.ItemArray[1].Description);
-        */
     }
 } 

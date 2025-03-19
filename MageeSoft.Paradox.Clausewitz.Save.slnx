@@ -16,7 +16,7 @@
     <Configuration Solution="Release|x64" Project="Release|Any CPU" />
     <Configuration Solution="Release|x86" Project="Release|Any CPU" />
   </Project>
-  <Project Path="MageeSoft.Paradox.Clausewitz.Save.Models\MageeSoft.Paradox.Clausewitz.Save.Models.csproj" Type="C#">
+  <Project Path="MageeSoft.Paradox.Clausewitz.Save.Models\MageeSoft.Paradox.Clausewitz.Save.Models.csproj">
     <Configuration Solution="Debug|x64" Project="Debug|Any CPU" />
     <Configuration Solution="Debug|x86" Project="Debug|Any CPU" />
     <Configuration Solution="Release|x64" Project="Release|Any CPU" />
@@ -35,6 +35,12 @@
     <Configuration Solution="Release|x86" Project="Release|Any CPU" />
   </Project>
   <Project Path="MageeSoft.Paradox.Clausewitz.Save.SourceGen\MageeSoft.Paradox.Clausewitz.Save.SourceGen.csproj">
+    <Configuration Solution="Debug|x64" Project="Debug|Any CPU" />
+    <Configuration Solution="Debug|x86" Project="Debug|Any CPU" />
+    <Configuration Solution="Release|x64" Project="Release|Any CPU" />
+    <Configuration Solution="Release|x86" Project="Release|Any CPU" />
+  </Project>
+  <Project Path="MageeSoft.Paradox.Clausewitz.Save.Test.Models\MageeSoft.Paradox.Clausewitz.Save.Test.Models.csproj" Type="Classic C#">
     <Configuration Solution="Debug|x64" Project="Debug|Any CPU" />
     <Configuration Solution="Debug|x86" Project="Debug|Any CPU" />
     <Configuration Solution="Release|x64" Project="Release|Any CPU" />

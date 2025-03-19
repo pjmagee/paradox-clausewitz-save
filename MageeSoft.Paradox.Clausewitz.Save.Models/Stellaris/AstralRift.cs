@@ -11,115 +11,115 @@ public partial class AstralRift
     /// <summary>
     /// Gets or sets the astral rift ID.
     /// </summary>
-    public required long Id { get;set; }
+    public long Id { get;set; }
 
     /// <summary>
     /// Gets or sets the type of the astral rift.
     /// </summary>
-    public required string Type { get;set; }
+    public string Type { get;set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether the astral rift is active.
     /// </summary>
-    public required bool IsActive { get;set; }
+    public bool IsActive { get;set; }
 
     /// <summary>
     /// Gets or sets the name of the astral rift.
     /// </summary>
-    public required LocalizedText Name { get;set; }
+    public LocalizedText Name { get;set; }
 
     /// <summary>
     /// Gets or sets the coordinate of the astral rift.
     /// </summary>
-    public required Coordinate Coordinate { get;set; }
+    public Coordinate Coordinate { get;set; }
 
     /// <summary>
     /// Gets or sets the owner ID.
     /// </summary>
-    public required int Owner { get;set; }
+    public int Owner { get;set; }
 
     /// <summary>
     /// Gets or sets the explorer fleet ID.
     /// </summary>
-    public required long ExplorerFleet { get;set; }
+    public long ExplorerFleet { get;set; }
 
     /// <summary>
     /// Gets or sets the leader ID.
     /// </summary>
-    public required long Leader { get;set; }
+    public long Leader { get;set; }
 
     /// <summary>
     /// Gets or sets the explorer ID.
     /// </summary>
-    public required long Explorer { get;set; }
+    public long Explorer { get;set; }
 
     /// <summary>
     /// Gets or sets the number of clues.
     /// </summary>
-    public required int Clues { get;set; }
+    public int Clues { get;set; }
 
     /// <summary>
     /// Gets or sets the last roll value.
     /// </summary>
-    public required int LastRoll { get;set; }
+    public int LastRoll { get;set; }
 
     /// <summary>
     /// Gets or sets the days left.
     /// </summary>
-    public required int DaysLeft { get;set; }
+    public int DaysLeft { get;set; }
 
     /// <summary>
     /// Gets or sets the difficulty.
     /// </summary>
-    public required int Difficulty { get;set; }
+    public int Difficulty { get;set; }
 
     /// <summary>
     /// Gets or sets the event information.
     /// </summary>
-    public required AstralRiftEvent Event { get;set; }
+    public AstralRiftEvent Event { get;set; }
 
     /// <summary>
     /// Gets or sets the event choice.
     /// </summary>
-    public required string EventChoice { get;set; }
+    public string EventChoice { get;set; }
 
     /// <summary>
     /// Gets or sets the on roll failed value.
     /// </summary>
-    public required string OnRollFailed { get;set; }
+    public string OnRollFailed { get;set; }
 
     /// <summary>
     /// Gets or sets the fail probability.
     /// </summary>
-    public required int FailProbability { get;set; }
+    public int FailProbability { get;set; }
 
     /// <summary>
     /// Gets or sets the cumulated fail probability.
     /// </summary>
-    public required int CumulatedFailProbability { get;set; }
+    public int CumulatedFailProbability { get;set; }
 
     /// <summary>
     /// Gets or sets the status.
     /// </summary>
-    public required string Status { get;set; }
+    public string Status { get;set; }
 
     /// <summary>
     /// Gets or sets the flags.
     /// </summary>
-    public required ImmutableDictionary<string, long> Flags { get;set; }
+    public ImmutableDictionary<string, long> Flags { get;set; }
 
     /// <summary>
     /// Gets or sets the interactable by IDs.
     /// </summary>
-    public required ImmutableArray<int> InteractableBy { get;set; }
+    public ImmutableArray<int> InteractableBy { get;set; }
 
     /// <summary>
     /// Gets or sets the astral rift orbitals.
     /// </summary>
-    public required ImmutableArray<object> AstralRiftOrbitals { get;set; }
+    public ImmutableArray<object> AstralRiftOrbitals { get;set; }
 
     /// <summary>
     /// Gets or sets the ship class orbital station ID.
     /// </summary>
-    public required long ShipClassOrbitalStation { get;set; }
+    public long ShipClassOrbitalStation { get;set; }
 }

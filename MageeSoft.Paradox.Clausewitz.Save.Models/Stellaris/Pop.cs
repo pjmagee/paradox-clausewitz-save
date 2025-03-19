@@ -9,7 +9,7 @@ public partial class Pop
     /// <summary>
     /// Gets or sets the ID.
     /// </summary>
-    public required long Id { get;set; }
+    public long Id { get;set; }
 
     /// <summary>
     /// Gets or sets the species id
@@ -20,15 +20,15 @@ public partial class Pop
     /// <summary>
     /// Gets or sets the faction.
     /// </summary>
-    public required PopFaction Faction { get;set; }
+    public PopFaction Faction { get;set; }
 
     /// <summary>
     /// Gets or sets the happiness.
     /// </summary>
-    public required float Happiness { get;set; }
+    public float Happiness { get;set; }
 
     /// <summary>
     /// Gets or sets the power.
     /// </summary>
-    public required float Power { get;set; }
+    public float Power { get;set; }
 }

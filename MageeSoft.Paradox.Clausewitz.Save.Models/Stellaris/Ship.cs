@@ -9,12 +9,12 @@ namespace MageeSoft.Paradox.Clausewitz.Save.Models.Stellaris;
 public partial class Ship
 {
     [SaveObject("name")]
-    public required LocalizedText Name { get;set; }
+    public LocalizedText Name { get;set; }
     
-    public required long DesignId { get;set; }
+    public long DesignId { get;set; }
 
     [SaveScalar("fleet")]
-    public required long Fleet { get;set; }
+    public long Fleet { get;set; }
     
     [SaveScalar("reserve")]
     public int Reserved { get; set; }

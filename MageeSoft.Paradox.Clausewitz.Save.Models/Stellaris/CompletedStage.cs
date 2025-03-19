@@ -11,12 +11,12 @@ public partial class CompletedStage
     /// <summary>
     /// Gets or sets the date when the stage was completed.
     /// </summary>
-    public required string Date { get;set; }
+    public string Date { get;set; }
 
     /// <summary>
     /// Gets or sets the stage name.
     /// </summary>
-    public required string Stage { get;set; }
+    public string Stage { get;set; }
 
 
 }

@@ -9,7 +9,8 @@ public partial class MovementTarget
     /// <summary>
     /// Gets or sets the coordinate.
     /// </summary>
-    public required Coordinate Coordinate { get;set; }
+    [SaveObject("coordinate")]
+    public Coordinate Coordinate { get;set; }
 
 }
 

@@ -12,22 +12,22 @@ public partial class Construction
     /// <summary>
     /// Gets or sets the type.
     /// </summary>
-    public required string Type { get;set; }
+    public string Type { get;set; }
 
     /// <summary>
     /// Gets or sets the planet.
     /// </summary>
-    public required int Planet { get;set; }
+    public int Planet { get;set; }
 
     /// <summary>
     /// Gets or sets the progress.
     /// </summary>
-    public required float Progress { get;set; }
+    public float Progress { get;set; }
 
     /// <summary>
     /// Gets or sets whether the construction is active.
     /// </summary>
-    public required bool IsActive { get;set; }
+    public bool IsActive { get;set; }
 
     /// <summary>
     /// Gets or sets the resources.

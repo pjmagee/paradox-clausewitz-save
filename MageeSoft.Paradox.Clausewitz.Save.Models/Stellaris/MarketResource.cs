@@ -9,22 +9,22 @@ public partial class MarketResource
     /// <summary>
     /// Gets or sets the type.
     /// </summary>
-    public required string Type { get;set; }
+    public string Type { get;set; }
 
     /// <summary>
     /// Gets or sets the price.
     /// </summary>
-    public required float Price { get;set; }
+    public float Price { get;set; }
 
     /// <summary>
     /// Gets or sets the demand.
     /// </summary>
-    public required float Demand { get;set; }
+    public float Demand { get;set; }
 
     /// <summary>
     /// Gets or sets the supply.
     /// </summary>
-    public required float Supply { get;set; }
+    public float Supply { get;set; }
 } 
 
 

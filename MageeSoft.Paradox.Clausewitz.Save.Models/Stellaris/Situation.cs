@@ -9,32 +9,32 @@ public partial class Situation
     /// <summary>
     /// Gets or sets the situation ID.
     /// </summary>
-    public required long Id { get;set; }
+    public long Id { get;set; }
 
     /// <summary>
     /// Gets or sets the type of the situation.
     /// </summary>
-    public required string Type { get;set; }
+    public string Type { get;set; }
 
     /// <summary>
     /// Gets or sets the country ID.
     /// </summary>
-    public required int Country { get;set; }
+    public int Country { get;set; }
 
     /// <summary>
     /// Gets or sets the progress value.
     /// </summary>
-    public required double Progress { get;set; }
+    public double Progress { get;set; }
 
     /// <summary>
     /// Gets or sets the last month progress value.
     /// </summary>
-    public required double LastMonthProgress { get;set; }
+    public double LastMonthProgress { get;set; }
 
     /// <summary>
     /// Gets or sets the approach value.
     /// </summary>
-    public required string Approach { get;set; }
+    public string Approach { get;set; }
 } 
 
 
