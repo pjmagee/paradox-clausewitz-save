@@ -3,7 +3,8 @@ namespace MageeSoft.Paradox.Clausewitz.Save.Models.Stellaris;
 /// <summary>
 /// Represents an army in the game state.
 /// </summary>
-public class Army
+[SaveModel]
+public partial class Army
 {
     /// <summary>
     /// Gets or sets the army ID.
@@ -13,52 +14,52 @@ public class Army
     /// <summary>
     /// Gets or sets the army type.
     /// </summary>
-    public required string Type { get; init; }
+    public required string Type { get;set; }
 
     /// <summary>
     /// Gets or sets the army name.
     /// </summary>
-    public required LocalizedText Name { get; init; }
+    public required LocalizedText Name { get;set; }
 
     /// <summary>
     /// Gets or sets the current health.
     /// </summary>
-    public required int Health { get; init; }
+    public required int Health { get;set; }
 
     /// <summary>
     /// Gets or sets the maximum health.
     /// </summary>
-    public required int MaxHealth { get; init; }
+    public required int MaxHealth { get;set; }
 
     /// <summary>
     /// Gets or sets the jump drive cooldown.
     /// </summary>
-    public required string JumpDriveCooldown { get; init; }
+    public required string JumpDriveCooldown { get;set; }
 
     /// <summary>
     /// Gets or sets the planet ID.
     /// </summary>
-    public required long Planet { get; init; }
+    public required long Planet { get;set; }
 
     /// <summary>
     /// Gets or sets the country ID.
     /// </summary>
-    public required long Country { get; init; }
+    public required long Country { get;set; }
 
     /// <summary>
     /// Gets or sets the ship ID.
     /// </summary>
-    public required long Ship { get; init; }
+    public required long Ship { get;set; }
 
     /// <summary>
     /// Gets or sets the leader ID.
     /// </summary>
-    public required long Leader { get; init; }
+    public required long Leader { get;set; }
 
     /// <summary>
     /// Gets or sets the morale value.
     /// </summary>
-    public required int Morale { get; init; }
+    public required int Morale { get;set; }
 } 
 
 

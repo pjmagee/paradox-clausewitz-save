@@ -1,62 +1,61 @@
-using MageeSoft.Paradox.Clausewitz.Save.Models.Attributes;
-
 namespace MageeSoft.Paradox.Clausewitz.Save.Models.Stellaris;
 
 /// <summary>
 /// Represents a fleet in the game state.
-/// </summary>
-public class Fleet
+/// </summary>  
+[SaveModel]
+public partial class Fleet
 {
     [SaveObject("name")]
-    public LocalizedText Name { get; init; }
+    public LocalizedText Name { get;set; }
     
     [SaveArray("ships")]
-    public int[] Ships { get; init; }
+    public int[] Ships { get;set; }
 
     [SaveObject("combat")]
-    public Combat Combat { get; init; }
+    public Combat Combat { get;set; }
 
     [SaveObject("fleet_stats")]
-    public FleetStats FleetStats { get; init; }
+    public FleetStats FleetStats { get;set; }
 
     [SaveScalar("station")]
-    public required bool IsStation { get; init; }
+    public bool IsStation { get;set; }
 
     [SaveScalar("ground_support_stance")]
-    public required string GroundSupportStance { get; init; }
+    public string GroundSupportStance { get;set; }
 
     [SaveScalar("space_fauna_growth_stance")]
-    public required string SpaceFaunaGrowthStance { get; init; }
+    public string SpaceFaunaGrowthStance { get;set; }
 
     [SaveObject("mia_from")]
-    public required Position MiaFrom { get; init; }
+    public Position MiaFrom { get;set; }
 
     [SaveObject("movement_manager")]
-    public required FleetMovementManager MovementManager { get; init; }
+    public FleetMovementManager MovementManager { get;set; }
 
     [SaveScalar("hit_points")]
-    public required float HitPoints { get; init; }
+    public float HitPoints { get;set; }
 
     [SaveScalar("military_power")]
-    public required float MilitaryPower { get; init; }
+    public float MilitaryPower { get;set; }
     
     [SaveScalar("diplomacy_weight")]
-    public required float DiplomacyWeight { get; init; }
+    public float DiplomacyWeight { get;set; }
 
     [SaveScalar("cached_killed_ships")]
-    public required int CachedKilledShips { get; init; }
+    public int CachedKilledShips { get;set; }
 
     [SaveScalar("cached_disabled_ships")]
-    public required int CachedDisabledShips { get; init; }
+    public int CachedDisabledShips { get;set; }
 
     [SaveScalar("cached_disengaged_ships")]
-    public required int CachedDisengagedShips { get; init; }
+    public int CachedDisengagedShips { get;set; }
 
     [SaveScalar("cached_combined_removed_ships")]
-    public required int CachedCombinedRemovedShips { get; init; }
+    public int CachedCombinedRemovedShips { get;set; }
 
     [SaveScalar("can_take_orders")]
-    public required bool CanTakeOrders { get; init; }
+    public bool CanTakeOrders { get;set; }
 }
 
 

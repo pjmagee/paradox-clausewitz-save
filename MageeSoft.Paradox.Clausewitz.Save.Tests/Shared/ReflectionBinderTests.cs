@@ -1,6 +1,8 @@
 using System.Collections.Immutable;
 using MageeSoft.Paradox.Clausewitz.Save.Binder.Reflection;
-using MageeSoft.Paradox.Clausewitz.Save.Models.Attributes;
+// Using qualified attribute names below
+// 
+using MageeSoft.Paradox.Clausewitz.Save.Models;
 using MageeSoft.Paradox.Clausewitz.Save.Parser;
 
 namespace MageeSoft.Paradox.Clausewitz.Save.Tests.Shared;
@@ -10,38 +12,38 @@ public class ReflectionBinderTests
 {
     public class TestModel
     {
-        [SaveScalar("name")]
+        [MageeSoft.Paradox.Clausewitz.Save.Models.SaveScalarAttribute("name")]
         public string Name { get; set; } = string.Empty;
 
-        [SaveScalar("capital")]
+        [MageeSoft.Paradox.Clausewitz.Save.Models.SaveScalarAttribute("capital")]
         public int Capital { get; set; }
 
-        [SaveScalar("start_date")]
+        [MageeSoft.Paradox.Clausewitz.Save.Models.SaveScalarAttribute("start_date")]
         public DateOnly StartDate { get; set; }
 
-        [SaveArray("achievement")]
+        [MageeSoft.Paradox.Clausewitz.Save.Models.SaveArrayAttribute("achievement")]
         public ImmutableList<int> Achievements { get; set; } = [];
 
-        [SaveScalar("ironman")]
+        [MageeSoft.Paradox.Clausewitz.Save.Models.SaveScalarAttribute("ironman")]
         public bool Ironman { get; set; }
 
-        [SaveScalar("id")]
+        [MageeSoft.Paradox.Clausewitz.Save.Models.SaveScalarAttribute("id")]
         public Guid Id { get; set; }
     }
 
     public class NestedModel
     {
         [SaveScalar("energy")]
-        public int Energy { get; init; }
+        public int Energy { get;set; }
 
         [SaveScalar("minerals")]
-        public int Minerals { get; init; }
+        public int Minerals { get;set; }
 
         [SaveScalar("name")]
-        public string Name { get; init; }
+        public string Name { get;set; }
 
         [SaveScalar("efficiency")]
-        public float Efficiency { get; init; }
+        public float Efficiency { get;set; }
     }
 
     public class ComplexModel
@@ -146,22 +148,47 @@ public class ReflectionBinderTests
     private class ImmutableListModel
     {
         [SaveArray("values")]
-        public ImmutableList<int> Values { get; init; }
+        public ImmutableList<int> Values { get;set; }
 
         [SaveArray("strings")]
-        public ImmutableList<string> Strings { get; init; }
+        public ImmutableList<string> Strings { get;set; }
 
         [SaveArray("nested")]
-        public ImmutableList<NestedModel?> Nested { get; init; }
+        public ImmutableList<NestedModel?> Nested { get;set; }
     }
 
     private class ImmutableDictionaryModel
     {
         [SaveIndexedDictionary("resources")]
-        public ImmutableDictionary<string, NestedModel?> Resources { get; init; }
+        public ImmutableDictionary<string, NestedModel?> Resources { get;set; }
 
         [SaveIndexedDictionary("scores")]
-        public ImmutableDictionary<int, float> Scores { get; init; }
+        public ImmutableDictionary<int, float> Scores { get;set; }
+    }
+
+    [SaveModel]
+    public partial class SimpleTestModel
+    {
+        [SaveScalar("int_value")]
+        public int IntValue { get; set; }
+
+        [SaveScalar("string_value")]
+        public string StringValue { get; set; }
+
+        [SaveScalar("bool_value")]
+        public bool BoolValue { get; set; }
+
+        [SaveScalar("float_value")]
+        public float FloatValue { get; set; }
+
+        [SaveScalar("long_value")]
+        public long LongValue { get; set; }
+
+        [SaveScalar("date_value")]
+        public DateOnly DateValue { get; set; }
+
+        [SaveScalar("guid_value")]
+        public Guid GuidValue { get; set; }
     }
 
     [TestMethod]

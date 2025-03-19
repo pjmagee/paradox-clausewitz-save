@@ -3,36 +3,37 @@ namespace MageeSoft.Paradox.Clausewitz.Save.Models.Stellaris;
 /// <summary>
 /// Represents an exhibit in the game state.
 /// </summary>
-public record Exhibit
+[SaveModel]
+public partial class Exhibit
 {
     /// <summary>
     /// Gets or sets the type.
     /// </summary>
-    public required string Type { get; init; }
+    public required string Type { get;set; }
 
     /// <summary>
     /// Gets or sets the planet.
     /// </summary>
-    public required int Planet { get; init; }
+    public required int Planet { get;set; }
 
     /// <summary>
     /// Gets or sets whether the exhibit is active.
     /// </summary>
-    public required bool IsActive { get; init; }
+    public required bool IsActive { get;set; }
 
     /// <summary>
     /// Gets or sets the exhibit state.
     /// </summary>
-    public required string ExhibitState { get; init; }
+    public required string ExhibitState { get;set; }
 
     /// <summary>
     /// Gets or sets the owner.
     /// </summary>
-    public required int Owner { get; init; }
+    public required int Owner { get;set; }
 
     /// <summary>
     /// Gets or sets the specimen.
     /// </summary>
-    public required ExhibitSpecimen Specimen { get; init; }
+    public required ExhibitSpecimen Specimen { get;set; }
 
 }

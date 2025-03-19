@@ -1,9 +1,12 @@
-using MageeSoft.Paradox.Clausewitz.Save.Models.Attributes;
+
 
 namespace MageeSoft.Paradox.Clausewitz.Save.Models.Stellaris;
 
-
-public class FormationPosition
+/// <summary>
+/// Represents a formation position in the game state.
+/// </summary>  
+[SaveModel]
+public partial class FormationPosition
 {
 
     [SaveScalar("x")]

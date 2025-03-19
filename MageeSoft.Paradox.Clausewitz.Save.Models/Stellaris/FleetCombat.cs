@@ -3,7 +3,8 @@ namespace MageeSoft.Paradox.Clausewitz.Save.Models.Stellaris;
 /// <summary>
 /// Represents fleet combat in the game state.
 /// </summary>
-public class FleetCombat
+[SaveModel]
+public partial class FleetCombat
 {
     /// <summary>
     /// Gets or sets the fleet ID.

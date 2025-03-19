@@ -6,32 +6,33 @@ namespace MageeSoft.Paradox.Clausewitz.Save.Models.Stellaris;
 /// <summary>
 /// Represents a construction in the game state.
 /// </summary>
-public record Construction
+[SaveModel]
+public partial class Construction
 {
     /// <summary>
     /// Gets or sets the type.
     /// </summary>
-    public required string Type { get; init; }
+    public required string Type { get;set; }
 
     /// <summary>
     /// Gets or sets the planet.
     /// </summary>
-    public required int Planet { get; init; }
+    public required int Planet { get;set; }
 
     /// <summary>
     /// Gets or sets the progress.
     /// </summary>
-    public required float Progress { get; init; }
+    public required float Progress { get;set; }
 
     /// <summary>
     /// Gets or sets whether the construction is active.
     /// </summary>
-    public required bool IsActive { get; init; }
+    public required bool IsActive { get;set; }
 
     /// <summary>
     /// Gets or sets the resources.
     /// </summary>
-    public ImmutableDictionary<string, float> Resources { get; init; }
+    public ImmutableDictionary<string, float> Resources { get;set; }
 } 
 
 

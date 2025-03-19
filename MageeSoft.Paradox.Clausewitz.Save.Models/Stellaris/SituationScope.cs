@@ -5,37 +5,38 @@ namespace MageeSoft.Paradox.Clausewitz.Save.Models.Stellaris;
 /// <summary>
 /// Represents a situation scope in the game state.
 /// </summary>
-public record SituationScope
+[SaveModel]
+public partial class SituationScope
 {
     /// <summary>
     /// Gets or sets the type.
     /// </summary>
-    public required string Type { get; init; }
+    public required string Type { get;set; }
 
     /// <summary>
     /// Gets or sets the ID.
     /// </summary>
-    public required long Id { get; init; }
+    public required long Id { get;set; }
 
     /// <summary>
     /// Gets or sets the country.
     /// </summary>
-    public required long Country { get; init; }
+    public required long Country { get;set; }
 
     /// <summary>
     /// Gets or sets the systems.
     /// </summary>
-    public required ImmutableArray<long> Systems { get; init; }
+    public required ImmutableArray<long> Systems { get;set; }
 
     /// <summary>
     /// Gets or sets the planets.
     /// </summary>
-    public required ImmutableArray<long> Planets { get; init; }
+    public required ImmutableArray<long> Planets { get;set; }
 
     /// <summary>
     /// Gets or sets the fleets.
     /// </summary>
-    public required ImmutableArray<long> Fleets { get; init; }
+    public required ImmutableArray<long> Fleets { get;set; }
 } 
 
 

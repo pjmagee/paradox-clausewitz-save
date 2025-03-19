@@ -3,40 +3,41 @@ namespace MageeSoft.Paradox.Clausewitz.Save.Models.Stellaris;
 /// <summary>
 /// Represents a bypass in the game state.
 /// </summary>
-public record Bypass
+[SaveModel]
+public partial class Bypass
 {
     /// <summary>
     /// Gets or sets the type.
     /// </summary>
-    public required string Type { get; init; }
+    public required string Type { get;set; }
 
     /// <summary>
     /// Gets or sets whether the bypass is active.
     /// </summary>
-    public required bool IsActive { get; init; }
+    public required bool IsActive { get;set; }
 
     /// <summary>
     /// Gets or sets the owner.
     /// </summary>
-    public required long Owner { get; init; }
+    public required long Owner { get;set; }
 
     /// <summary>
     /// Gets or sets the index.
     /// </summary>
-    public required int Index { get; init; }
+    public required int Index { get;set; }
 
     /// <summary>
     /// Gets or sets whether the bypass is locked.
     /// </summary>
-    public required bool IsLocked { get; init; }
+    public required bool IsLocked { get;set; }
 
     /// <summary>
     /// Gets or sets the days left.
     /// </summary>
-    public required int DaysLeft { get; init; }
+    public required int DaysLeft { get;set; }
 
     /// <summary>
     /// Gets or sets the position.
     /// </summary>
-    public Position Position { get; init; }
+    public Position Position { get;set; }
 } 

@@ -5,32 +5,33 @@ namespace MageeSoft.Paradox.Clausewitz.Save.Models.Stellaris;
 /// <summary>
 /// Represents the scope of an astral rift event.
 /// </summary>
-public record AstralRiftEventScope
+[SaveModel]
+public partial class AstralRiftEventScope
 {
     /// <summary>
     /// Gets or sets the type.
     /// </summary>
-    public required string Type { get; init; }
+    public required string Type { get;set; }
 
     /// <summary>
     /// Gets or sets the ID.
     /// </summary>
-    public required long Id { get; init; }
+    public required long Id { get;set; }
 
     /// <summary>
     /// Gets or sets the opener ID.
     /// </summary>
-    public required long OpenerId { get; init; }
+    public required long OpenerId { get;set; }
 
     /// <summary>
     /// Gets or sets the random values.
     /// </summary>
-    public required ImmutableArray<long> Random { get; init; }
+    public required ImmutableArray<long> Random { get;set; }
 
     /// <summary>
     /// Gets or sets whether random is allowed.
     /// </summary>
-    public required bool RandomAllowed { get; init; }
+    public required bool RandomAllowed { get;set; }
 
     /// <summary>
     /// Default instance of AstralRiftEventScope.

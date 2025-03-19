@@ -3,7 +3,8 @@ namespace MageeSoft.Paradox.Clausewitz.Save.Models.Stellaris;
 /// <summary>
 /// Represents a job cache in the game state.
 /// </summary>
-public class JobCache
+[SaveModel]
+public partial class JobCache
 {
     /// <summary>
     /// Gets the default instance of JobCache.
@@ -17,10 +18,10 @@ public class JobCache
     /// <summary>
     /// Gets or sets the job.
     /// </summary>
-    public required string Job { get; init; }
+    public required string Job { get;set; }
 
     /// <summary>
     /// Gets or sets the count.
     /// </summary>
-    public required int Count { get; init; }
+    public required int Count { get;set; }
 }

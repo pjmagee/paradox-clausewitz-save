@@ -3,27 +3,28 @@ namespace MageeSoft.Paradox.Clausewitz.Save.Models.Stellaris;
 /// <summary>
 /// Represents combat statistics in the game state.
 /// </summary>
-public record CombatStats
+[SaveModel]
+public partial class CombatStats
 {
     /// <summary>
     /// Gets or sets the damage dealt.
     /// </summary>
-    public required float DamageDealt { get; init; }
+    public required float DamageDealt { get;set; }
 
     /// <summary>
     /// Gets or sets the damage taken.
     /// </summary>
-    public required float DamageTaken { get; init; }
+    public required float DamageTaken { get;set; }
 
     /// <summary>
     /// Gets or sets the ships lost.
     /// </summary>
-    public required int ShipsLost { get; init; }
+    public required int ShipsLost { get;set; }
 
     /// <summary>
     /// Gets or sets the armies lost.
     /// </summary>
-    public required int ArmiesLost { get; init; }
+    public required int ArmiesLost { get;set; }
 }
 
 

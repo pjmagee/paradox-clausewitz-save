@@ -1,11 +1,10 @@
-using MageeSoft.Paradox.Clausewitz.Save.Models.Attributes;
-
 namespace MageeSoft.Paradox.Clausewitz.Save.Models.Stellaris;
 
 /// <summary>
 /// Represents a formation in the game state.
-/// </summary>
-public class Formation
+/// </summary>  
+[SaveModel]
+public partial class Formation
 {
     [SaveScalar("scale")]
     public float? Scale { get; set; }

@@ -1,19 +1,20 @@
-using MageeSoft.Paradox.Clausewitz.Save.Models.Attributes;
+
 
 namespace MageeSoft.Paradox.Clausewitz.Save.Models.Stellaris;
 
 /// <summary>
 /// Represents a ship in the game state.
 /// </summary>
-public class Ship
+[SaveModel]
+public partial class Ship
 {
     [SaveObject("name")]
-    public required LocalizedText Name { get; init; }
+    public required LocalizedText Name { get;set; }
     
-    public required long DesignId { get; init; }
+    public required long DesignId { get;set; }
 
     [SaveScalar("fleet")]
-    public required long Fleet { get; init; }
+    public required long Fleet { get;set; }
     
     [SaveScalar("reserve")]
     public int Reserved { get; set; }

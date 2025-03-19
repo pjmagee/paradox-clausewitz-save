@@ -3,37 +3,38 @@ namespace MageeSoft.Paradox.Clausewitz.Save.Models.Stellaris;
 /// <summary>
 /// Represents a situation in the game state.
 /// </summary>
-public record Situation
+[SaveModel]
+public partial class Situation
 {
     /// <summary>
     /// Gets or sets the situation ID.
     /// </summary>
-    public required long Id { get; init; }
+    public required long Id { get;set; }
 
     /// <summary>
     /// Gets or sets the type of the situation.
     /// </summary>
-    public required string Type { get; init; }
+    public required string Type { get;set; }
 
     /// <summary>
     /// Gets or sets the country ID.
     /// </summary>
-    public required int Country { get; init; }
+    public required int Country { get;set; }
 
     /// <summary>
     /// Gets or sets the progress value.
     /// </summary>
-    public required double Progress { get; init; }
+    public required double Progress { get;set; }
 
     /// <summary>
     /// Gets or sets the last month progress value.
     /// </summary>
-    public required double LastMonthProgress { get; init; }
+    public required double LastMonthProgress { get;set; }
 
     /// <summary>
     /// Gets or sets the approach value.
     /// </summary>
-    public required string Approach { get; init; }
+    public required string Approach { get;set; }
 } 
 
 

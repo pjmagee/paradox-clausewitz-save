@@ -5,16 +5,17 @@ namespace MageeSoft.Paradox.Clausewitz.Save.Models.Stellaris;
 /// <summary>
 /// Represents a movement path in the game state.
 /// </summary>
-public record MovementPath
+[SaveModel]
+public partial class MovementPath
 {
     /// <summary>
     /// Gets or sets the date.
     /// </summary>
-    public required string Date { get; init; }
+    public required string Date { get;set; }
 
     /// <summary>
     /// Gets or sets the nodes.
     /// </summary>
-    public required ImmutableArray<MovementPathNode> Nodes { get; init; }
+    public required ImmutableArray<MovementPathNode> Nodes { get;set; }
 
 }

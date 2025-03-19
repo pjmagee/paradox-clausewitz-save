@@ -1,4 +1,5 @@
 using MageeSoft.Paradox.Clausewitz.Save.Binder.Reflection;
+using MageeSoft.Paradox.Clausewitz.Save.Models.Stellaris;
 
 namespace MageeSoft.Paradox.Clausewitz.Save.Reader.Games.Stellaris;
 
@@ -7,8 +8,8 @@ namespace MageeSoft.Paradox.Clausewitz.Save.Reader.Games.Stellaris;
 /// </summary>
 public class StellarisSave
 {
-    public Meta Meta { get; private set; }
-    public GameState GameState { get; private set; }
+    public Meta Meta { get; private set; } = null!;
+    public GameState GameState { get; private set; } = null!;
   
     public static StellarisSave FromSave(string saveFile)
     {
@@ -32,10 +33,15 @@ public class StellarisSave
                     var documents = zip.GetDocuments();
 
                     Meta? meta = null;
-                    GameState ? gameState = null;
+                    GameState? gameState = null;
                     
                     try
                     {
+                        // TODO: Replace with source-generated binding once it's fully implemented
+                        // - Source generator should support cascading binding through nested objects
+                        // - All complex properties with [SaveObject] should be bound via their Bind() method
+                        // - Arrays of complex objects should be bound via their respective Bind() methods
+                        // - Dictionaries with complex values should be bound via their respective Bind() methods
                         meta = ReflectionBinder.Bind<Meta>(documents.MetaDocument.Root);
                     }
                     catch (Exception ex)
@@ -45,7 +51,12 @@ public class StellarisSave
                     
                     try
                     {
-                        gameState =  ReflectionBinder.Bind<GameState>(documents.GameStateDocument.Root);
+                        // TODO: Replace with source-generated binding once it's fully implemented
+                        // - Source generator should support cascading binding through nested objects
+                        // - All complex properties with [SaveObject] should be bound via their Bind() method
+                        // - Arrays of complex objects should be bound via their respective Bind() methods
+                        // - Dictionaries with complex values should be bound via their respective Bind() methods
+                        gameState = ReflectionBinder.Bind<GameState>(documents.GameStateDocument.Root);
                     }
                     catch (Exception ex)
                     {

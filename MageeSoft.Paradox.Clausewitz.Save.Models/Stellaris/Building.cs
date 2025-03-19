@@ -2,11 +2,13 @@ using System.Collections.Immutable;
 
 namespace MageeSoft.Paradox.Clausewitz.Save.Models.Stellaris;
 
-public record Building
+
+[SaveModel]
+public partial class Building
 {
-    public required long Id { get; init; }
-    public required string Type { get; init; }
-    public required int RuinTime { get; init; }
+    public required long Id { get;set; }
+    public required string Type { get;set; }
+    public required int RuinTime { get;set; }
 } 
 
 

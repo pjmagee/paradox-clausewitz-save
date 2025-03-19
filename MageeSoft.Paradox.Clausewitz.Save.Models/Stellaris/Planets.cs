@@ -1,8 +1,12 @@
-using MageeSoft.Paradox.Clausewitz.Save.Models.Attributes;
+
 
 namespace MageeSoft.Paradox.Clausewitz.Save.Models.Stellaris;
 
-public class Planets
+/// <summary>
+/// Represents a collection of planets in the game state.
+/// </summary>
+[SaveModel]
+public partial class Planets
 {
     [SaveArray("planet")]
     public Dictionary<long, Planet> Values { get; set; } = new();

@@ -4,605 +4,505 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
+using System.Linq;
+using System.Collections.Generic;
 
 namespace MageeSoft.Paradox.Clausewitz.Save.SourceGen;
+
+/*
+ * CASCADING BINDING ARCHITECTURE
+ * 
+ * The binding system works by generating Bind() methods for each class annotated with [SaveModel].
+ * These Bind methods form a cascading hierarchy that enables hierarchical object binding:
+ * 
+ * 1. Root objects like GameState and Meta have a static Bind(SaveObject) method that initializes the root object
+ * 2. Sub-objects marked with [SaveObject] are bound by calling their Bind method recursively
+ * 3. Collections of objects use the appropriate binding method for each element:
+ *    - [SaveArray] of complex objects -> bind each element using its Bind method
+ *    - [SaveIndexedDictionary] with complex values -> bind each value using its Bind method
+ * 
+ * This architecture enables automatic cascading binding through the entire object graph, starting
+ * from a single call to the root object's Bind method.
+ * 
+ * ISSUES THAT NEED TO BE FIXED:
+ * 
+ * 1. Dictionary<TKey, TValue> support:
+ *    - Currently generates code for regular Dictionary but not ImmutableDictionary
+ *    - Needs proper type checking for TKey and TValue
+ *    - Needs special handling for int keys (parsing int instead of using TKey.Parse)
+ *    
+ * 2. Complex object binding:
+ *    - Need to properly detect when a type has a Bind() method available
+ *    - For SaveIndexedDictionary with complex values, need to invoke the Bind() method
+ *    - Need to handle arrays of complex objects correctly
+ *    
+ * 3. Required properties initialization:
+ *    - Default initialization of required properties sometimes doesn't work
+ *    - Need better default value generation for complex objects
+ *    
+ * 4. Dictionary<long, TValue> special handling:
+ *    - SaveIndexedDictionary with long keys needs custom int.Parse/long.Parse logic
+ */
 
 [Generator]
 public class BinderGenerator : IIncrementalGenerator
 {
-    // Attribute fully qualified names we care about
-    const string NameSpace = "MageeSoft.Paradox.Clausewitz.Save.Models.Attributes";
-    const string SaveScalarAttributeName = $"{NameSpace}.SaveScalarAttribute";
-    const string SaveArrayAttributeName = $"{NameSpace}.SaveArrayAttribute";
-    const string SaveObjectAttributeName = $"{NameSpace}.SaveObjectAttribute";
-    const string SaveIndexedDictionaryAttributeName = $"{NameSpace}.SaveIndexedDictionaryAttribute";
+    private const string SaveScalarAttributeName = "MageeSoft.Paradox.Clausewitz.Save.Models.SaveScalarAttribute";
+    private const string SaveArrayAttributeName = "MageeSoft.Paradox.Clausewitz.Save.Models.SaveArrayAttribute";
+    private const string SaveObjectAttributeName = "MageeSoft.Paradox.Clausewitz.Save.Models.SaveObjectAttribute";
+    private const string SaveIndexedDictionaryAttributeName = "MageeSoft.Paradox.Clausewitz.Save.Models.SaveIndexedDictionaryAttribute";
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        // Register for syntax notifications 
         var classDeclarations = context.SyntaxProvider
             .CreateSyntaxProvider(
-                predicate: static (s, _) => IsPotentiallyRelevantClass(s),
+                predicate: static (s, _) => IsSyntaxTargetForGeneration(s),
                 transform: static (ctx, _) => GetSemanticTargetForGeneration(ctx))
             .Where(static m => m is not null);
 
-        // Combine with compilation
-        var compilationAndClasses = context.CompilationProvider
-            .Combine(classDeclarations.Collect());
+        var compilation = context.CompilationProvider.Combine(classDeclarations.Collect());
 
-        // Generate the source
-        context.RegisterSourceOutput(compilationAndClasses, 
-            static (spc, source) => Execute(source.Left, source.Right, spc));
+        context.RegisterSourceOutput(compilation,
+            static (spc, source) => Execute(source.Left, source.Right!, spc));
     }
 
-    static bool IsPotentiallyRelevantClass(SyntaxNode node)
-    {
-        // We're looking for classes with properties that might have our attributes
-        return node is ClassDeclarationSyntax classDecl && 
-               classDecl.Members.OfType<PropertyDeclarationSyntax>().Any(p => 
-                   p.AttributeLists.Count > 0);
-    }
+    private static bool IsSyntaxTargetForGeneration(SyntaxNode node)
+        => node is ClassDeclarationSyntax { AttributeLists.Count: > 0 };
 
-    static ClassDeclarationSyntax? GetSemanticTargetForGeneration(GeneratorSyntaxContext context)
+    private static ClassDeclarationSyntax? GetSemanticTargetForGeneration(GeneratorSyntaxContext context)
     {
-        // Get the class declaration
         var classDeclaration = (ClassDeclarationSyntax)context.Node;
+        var model = context.SemanticModel;
+        var classSymbol = model.GetDeclaredSymbol(classDeclaration) as INamedTypeSymbol;
         
-        // Check if any property has our attributes
-        foreach (var property in classDeclaration.Members.OfType<PropertyDeclarationSyntax>())
+        if (classSymbol == null)
+            return null;
+            
+        // Check if the class has the SaveModel attribute
+        var attributes = classSymbol.GetAttributes();
+        var hasSaveModelAttribute = attributes.Any(a => 
+            a.AttributeClass?.Name == "SaveModelAttribute" || 
+            a.AttributeClass?.Name == "SaveModel");
+            
+        if (hasSaveModelAttribute)
         {
-            foreach (var attributeList in property.AttributeLists)
-            {
-                foreach (var attribute in attributeList.Attributes)
-                {
-                    var attributeName = attribute.Name.ToString();
-                    
-                    if (attributeName.Contains("SaveScalar") || 
-                        attributeName.Contains("SaveArray") || 
-                        attributeName.Contains("SaveObject") || 
-                        attributeName.Contains("SaveIndexedDictionary"))
-                    {
-                        // This is a potentially relevant class
-                        return classDeclaration;
-                    }
-                }
-            }
+            return classDeclaration;
         }
 
         return null;
     }
 
-    static void Execute(Compilation compilation, ImmutableArray<ClassDeclarationSyntax?> classes, SourceProductionContext context)
+    private static void Execute(Compilation compilation, ImmutableArray<ClassDeclarationSyntax> classes, SourceProductionContext context)
     {
         if (classes.IsDefaultOrEmpty)
         {
             return;
         }
 
-        // Generate common binding utility methods
-        GenerateBinderUtilities(context);
+        // Keep track of processed classes by full qualified name to avoid duplicates
+        var processedClasses = new HashSet<string>();
 
-        // Generate a static binder for each class
-        foreach (var classDeclaration in classes.Where(c => c != null))
+        foreach (var classDeclaration in classes)
         {
-            var semanticModel = compilation.GetSemanticModel(classDeclaration!.SyntaxTree);
-
-            if (semanticModel.GetDeclaredSymbol(classDeclaration!) is INamedTypeSymbol classSymbol)
+            var model = compilation.GetSemanticModel(classDeclaration.SyntaxTree);
+            var classSymbol = model.GetDeclaredSymbol(classDeclaration) as INamedTypeSymbol;
+            if (classSymbol != null)
+            {
+                var className = classSymbol.ToDisplayString();
+                var classSyntaxTree = classDeclaration.SyntaxTree.FilePath;
+                var classKey = $"{className}|{classSyntaxTree}";
+                
+                // Skip if we've already processed this class
+                if (processedClasses.Contains(classKey))
+                    continue;
+                    
+                processedClasses.Add(classKey);
+                
+                // Check if this class has any SaveScalar, SaveArray, etc. attributes on its properties
+                var properties = GetPropertiesWithAttributes(classSymbol);
+                if (properties.Any())
             {
                 GenerateBinderForClass(classSymbol, context);
+                }
             }
         }
     }
 
-    static void GenerateBinderUtilities(SourceProductionContext context)
+    private static void GenerateBinderForClass(INamedTypeSymbol classSymbol, SourceProductionContext context)
     {
-        var utilityCode = @"#nullable enable
-
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using MageeSoft.Paradox.Clausewitz.Save.Parser;
-
-namespace MageeSoft.Paradox.Clausewitz.Save.Models
-{
-    /// <summary>
-    /// Contains utility methods used by the generated binders.
-    /// </summary>
-    public static class BinderUtilities
-    {
-        public static object? BindScalar(SaveElement element, Type targetType)
-        {
-            // For nullable types, get the underlying type
-            Type nullableUnderlyingType = Nullable.GetUnderlyingType(targetType) ?? targetType;
-
-            if (element is Scalar<string> stringScalar)
-            {
-                if (stringScalar.Value == ""none"")
-                    return null;
-                if (nullableUnderlyingType == typeof(string))
-                    return stringScalar.Value;
-            }
-            else if (element is Scalar<int> intScalar)
-            {
-                if (nullableUnderlyingType == typeof(int))
-                    return intScalar.Value;
-                if (nullableUnderlyingType == typeof(float))
-                    return (float)intScalar.Value;
-                if (nullableUnderlyingType == typeof(long))
-                    return (long)intScalar.Value;
-            }
-            else if (element is Scalar<long> longScalar)
-            {
-                if (nullableUnderlyingType == typeof(long))
-                    return longScalar.Value;
-                if (nullableUnderlyingType == typeof(int) && longScalar.Value <= int.MaxValue)
-                    return (int)longScalar.Value;
-                if (nullableUnderlyingType == typeof(float))
-                    return (float)longScalar.Value;
-            }
-            else if (element is Scalar<float> floatScalar)
-            {
-                if (nullableUnderlyingType == typeof(float))
-                    return floatScalar.Value;
-                if (nullableUnderlyingType == typeof(int) && floatScalar.Value % 1 == 0)
-                    return (int)floatScalar.Value;
-                if (nullableUnderlyingType == typeof(long) && floatScalar.Value % 1 == 0)
-                    return (long)floatScalar.Value;
-            }
-            else if (element is Scalar<bool> boolScalar)
-            {
-                if (nullableUnderlyingType == typeof(bool))
-                    return boolScalar.Value;
-            }
-            else if (element is Scalar<DateOnly> dateScalar)
-            {
-                if (nullableUnderlyingType == typeof(DateOnly))
-                    return dateScalar.Value;
-            }
-            else if (element is Scalar<Guid> guidScalar)
-            {
-                if (nullableUnderlyingType == typeof(Guid))
-                    return guidScalar.Value;
-            }
-
-            return null;
-        }
-
-        public static T? BindInt<T>(SaveElement element) where T : struct
-        {
-            if (element is Scalar<int> intScalar)
-            {
-                if (typeof(T) == typeof(int))
-                    return (T)(object)intScalar.Value;
-                if (typeof(T) == typeof(float))
-                    return (T)(object)(float)intScalar.Value;
-                if (typeof(T) == typeof(long))
-                    return (T)(object)(long)intScalar.Value;
-            }
-            return null;
-        }
-
-        public static T? BindLong<T>(SaveElement element) where T : struct
-        {
-            if (element is Scalar<long> longScalar)
-            {
-                if (typeof(T) == typeof(long))
-                    return (T)(object)longScalar.Value;
-                if (typeof(T) == typeof(int) && longScalar.Value <= int.MaxValue)
-                    return (T)(object)(int)longScalar.Value;
-                if (typeof(T) == typeof(float))
-                    return (T)(object)(float)longScalar.Value;
-            }
-            return null;
-        }
-
-        public static T? BindFloat<T>(SaveElement element) where T : struct
-        {
-            if (element is Scalar<float> floatScalar)
-            {
-                if (typeof(T) == typeof(float))
-                    return (T)(object)floatScalar.Value;
-                if (typeof(T) == typeof(int) && floatScalar.Value % 1 == 0)
-                    return (T)(object)(int)floatScalar.Value;
-                if (typeof(T) == typeof(long) && floatScalar.Value % 1 == 0)
-                    return (T)(object)(long)floatScalar.Value;
-            }
-            return null;
-        }
-
-        public static SaveObject? GetSaveObject(SaveObject saveObject, string propertyName)
-        {
-            var prop = saveObject.Properties.FirstOrDefault(p => p.Key == propertyName);
-            
-            // Handle 'none' value
-            if (prop.Value != null && prop.Value.ToString() == ""none"")
-                return null;
-            
-            return prop.Value as SaveObject;
-        }
-
-        public static bool IsNullable(Type type)
-        {
-            return !type.IsValueType || Nullable.GetUnderlyingType(type) != null;
-        }
-    }
-}";
-
-        context.AddSource("BinderUtilities.g.cs", SourceText.From(utilityCode, Encoding.UTF8));
-    }
-
-    static void GenerateBinderForClass(INamedTypeSymbol classSymbol, SourceProductionContext context)
-    {
-        string namespaceName = classSymbol.ContainingNamespace.ToDisplayString();
-        string className = classSymbol.Name;
-        string binderClassName = $"{className}Binder";
-
+        var namespaceName = classSymbol.ContainingNamespace.ToDisplayString();
+        var className = classSymbol.Name;
         var properties = GetPropertiesWithAttributes(classSymbol);
-        
-        if (!properties.Any())
-        {
-            return; // No relevant properties to generate binding for
-        }
+        var allProperties = classSymbol.GetMembers().OfType<IPropertySymbol>().ToList();
+        var requiredProperties = allProperties.Where(p => p.IsRequired).ToList();
 
-        var source = new StringBuilder();
-        source.AppendLine($@"#nullable enable
-
+        var sourceText = $$"""
+// <auto-generated/>
+#nullable enable
+using MageeSoft.Paradox.Clausewitz.Save.Parser;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using MageeSoft.Paradox.Clausewitz.Save.Parser;
-using MageeSoft.Paradox.Clausewitz.Save.Models;
+using System.Linq;
 
-namespace {namespaceName}.Generated
-{{
-    /// <summary>
-    /// Generated binder for {className}
-    /// </summary>
-    public static class {binderClassName}
-    {{
-        /// <summary>
-        /// Binds a SaveObject to a {className} instance.
-        /// </summary>
-        /// <param name=""saveObject"">The SaveObject to bind from.</param>
-        /// <returns>A new {className} instance with bound properties.</returns>
-        public static {className} Bind(SaveObject saveObject)
-        {{
-            var result = new {className}();
-");
-
-        // Generate binding code for each property
-        foreach (var property in properties)
+namespace {{namespaceName}}
+{
+    partial class {{className}}
+    {
+        public static {{className}} Bind(SaveObject obj)
         {
-            var propertyName = property.Name;
-            var propertyType = property.Type.ToDisplayString();
-            var attributeData = GetSaveAttribute(property);
+            try
+            {
+                return new {{className}}
+                {
+{{GenerateRequiredPropertyInitializers(requiredProperties)}}{{GeneratePropertyBindings(properties)}}
+                };
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error binding {nameof({{className}})}", ex);
+            }
+        }
+    }
+}
+""";
+
+        // Parse the source text into a syntax tree for formatting
+        var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
+        
+        // Get the formatted syntax tree with proper whitespace normalization
+        var formattedRoot = syntaxTree.GetRoot().NormalizeWhitespace();
+        var formattedSourceText = formattedRoot.GetText(Encoding.UTF8);
+        
+        // Add the source with proper formatting
+        context.AddSource($"{className}.g.cs", formattedSourceText);
+    }
+
+    private static string GenerateRequiredPropertyInitializers(List<IPropertySymbol> requiredProperties)
+    {
+        if (requiredProperties.Count == 0)
+            return string.Empty;
+
+        var sb = new StringBuilder();
+        foreach (var property in requiredProperties)
+        {
+            sb.AppendLine($"                    {property.Name} = {GetDefaultValueForType(property.Type)},");
+        }
+        return sb.ToString();
+    }
+
+    private static string GetDefaultValueForType(ITypeSymbol type)
+    {
+        if (type.SpecialType == SpecialType.System_String)
+            return "string.Empty";
+        if (type.SpecialType == SpecialType.System_Boolean)
+            return "false";
+        if (type.SpecialType == SpecialType.System_Int32 ||
+            type.SpecialType == SpecialType.System_Int64 ||
+            type.SpecialType == SpecialType.System_Single ||
+            type.SpecialType == SpecialType.System_Double)
+            return "0";
+        
+        if (type.TypeKind == TypeKind.Enum)
+            return "0";
+        
+        // For DateOnly
+        if (type.Name == "DateOnly")
+            return "new DateOnly(1, 1, 1)";
+        
+        // For Guid
+        if (type.Name == "Guid")
+            return "Guid.Empty";
+
+        // For collections
+        if (type.Name.Contains("List") || type.Name.Contains("Array") || type.Name.Contains("Dictionary"))
+        {
+            // Check if it's an array
+            if (type is IArrayTypeSymbol)
+                return "Array.Empty<" + ((IArrayTypeSymbol)type).ElementType + ">()";
             
-            if (attributeData == null)
-                continue;
-
-            var attributeName = attributeData.AttributeClass!.Name;
-            var saveName = GetAttributeNameValue(attributeData);
-
-            // Handle different attribute types
-            if (attributeName == "SaveScalarAttribute")
+            // Check if it's a generic collection
+            if (type is INamedTypeSymbol namedType && namedType.TypeArguments.Length > 0)
             {
-                GenerateScalarBinding(source, property, saveName);
-            }
-            else if (attributeName == "SaveArrayAttribute")
-            {
-                GenerateArrayBinding(source, property, saveName);
-            }
-            else if (attributeName == "SaveObjectAttribute")
-            {
-                GenerateObjectBinding(source, property, saveName);
-            }
-            else if (attributeName == "SaveIndexedDictionaryAttribute")
-            {
-                GenerateDictionaryBinding(source, property, saveName);
+                if (type.Name.Contains("ImmutableList"))
+                    return "ImmutableList<" + namedType.TypeArguments[0] + ">.Empty";
+                if (type.Name.Contains("ImmutableArray"))
+                    return "ImmutableArray<" + namedType.TypeArguments[0] + ">.Empty";
+                if (type.Name.Contains("ImmutableDictionary"))
+                    return "ImmutableDictionary<" + namedType.TypeArguments[0] + ", " + namedType.TypeArguments[1] + ">.Empty";
+                if (type.Name.Contains("Dictionary"))
+                    return "new Dictionary<" + namedType.TypeArguments[0] + ", " + namedType.TypeArguments[1] + ">()";
+                if (type.Name.Contains("List"))
+                    return "new List<" + namedType.TypeArguments[0] + ">()";
             }
         }
 
-        source.AppendLine(@"
-            return result;
-        }");
-
-        // Add any helper methods for binding specific types for this class
-        GenerateHelperMethods(source, properties);
-
-        source.AppendLine(@"    }
-}");
-
-        context.AddSource($"{binderClassName}.g.cs", SourceText.From(source.ToString(), Encoding.UTF8));
+        // For all other reference types
+        return "default!";
     }
 
-    static IEnumerable<IPropertySymbol> GetPropertiesWithAttributes(INamedTypeSymbol classSymbol)
+    private static IEnumerable<(IPropertySymbol Property, AttributeData Attribute)> GetPropertiesWithAttributes(INamedTypeSymbol classSymbol)
     {
-        return classSymbol.GetMembers()
-            .OfType<IPropertySymbol>()
-            .Where(p => p.GetAttributes().Any(a => 
+        // Track which properties we've processed to avoid duplicates
+        var processedPropertyKeys = new HashSet<string>();
+        
+        foreach (var member in classSymbol.GetMembers().OfType<IPropertySymbol>())
+        {
+            var attributes = member.GetAttributes();
+            
+            // Filter to just the Save* attributes
+            var saveAttributes = attributes.Where(a => 
                 a.AttributeClass?.ToDisplayString() == SaveScalarAttributeName ||
                 a.AttributeClass?.ToDisplayString() == SaveArrayAttributeName ||
                 a.AttributeClass?.ToDisplayString() == SaveObjectAttributeName ||
-                a.AttributeClass?.ToDisplayString() == SaveIndexedDictionaryAttributeName));
-    }
-
-    static AttributeData? GetSaveAttribute(IPropertySymbol property)
-    {
-        return property.GetAttributes().FirstOrDefault(a => 
-            a.AttributeClass?.ToDisplayString() == SaveScalarAttributeName ||
-            a.AttributeClass?.ToDisplayString() == SaveArrayAttributeName ||
-            a.AttributeClass?.ToDisplayString() == SaveObjectAttributeName ||
-            a.AttributeClass?.ToDisplayString() == SaveIndexedDictionaryAttributeName);
-    }
-
-    static string GetAttributeNameValue(AttributeData attributeData)
-    {
-        if (attributeData.ConstructorArguments.Length > 0)
-        {
-            return attributeData.ConstructorArguments[0].Value?.ToString() ?? "";
-        }
-        return "";
-    }
-
-    static void GenerateScalarBinding(StringBuilder source, IPropertySymbol property, string saveName)
-    {
-        var propertyName = property.Name;
-        var propertyType = property.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-        
-        source.AppendLine($@"            try
-            {{
-                var scalar = saveObject.Properties.FirstOrDefault(p => p.Key == ""{saveName}"").Value;
-                if (scalar != null)
-                {{
-                    var value = BinderUtilities.BindScalar(scalar, typeof({propertyType}));
-                    if (value != null)
-                    {{
-                        result.{propertyName} = ({propertyType})value;
-                    }}
-                }}
-            }}
-            catch (Exception ex)
-            {{
-                Console.WriteLine($""Error binding {propertyName}: {{ex.Message}}"");
-            }}");
-    }
-
-    static void GenerateArrayBinding(StringBuilder source, IPropertySymbol property, string saveName)
-    {
-        var propertyName = property.Name;
-        var propertyType = property.Type;
-        
-        if (propertyType is IArrayTypeSymbol arrayType)
-        {
-            var elementType = arrayType.ElementType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-            GenerateArrayBindingCode(source, propertyName, saveName, elementType, "Array");
-        }
-        else if (propertyType is INamedTypeSymbol namedType && namedType.IsGenericType)
-        {
-            var genericTypeName = namedType.ConstructedFrom.ToDisplayString();
-            var elementType = namedType.TypeArguments[0].ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                a.AttributeClass?.ToDisplayString() == SaveIndexedDictionaryAttributeName).ToList();
+                
+            // Check if we have multiple Save* attributes on the same property
+            if (saveAttributes.Count > 1)
+            {
+                throw new InvalidOperationException(
+                    $"Property {member.Name} on class {classSymbol.Name} has multiple Save* attributes. " +
+                    $"Only one Save* attribute is allowed per property.");
+            }
             
-            if (genericTypeName.Contains("ImmutableArray"))
+            // Check for duplicate properties
+            var propertyKey = $"{classSymbol.ToDisplayString()}.{member.Name}";
+            if (!processedPropertyKeys.Contains(propertyKey) && saveAttributes.Count > 0)
             {
-                GenerateArrayBindingCode(source, propertyName, saveName, elementType, "ImmutableArray");
-            }
-            else if (genericTypeName.Contains("ImmutableList"))
-            {
-                GenerateArrayBindingCode(source, propertyName, saveName, elementType, "ImmutableList");
-            }
-            else if (genericTypeName.Contains("List"))
-            {
-                GenerateArrayBindingCode(source, propertyName, saveName, elementType, "List");
+                processedPropertyKeys.Add(propertyKey);
+                yield return (member, saveAttributes[0]);
             }
         }
     }
 
-    static void GenerateArrayBindingCode(StringBuilder source, string propertyName, string saveName, 
-                                             string elementType, string collectionType)
+    private static string GeneratePropertyBindings(IEnumerable<(IPropertySymbol Property, AttributeData Attribute)> propertyAttributes)
     {
-        // Simplified array binding that calls into a separate method to handle the details
-        source.AppendLine($@"            try
-            {{
-                result.{propertyName} = Bind{collectionType}OfType<{elementType}>(saveObject, ""{saveName}"");
-            }}
-            catch (Exception ex)
-            {{
-                Console.WriteLine($""Error binding {propertyName}: {{ex.Message}}"");
-            }}");
-    }
-
-    static void GenerateObjectBinding(StringBuilder source, IPropertySymbol property, string saveName)
-    {
-        var propertyName = property.Name;
-        var propertyType = property.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-        var isNullable = property.NullableAnnotation == NullableAnnotation.Annotated;
+        var sb = new StringBuilder();
+        // Track properties by containing type + property name to avoid duplicates
+        var processedProperties = new HashSet<string>(); 
         
-        source.AppendLine($@"            try
-            {{
-                var obj = BinderUtilities.GetSaveObject(saveObject, ""{saveName}"");
-                if (obj != null)
-                {{
-                    // Need to handle binding to the specific type
-                    result.{propertyName} = {GetBindMethodForType(propertyType)};
-                }}");
-        
-        if (isNullable)
+        foreach (var (property, attribute) in propertyAttributes)
         {
-            source.AppendLine($@"                else
-                {{
-                    result.{propertyName} = null;
-                }}");
-        }
-        
-        source.AppendLine($@"            }}
-            catch (Exception ex)
-            {{
-                Console.WriteLine($""Error binding {propertyName}: {{ex.Message}}"");
-            }}");
-    }
-
-    static void GenerateDictionaryBinding(StringBuilder source, IPropertySymbol property, string saveName)
-    {
-        var propertyName = property.Name;
-        var propertyType = property.Type as INamedTypeSymbol;
-        
-        if (propertyType != null && propertyType.IsGenericType && propertyType.TypeArguments.Length == 2)
-        {
-            var keyType = propertyType.TypeArguments[0].ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-            var valueType = propertyType.TypeArguments[1].ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+            var propertyName = property.Name;
+            var containingType = property.ContainingType.ToDisplayString();
+            var fullPropertyId = $"{containingType}.{propertyName}";
             
-            source.AppendLine($@"            try
-            {{
-                var obj = BinderUtilities.GetSaveObject(saveObject, ""{saveName}"");
-                if (obj != null)
-                {{
-                    result.{propertyName} = BindDictionary<{keyType}, {valueType}>(obj);
-                }}
-            }}
-            catch (Exception ex)
-            {{
-                Console.WriteLine($""Error binding {propertyName}: {{ex.Message}}"");
-            }}");
-        }
-    }
-
-    static string GetBindMethodForType(string typeName)
-    {
-        // This is a simplification - ideally we'd check if the type has a generated binder
-        // For now, just assume it does
-        var simpleTypeName = typeName.Split('.').Last().TrimEnd('?');
-        return $"{simpleTypeName}Binder.Bind(obj)";
-    }
-
-    static void GenerateHelperMethods(StringBuilder source, IEnumerable<IPropertySymbol> properties)
-    {
-        // Add standard helper methods for handling common types
-        source.AppendLine(@"
-        // Helper methods for array binding
-        private static T[] BindArrayOfType<T>(SaveObject saveObject, string propertyName)
-        {
-            var list = new List<T>();
-            bool isNullableElementType = BinderUtilities.IsNullable(typeof(T));
+            // Skip if this property has already been processed
+            if (processedProperties.Contains(fullPropertyId))
+                continue;
+                
+            processedProperties.Add(fullPropertyId);
             
-            foreach (var prop in saveObject.Properties.Where(p => p.Key == propertyName))
+            // Get the property key name from the attribute's Name property or use the property name if null
+            string? propertyKey = null;
+            if (attribute.NamedArguments.Any(na => na.Key == "Name"))
             {
-                if (prop.Value is SaveArray array)
-                {
-                    foreach (var element in array.Items)
+                propertyKey = attribute.NamedArguments.First(na => na.Key == "Name").Value.Value?.ToString();
+            }
+            else if (attribute.ConstructorArguments.Length > 0 && attribute.ConstructorArguments[0].Value != null)
+            {
+                propertyKey = attribute.ConstructorArguments[0].Value?.ToString();
+            }
+
+            // Fall back to property name if no custom name is specified
+            propertyKey ??= property.Name;
+
+            var attributeType = attribute.AttributeClass?.ToDisplayString();
+            var propertyType = property.Type.ToDisplayString();
+            var varName = propertyName.ToLower();
+
+            // Check if property is read-only or has an init setter
+            bool isReadOnly = property.IsReadOnly;
+            bool hasInitSetter = property.SetMethod?.IsInitOnly ?? false;
+
+            if (isReadOnly && !hasInitSetter)
+            {
+                // Skip properties that are read-only and don't have an init setter
+                continue;
+            }
+
+            // Special case for Achievements.Values
+            if (propertyName == "Values" && propertyType.Contains("ImmutableList<int>"))
+            {
+                sb.AppendLine($"                    {propertyName} = obj.TryGetSaveArray(\"{propertyKey}\", out var {varName}Array) ? " +
+                              $"System.Collections.Immutable.ImmutableList<int>.Empty.AddRange({varName}Array.Elements().Select(x => ((Scalar<int>)x).Value)) : " +
+                              $"System.Collections.Immutable.ImmutableList<int>.Empty,");
+                continue;
+            }
+
+            switch (attributeType)
+            {
+                case SaveScalarAttributeName:
+                    var underlyingType = GetUnderlyingType(propertyType);
+                    
+                    if (underlyingType == "bool" || underlyingType == "System.Boolean")
                     {
-                        if (element is SaveObject obj)
-                        {
-                            // Need specific binding based on type T
-                            var item = BindObjectElement<T>(obj);
-                            if (item != null)
-                                list.Add((T)item);
-                            else if (isNullableElementType)
-                                list.Add(default!);
-                        }
-                        else if (element is SaveElement scalar)
-                        {
-                            if (scalar.ToString() == ""none"" && isNullableElementType)
-                            {
-                                list.Add(default!);
-                            }
-                            else if (scalar.ToString() != ""none"")
-                            {
-                                var value = BinderUtilities.BindScalar(scalar, typeof(T));
-                                if (value != null)
-                                    list.Add((T)value);
-                                else if (isNullableElementType)
-                                    list.Add(default!);
-                            }
-                        }
+                        sb.AppendLine($"                    {propertyName} = obj.TryGetBool(\"{propertyKey}\", out var {varName}) ? {varName} : default,");
                     }
-                }
-                else if (prop.Value is SaveObject obj)
-                {
-                    var item = BindObjectElement<T>(obj);
-                    if (item != null)
-                        list.Add((T)item);
-                    else if (isNullableElementType)
-                        list.Add(default!);
-                }
-                else if (prop.Value is SaveElement scalar && prop.Value.ToString() != ""none"")
-                {
-                    var value = BinderUtilities.BindScalar(scalar, typeof(T));
-                    if (value != null)
-                        list.Add((T)value);
-                    else if (isNullableElementType)
-                        list.Add(default!);
-                }
-            }
-            
-            return list.ToArray();
-        }
-
-        private static List<T> BindListOfType<T>(SaveObject saveObject, string propertyName)
-        {
-            return new List<T>(BindArrayOfType<T>(saveObject, propertyName));
-        }
-
-        private static ImmutableArray<T> BindImmutableArrayOfType<T>(SaveObject saveObject, string propertyName)
-        {
-            return ImmutableArray.CreateRange(BindArrayOfType<T>(saveObject, propertyName));
-        }
-
-        private static ImmutableList<T> BindImmutableListOfType<T>(SaveObject saveObject, string propertyName)
-        {
-            // Fix to ensure nullability is preserved correctly
-            return ImmutableList.CreateRange<T>(BindArrayOfType<T>(saveObject, propertyName));
-        }
-
-        private static object? BindObjectElement<T>(SaveObject obj)
-        {
-            // This is a simplification - ideally, we would check if T has a generated binder
-            // and use it if available, but for now we'll just return null
-            return null;
-        }
-
-        private static ImmutableDictionary<TKey, TValue> BindDictionary<TKey, TValue>(SaveObject saveObject)
-            where TKey : notnull
-        {
-            var dictionary = new Dictionary<TKey, TValue>();
-            bool isNullableValueType = BinderUtilities.IsNullable(typeof(TValue));
-
-            foreach (var prop in saveObject.Properties)
-            {
-                TKey? key = default;
-                try
-                {
-                    if (typeof(TKey) == typeof(string))
-                        key = (TKey)(object)prop.Key;
-                    else if (typeof(TKey) == typeof(int) && int.TryParse(prop.Key, out var intKey))
-                        key = (TKey)(object)intKey;
+                    else if (underlyingType == "int" || underlyingType == "System.Int32")
+                    {
+                        sb.AppendLine($"                    {propertyName} = obj.TryGetInt(\"{propertyKey}\", out var {varName}) ? {varName} : default,");
+                    }
+                    else if (underlyingType == "long" || underlyingType == "System.Int64")
+                    {
+                        sb.AppendLine($"                    {propertyName} = obj.TryGetLong(\"{propertyKey}\", out var {varName}) ? {varName} : default,");
+                    }
+                    else if (underlyingType == "float" || underlyingType == "System.Single")
+                    {
+                        sb.AppendLine($"                    {propertyName} = obj.TryGetFloat(\"{propertyKey}\", out var {varName}) ? {varName} : default,");
+                    }
+                    else if (underlyingType == "string" || underlyingType == "System.String")
+                    {
+                        sb.AppendLine($"                    {propertyName} = obj.TryGetString(\"{propertyKey}\", out var {varName}) ? {varName} : default,");
+                    }
+                    else if (underlyingType == "Guid" || underlyingType == "System.Guid")
+                    {
+                        sb.AppendLine($"                    {propertyName} = obj.TryGetGuid(\"{propertyKey}\", out var {varName}) ? {varName} : default,");
+                    }
+                    else if (underlyingType == "DateOnly" || underlyingType == "System.DateOnly")
+                    {
+                        sb.AppendLine($"                    {propertyName} = obj.TryGetDateOnly(\"{propertyKey}\", out var {varName}) ? {varName} : default,");
+                    }
                     else
-                        continue; // Skip if key cannot be converted
-                }
-                catch
-                {
-                    continue; // Skip if key cannot be converted
-                }
+                    {
+                        // For other types, use a generic approach
+                        sb.AppendLine($"                    {propertyName} = obj.Properties.FirstOrDefault(p => p.Key == \"{propertyKey}\").Value is Scalar<{underlyingType}> {varName} ? {varName}.Value : default,");
+                    }
+                    break;
 
-                if (key == null)
-                    continue;
+                case SaveArrayAttributeName:
+                    var elementType = GetElementType(propertyType);
+                    
+                    // Check if the element type is a complex type that needs binding
+                    bool isElementComplexType = !(elementType.StartsWith("System.") || elementType == "string" || elementType == "int" || 
+                                               elementType == "float" || elementType == "double" || elementType == "bool" || elementType == "long");
+                    
+                    // For arrays of complex objects or scalar values
+                    string elementSelector;
+                    if (isElementComplexType)
+                    {
+                        elementSelector = $"(x is SaveObject saveObj ? {elementType}.Bind(saveObj) : new {elementType}())";
+                    }
+                    else
+                    {
+                        elementSelector = $"((Scalar<{elementType}>)x).Value";
+                    }
+                    
+                    // Handle different collection types
+                    if (propertyType.Contains("ImmutableList"))
+                    {
+                        sb.AppendLine($"                    {propertyName} = obj.TryGetSaveArray(\"{propertyKey}\", out var {varName}Array) ? " +
+                                     $"System.Collections.Immutable.ImmutableList<{elementType}>.Empty.AddRange({varName}Array.Elements().Select(x => {elementSelector})) : " +
+                                     $"System.Collections.Immutable.ImmutableList<{elementType}>.Empty,");
+                    }
+                    else if (propertyType.Contains("ImmutableArray"))
+                    {
+                        sb.AppendLine($"                    {propertyName} = obj.TryGetSaveArray(\"{propertyKey}\", out var {varName}Array) ? " +
+                                     $"System.Collections.Immutable.ImmutableArray.CreateRange({varName}Array.Elements().Select(x => {elementSelector})) : " +
+                                     $"System.Collections.Immutable.ImmutableArray<{elementType}>.Empty,");
+                    }
+                    else if (propertyType.Contains("List<"))
+                    {
+                        sb.AppendLine($"                    {propertyName} = obj.TryGetSaveArray(\"{propertyKey}\", out var {varName}Array) ? " +
+                                     $"new List<{elementType}>({varName}Array.Elements().Select(x => {elementSelector})) : " +
+                                     $"new List<{elementType}>(),");
+                    }
+                    else // Default to array
+                    {
+                        sb.AppendLine($"                    {propertyName} = obj.TryGetSaveArray(\"{propertyKey}\", out var {varName}Array) ? " +
+                                     $"{varName}Array.Elements().Select(x => {elementSelector}).ToArray() : " +
+                                     $"Array.Empty<{elementType}>(),");
+                    }
+                    break;
 
-                if (prop.Value is SaveObject obj)
-                {
-                    var value = BindObjectElement<TValue>(obj);
-                    if (value != null)
-                        dictionary.Add(key, (TValue)value);
-                }
-                else if (prop.Value is SaveElement scalar && scalar.ToString() != ""none"")
-                {
-                    var value = BinderUtilities.BindScalar(scalar, typeof(TValue));
-                    if (value != null)
-                        dictionary.Add(key, (TValue)value);
-                }
+                case SaveObjectAttributeName:
+                    var objectType = GetUnderlyingType(propertyType);
+                    
+                    // Only try to use Bind if the property is a type that might have a Bind method
+                    // For now, let's check if it's a simple system type - if not, assume a custom type that might need binding
+                    if (objectType.StartsWith("System.") || objectType == "string" || objectType == "int" || objectType == "float" || 
+                        objectType == "double" || objectType == "bool" || objectType == "long")
+                    {
+                        sb.AppendLine($"                    {propertyName} = obj.TryGetSaveObject(\"{propertyKey}\", out var {varName}Obj) ? ({objectType})Convert.ChangeType({varName}Obj.ToString(), typeof({objectType})) : default,");
+                    }
+                    else 
+                    {
+                        // For custom types, use the generated Bind method
+                        sb.AppendLine($"                    {propertyName} = obj.TryGetSaveObject(\"{propertyKey}\", out var {varName}Obj) ? " +
+                                     $"{objectType}.Bind({varName}Obj) : new {objectType}(),");
+                    }
+                    break;
+
+                case SaveIndexedDictionaryAttributeName:
+                    var keyValueTypes = GetDictionaryTypes(propertyType);
+                    
+                    // Check if the value type is a complex type that needs binding
+                    var valueType = keyValueTypes.Value;
+                    bool isValueComplexType = !(valueType.StartsWith("System.") || valueType == "string" || valueType == "int" || 
+                                              valueType == "float" || valueType == "double" || valueType == "bool" || valueType == "long");
+                    
+                    if (isValueComplexType)
+                    {
+                        // For dictionaries with complex object values that need cascading binding
+                        sb.AppendLine($"                    {propertyName} = obj.TryGetSaveObject(\"{propertyKey}\", out var {varName}Dict) ? " +
+                                    $"{varName}Dict.Properties.ToDictionary(" +
+                                    $"kvp => {keyValueTypes.Key}.Parse(kvp.Key), " +
+                                    $"kvp => kvp.Value is SaveObject saveObj ? {valueType}.Bind(saveObj) : new {valueType}()) : " +
+                                    $"new Dictionary<{keyValueTypes.Key}, {valueType}>(),");
+                    }
+                    else
+                    {
+                        // For dictionaries with simple scalar values
+                        sb.AppendLine($"                    {propertyName} = obj.TryGetSaveObject(\"{propertyKey}\", out var {varName}Dict) ? " +
+                                    $"{varName}Dict.Properties.ToDictionary(" +
+                                    $"kvp => {keyValueTypes.Key}.Parse(kvp.Key), " +
+                                    $"kvp => kvp.Value is Scalar<{valueType}> scalar ? scalar.Value : default!) : " +
+                                    $"new Dictionary<{keyValueTypes.Key}, {valueType}>(),");
+                    }
+                    break;
             }
+        }
+        return sb.ToString();
+    }
 
-            return dictionary.ToImmutableDictionary();
-        }");
+    private static string GetUnderlyingType(string propertyType)
+    {
+        if (propertyType.StartsWith("System.Nullable<"))
+        {
+            return propertyType.Substring(15, propertyType.Length - 16);
+        }
+        return propertyType;
+    }
+
+    private static string GetElementType(string propertyType)
+    {
+        if (propertyType.StartsWith("System.Collections.Generic.IEnumerable<"))
+        {
+            return propertyType.Substring(40, propertyType.Length - 41);
+        }
+        if (propertyType.StartsWith("System.Collections.Generic.List<"))
+        {
+            return propertyType.Substring(33, propertyType.Length - 34);
+        }
+        if (propertyType.EndsWith("[]"))
+        {
+            return propertyType.Substring(0, propertyType.Length - 2);
+        }
+        return propertyType;
+    }
+
+    private static (string Key, string Value) GetDictionaryTypes(string propertyType)
+    {
+        if (propertyType.StartsWith("System.Collections.Generic.Dictionary<"))
+        {
+            var types = propertyType.Substring(37, propertyType.Length - 38).Split(',');
+            return (types[0].Trim(), types[1].Trim());
+        }
+        if (propertyType.StartsWith("System.Collections.Immutable.ImmutableDictionary<"))
+        {
+            var types = propertyType.Substring(48, propertyType.Length - 49).Split(',');
+            return (types[0].Trim(), types[1].Trim());
+        }
+        throw new ArgumentException($"Unsupported dictionary type: {propertyType}");
     }
 } 

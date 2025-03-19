@@ -1,7 +1,8 @@
 namespace MageeSoft.Paradox.Clausewitz.Save.Models.Stellaris;
 
-public record Location
+[SaveModel]
+public partial class Location
 {
-    public required int Type { get; init; }
-    public required long Id { get; init; }
+    public required int Type { get;set; }
+    public required long Id { get;set; }
 }

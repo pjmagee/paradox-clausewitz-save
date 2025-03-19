@@ -1,9 +1,7 @@
-using MageeSoft.Paradox.Clausewitz.Save.Models.Attributes;
-
 namespace MageeSoft.Paradox.Clausewitz.Save.Models.Stellaris;
 
-
-public class LocalizedTextVariable
+[SaveModel]
+public partial class LocalizedTextVariable
 {
     [SaveScalar("key")]
     public required string Key { get; set; }

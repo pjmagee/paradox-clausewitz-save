@@ -1,16 +1,17 @@
-using MageeSoft.Paradox.Clausewitz.Save.Models.Attributes;
+
 
 namespace MageeSoft.Paradox.Clausewitz.Save.Models.Stellaris;
 
 /// <summary>
 /// Represents localized text in the game state.
 /// </summary>
-public record LocalizedText
+[SaveModel]
+public partial class LocalizedText
 {
     [SaveScalar("key")]
-    public string Key { get; init; }
+    public string Key { get;set; }
     
-    public LocalizedTextVariable[] Variables { get; init; }
+    public LocalizedTextVariable[] Variables { get;set; }
 }
 
 
