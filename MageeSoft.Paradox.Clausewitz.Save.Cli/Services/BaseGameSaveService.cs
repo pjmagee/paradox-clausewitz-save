@@ -56,6 +56,8 @@ public abstract class BaseGameSaveService(ILogger logger) : IGameSaveService
                file.Length > 0;
     }
 
+    public abstract string GetSummary(FileInfo saveFile);
+
     protected virtual IEnumerable<string> GetSavePaths()
     {
         var paths = new List<string>();
@@ -138,7 +140,6 @@ public abstract class BaseGameSaveService(ILogger logger) : IGameSaveService
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                // Check 64-bit registry
                 using var key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\WOW6432Node\Valve\Steam");
                 if (key != null)
                 {
@@ -149,7 +150,6 @@ public abstract class BaseGameSaveService(ILogger logger) : IGameSaveService
                     }
                 }
 
-                // Check 32-bit registry
                 using var key32 = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Valve\Steam");
                 if (key32 != null)
                 {
@@ -160,7 +160,6 @@ public abstract class BaseGameSaveService(ILogger logger) : IGameSaveService
                     }
                 }
 
-                // Check user registry
                 using var userKey = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Valve\Steam");
                 if (userKey != null)
                 {
@@ -173,7 +172,6 @@ public abstract class BaseGameSaveService(ILogger logger) : IGameSaveService
                 }
             }
 
-            // Default Steam paths for other platforms
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
                 var homePath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
@@ -193,4 +191,4 @@ public abstract class BaseGameSaveService(ILogger logger) : IGameSaveService
 
         return string.Empty;
     }
-} 
+}

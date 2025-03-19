@@ -50,4 +50,6 @@ public class HeartsOfIron4SaveService : BaseGameSaveService
         return file.Extension.Equals(SaveFileExtension, StringComparison.OrdinalIgnoreCase) &&
                file.Length > 0;
     }
+
+    public override string GetSummary(FileInfo saveFile) => throw new NotImplementedException();
 } 

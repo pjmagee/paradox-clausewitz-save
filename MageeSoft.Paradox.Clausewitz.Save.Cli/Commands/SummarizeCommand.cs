@@ -1,5 +1,7 @@
 using System.CommandLine;
 using System.CommandLine.NamingConventionBinder;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using MageeSoft.Paradox.Clausewitz.Save.Cli.Services.Games.Stellaris;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -7,16 +9,30 @@ using Microsoft.Extensions.Logging;
 
 namespace MageeSoft.Paradox.Clausewitz.Save.Cli.Commands;
 
+// Error response model
+public class ErrorResponse
+{
+    public string Error { get; set; } = string.Empty;
+}
+
+// JSON context for error responses
+[JsonSourceGenerationOptions(WriteIndented = true)]
+[JsonSerializable(typeof(ErrorResponse))]
+internal partial class ErrorResponseJsonContext : JsonSerializerContext
+{
+}
+
 public class SummarizeCommand : Command
 {
     private readonly Argument<FileInfo?> _fileArgument;
     private readonly Option<int?> _numberOption;
+    private readonly Option<bool> _jsonOption;
 
-    public SummarizeCommand() : base("summarize", "Display a summary of a Stellaris save file")
+    public SummarizeCommand() : base("summarize", "Display a summary of the Stellaris save file")
     {
         _fileArgument = new Argument<FileInfo?>(
             name: "file",
-            description: "The save file to summarize",
+            description: "The save file to summarize", 
             getDefaultValue: () => null);
         
         _numberOption = new Option<int?>(
@@ -24,13 +40,19 @@ public class SummarizeCommand : Command
             description: "The number of the save file from the list command",
             getDefaultValue: () => null);
         
+        _jsonOption = new Option<bool>(
+            aliases: ["--json", "-j"],
+            description: "Output in JSON format",
+            getDefaultValue: () => false);
+        
         AddArgument(_fileArgument);
         AddOption(_numberOption);
+        AddOption(_jsonOption);
         
-        this.Handler = CommandHandler.Create<FileInfo?, int?, IHost>(HandleCommand);
+        this.Handler = CommandHandler.Create<FileInfo?, int?, bool, IHost>(HandleCommand);
     }
     
-    private int HandleCommand(FileInfo? file, int? number, IHost host)
+    private int HandleCommand(FileInfo? file, int? number, bool json, IHost host)
     {
         var logger = host.Services.GetRequiredService<ILogger<SummarizeCommand>>();
         var saveService = host.Services.GetRequiredService<StellarisSaveService>();
@@ -41,6 +63,11 @@ public class SummarizeCommand : Command
             var cachePath = Path.Combine(Path.GetTempPath(), "stellaris-sav-parser-cache.txt");
             if (!File.Exists(cachePath))
             {
+                if (json)
+                {
+                    WriteErrorJson("No save file list cache found. Please run the 'list' command first.");
+                    return 1;
+                }
                 Console.WriteLine("No save file list cache found. Please run the 'list' command first.");
                 return 1;
             }
@@ -50,6 +77,11 @@ public class SummarizeCommand : Command
                 var lines = File.ReadAllLines(cachePath);
                 if (number.Value <= 0 || number.Value > lines.Length)
                 {
+                    if (json)
+                    {
+                        WriteErrorJson($"Invalid save file number: {number.Value}. Valid range is 1-{lines.Length}.");
+                        return 1;
+                    }
                     Console.WriteLine($"Invalid save file number: {number.Value}. Valid range is 1-{lines.Length}.");
                     return 1;
                 }
@@ -59,6 +91,11 @@ public class SummarizeCommand : Command
             }
             catch (Exception ex)
             {
+                if (json)
+                {
+                    WriteErrorJson($"Error reading save file cache: {ex.Message}");
+                    return 1;
+                }
                 Console.WriteLine($"Error reading save file cache: {ex.Message}");
                 return 1;
             }
@@ -67,18 +104,33 @@ public class SummarizeCommand : Command
         // Ensure we have a file to process
         if (file == null)
         {
+            if (json)
+            {
+                WriteErrorJson("No file specified. Please provide a file path or use --number option.");
+                return 1;
+            }
             Console.WriteLine("No file specified. Please provide a file path or use --number option.");
             return 1;
         }
         
         if (!file.Exists)
         {
+            if (json)
+            {
+                WriteErrorJson($"File not found: {file.FullName}");
+                return 1;
+            }
             Console.WriteLine($"File not found: {file.FullName}");
             return 1;
         }
         
         if (!file.Extension.Equals(".sav", StringComparison.OrdinalIgnoreCase))
         {
+            if (json)
+            {
+                WriteErrorJson($"File is not a Stellaris save file: {file.FullName}");
+                return 1;
+            }
             Console.WriteLine($"File is not a Stellaris save file: {file.FullName}");
             return 1;
         }
@@ -87,34 +139,24 @@ public class SummarizeCommand : Command
         
         if (summary.HasError)
         {
+            if (json)
+            {
+                WriteErrorJson($"Error analyzing save file: {summary.Error}");
+                return 1;
+            }
             Console.WriteLine($"Error analyzing save file: {summary.Error}");
             return 1;
         }
-        
-        Console.WriteLine($"Save File Summary: {summary.FileName}");
-        Console.WriteLine(new string('-', 50));
-        Console.WriteLine($"File Path:      {summary.FilePath}");
-        Console.WriteLine($"File Size:      {summary.GetFormattedSize()}");
-        Console.WriteLine($"Last Modified:  {summary.LastModified:yyyy-MM-dd HH:mm:ss}");
-        Console.WriteLine($"Game Version:   {summary.GameVersion}");
-        Console.WriteLine($"Game Date:      {summary.GameDate}");
-        Console.WriteLine($"Empire Name:    {summary.EmpireName}");
-        Console.WriteLine($"Ironman:        {(summary.IsIronman ? "Yes" : "No")}");
-        Console.WriteLine($"Fleet Count:    {summary.FleetCount}");
-        Console.WriteLine($"Planet Count:   {summary.PlanetCount}");
-        
-        Console.WriteLine();
-        Console.WriteLine("Top-level Sections:");
-        foreach (var section in summary.TopLevelSections.Take(20))
-        {
-            Console.WriteLine($"  - {section}");
-        }
-        
-        if (summary.TopLevelSections.Count > 20)
-        {
-            Console.WriteLine($"  ... and {summary.TopLevelSections.Count - 20} more sections");
-        }
+
+        // Always output as JSON
+        Console.WriteLine(saveService.GetSummary(file));
         
         return 0;
+    }
+    
+    private void WriteErrorJson(string errorMessage)
+    {
+        var error = new ErrorResponse { Error = errorMessage };
+        Console.WriteLine(JsonSerializer.Serialize(error, ErrorResponseJsonContext.Default.ErrorResponse));
     }
 } 

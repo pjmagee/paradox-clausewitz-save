@@ -16,7 +16,7 @@ package main
 
 import (
 	"context"
-	"dagger/stellaris-sav-parser/internal/dagger"
+	"dagger/paradox-clauswitz-sav-parser/internal/dagger"
 )
 
 type StellarisSavParser struct{}

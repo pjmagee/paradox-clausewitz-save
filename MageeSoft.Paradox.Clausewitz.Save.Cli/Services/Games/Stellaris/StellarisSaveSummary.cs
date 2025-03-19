@@ -1,3 +1,5 @@
+using MageeSoft.Paradox.Clausewitz.Save.Models.Stellaris;
+
 namespace MageeSoft.Paradox.Clausewitz.Save.Cli.Services.Games.Stellaris;
 
 public class StellarisSaveSummary
@@ -6,17 +8,9 @@ public class StellarisSaveSummary
     public string FilePath { get; set; } = string.Empty;
     public long FileSize { get; set; }
     public DateTime LastModified { get; set; }
-    public string GameVersion { get; set; } = string.Empty;
-    public string GameDate { get; set; } = string.Empty;
-    public string EmpireName { get; set; } = string.Empty;
-    public bool IsIronman { get; set; }
-    public int FleetCount { get; set; }
-    public int PlanetCount { get; set; }
-    public List<string> TopLevelSections { get; set; } = new();
     public string Error { get; set; } = string.Empty;
-    
     public bool HasError => !string.IsNullOrEmpty(Error);
-    
+    public Meta Meta { get; set; } = new Meta();
     public string GetFormattedSize()
     {
         string[] sizes = { "B", "KB", "MB", "GB" };

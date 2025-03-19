@@ -10,7 +10,20 @@ public class StellarisSave
 {
     public Meta Meta { get; private set; } = null!;
     public GameState GameState { get; private set; } = null!;
-  
+
+    public static StellarisSave FromSave(FileInfo fileInfo)
+    {
+        ArgumentNullException.ThrowIfNull(fileInfo, nameof(fileInfo));
+
+        if (!fileInfo.Exists)
+            throw new FileNotFoundException("Stellaris save file not found", fileInfo.FullName);
+
+        if (!fileInfo.Extension.Equals(".sav", StringComparison.OrdinalIgnoreCase))
+            throw new ArgumentException("Invalid save file format. Expected .sav file.", nameof(fileInfo));
+        
+        return FromSave(fileInfo.FullName);
+    }
+    
     public static StellarisSave FromSave(string saveFile)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(saveFile, nameof(saveFile));
@@ -37,12 +50,8 @@ public class StellarisSave
                     
                     try
                     {
-                        // TODO: Replace with source-generated binding once it's fully implemented
-                        // - Source generator should support cascading binding through nested objects
-                        // - All complex properties with [SaveObject] should be bound via their Bind() method
-                        // - Arrays of complex objects should be bound via their respective Bind() methods
-                        // - Dictionaries with complex values should be bound via their respective Bind() methods
-                        meta = ReflectionBinder.Bind<Meta>(documents.MetaDocument.Root);
+                        // meta = ReflectionBinder.Bind<Meta>(documents.MetaDocument.Root);
+                        meta = Meta.Bind(documents.MetaDocument.Root);
                     }
                     catch (Exception ex)
                     {
@@ -56,7 +65,8 @@ public class StellarisSave
                         // - All complex properties with [SaveObject] should be bound via their Bind() method
                         // - Arrays of complex objects should be bound via their respective Bind() methods
                         // - Dictionaries with complex values should be bound via their respective Bind() methods
-                        gameState = ReflectionBinder.Bind<GameState>(documents.GameStateDocument.Root);
+                        // gameState = ReflectionBinder.Bind<GameState>(documents.GameStateDocument.Root);
+                        gameState = GameState.Bind(documents.GameStateDocument.Root);
                     }
                     catch (Exception ex)
                     {

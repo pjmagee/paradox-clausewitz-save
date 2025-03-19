@@ -1,5 +1,5 @@
 {
-  "name": "stellaris-sav-parser",
+  "name": "paradox-clauswitz-sav-parser",
   "engineVersion": "v0.16.3",
   "sdk": {
     "source": "go"

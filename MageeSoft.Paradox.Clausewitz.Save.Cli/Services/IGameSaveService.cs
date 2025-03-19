@@ -34,4 +34,6 @@ public interface IGameSaveService
     /// <param name="file">The file to validate.</param>
     /// <returns>True if the file is valid, false otherwise.</returns>
     bool IsValidSaveFile(FileInfo file);
+    
+    string GetSummary(FileInfo saveFile);
 } 

@@ -1,23 +1,23 @@
-# Native Builds for Stellaris Save Parser CLI
+# Native Builds for Paradox Clausewitz Save Reader
 
-This document describes the process of building native executables for the Stellaris Save Parser CLI tool.
+This document describes the process of building native executables for the Paradox Clausewitz Save Reader CLI tool
 
 ## Overview
 
-The Stellaris Save Parser CLI tool can be built as native executables for various platforms using .NET's Native AOT compilation. This allows users to run the tool without having .NET installed on their system.
+The Save Parser CLI tool can be built as native executables for various platforms using .NET's Native AOT compilation. 
+This allows users to run the tool without having .NET installed on their system.
 
 ## Supported Platforms
 
 The following platforms are supported:
 
-- Windows (x64, ARM64)
-- Linux (x64, ARM64)
-- macOS (x64, ARM64)
+- Windows (amd64, arm64)
+- Linux (amd64, arm64)
+- macOS (amd64, arm64)
 
 ## Building Native Executables
 
-There are two scripts provided to build native executables:
-
+- `etc/Dockerfile.linux-cross` (Dockerfile for Linux cross-compilation)
 - `etc/build-native-windows.ps1` (PowerShell script for Windows)
 - `etc/build-native-macos.sh` (Bash script for macOS)
 

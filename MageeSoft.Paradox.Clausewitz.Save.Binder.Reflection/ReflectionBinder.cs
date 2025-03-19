@@ -8,26 +8,8 @@ using MageeSoft.Paradox.Clausewitz.Save.Models;
 namespace MageeSoft.Paradox.Clausewitz.Save.Binder.Reflection;
 
 /// <summary>
-/// ReflectionBinder provides model binding functionality for SaveObject to C# model classes
-/// using reflection to examine class structure at runtime.
-/// 
-/// This binder is currently used as the reference implementation, and the source generator
-/// should match its behavior. Key features to replicate in the source generator:
-/// 
-/// 1. CASCADING BINDING:
-///    - Bind complex objects through the object graph recursively
-///    - Properly handle ImmutableDictionary and Dictionary with complex object values
-///    - Handle arrays/collections of complex objects
-/// 
-/// 2. TYPE CONVERSION SUPPORT:
-///    - Handle nullable types and conversions between numeric types
-///    - Support parsing string to appropriate type
-///    - Support default values when properties are missing
-/// 
-/// 3. SPECIAL COLLECTION HANDLING:
-///    - Support for ImmutableList, ImmutableArray, ImmutableDictionary
-///    - Support for Dictionary with numeric keys (conversion from string)
-///    - Support for arrays and collections of complex objects
+/// This does NOT support Native AOT compilation.
+/// We should rely on the SourceGen generated Model binders instead.
 /// </summary>
 [Obsolete("Use the SourceGen generated Model binders instead")]
 public static class ReflectionBinder

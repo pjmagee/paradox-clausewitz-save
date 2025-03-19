@@ -8,13 +8,20 @@ public class SaveTests
     public TestContext TestContext { get; set; } = null!;
 
     [TestMethod]
-    [Ignore(message: "Will do this after we make all Binder and Parser tests pass")]
     public void FromFile_WithValidSaveFile_ReturnsStellarisSave()
     {
         // Act  
         StellarisSave save = StellarisSave.FromSave("Stellaris/TestData/ironman.sav");
         
-        TestContext.Write(System.Text.Json.JsonSerializer.Serialize(save));
+        // Assert
+        Assert.IsNotNull(save);
+        Assert.IsNotNull(save.GameState);
+        Assert.IsNotNull(save.Meta);
+        
+        Assert.AreEqual(expected: "Circinus v3.14.15926", actual: save.Meta.Version);
+        Assert.AreEqual(new DateOnly(2250, 11, 15), save.Meta.Date);
+        Assert.AreEqual("United Nations of Earth", save.Meta.Name);
+        Assert.AreEqual(25, save.Meta.RequiredDlcs.Count);
     }
 
     [TestMethod]

@@ -5,45 +5,27 @@ public partial class Meta
 {
     [SaveScalar("version")]
     public string Version { get; set; } = string.Empty;
+    
+    [SaveScalar("version_control_revision")]
+    public int VersionControlRevision { get; set; }
 
     [SaveScalar("name")]
     public string Name { get; set; } = string.Empty;
 
     [SaveScalar("date")]
     public DateOnly Date { get; set; }
-
-    [SaveScalar("save_game_name")]
-    public string SaveGameName { get; set; } = string.Empty;
-
-    [SaveObject("player")]
-    public Player Player { get; set; } = new();
-
-    [SaveScalar("empire_name")]
-    public string EmpireName { get; set; } = string.Empty;
-
+    
+    [SaveArray("required_dlcs")]
+    public List<string> RequiredDlcs { get; set; } = new();
+    
     [SaveScalar("ironman")]
     public bool Ironman { get; set; }
-
-    [SaveScalar("ironman_manager")]
-    public IronmanManager IronmanManager { get; set; } = new();
-
-    [SaveScalar("cloud_save")]
-    public bool CloudSave { get; set; }
-
-    [SaveObject("outer_text")]
-    public OuterText OuterText { get; set; } = new();
-
-    [SaveArray("achievements")]
-    public int[] Achievements { get; set; } = Array.Empty<int>();
-
-    [SaveScalar("version_control_revision")]
-    public int VersionControlRevision { get; set; }
     
     [SaveScalar("player_portrait")]
     public string PlayerPortrait { get; set; } = string.Empty;
     
     [SaveObject("flag")]
-    public MetaFlag Flag { get; set; } = new();
+    public MetaFlag Flag { get; set; }
     
     [SaveScalar("meta_fleets")]
     public int MetaFleets { get; set; }
@@ -86,13 +68,13 @@ public partial class OuterText
 public partial class MetaFlag
 {
     [SaveObject("icon")]
-    public MetaIcon Icon { get; set; } = new();
+    public MetaIcon Icon { get; set; }
 
     [SaveObject("background")]
-    public MetaBackground Background { get; set; } = new();
+    public MetaBackground Background { get; set; }
 
     [SaveArray("colors")]
-    public List<string> Colors { get; set; } = new();
+    public List<string> Colors { get; set; }
 }
 
 [SaveModel]

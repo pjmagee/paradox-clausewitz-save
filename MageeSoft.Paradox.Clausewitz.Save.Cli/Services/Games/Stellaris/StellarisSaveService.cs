@@ -1,5 +1,4 @@
 using MageeSoft.Paradox.Clausewitz.Save.Cli.Games;
-using MageeSoft.Paradox.Clausewitz.Save.Parser;
 using MageeSoft.Paradox.Clausewitz.Save.Reader.Games.Stellaris;
 using Microsoft.Extensions.Logging;
 
@@ -26,26 +25,16 @@ public class StellarisSaveService(ILogger<StellarisSaveService> logger) : BaseGa
 
     protected override string? MicrosoftStorePackageName => "ParadoxInteractive.ProjectTitus_zfnrdv2de78ny";
 
+    public override string GetSummary(FileInfo saveFile)
+    {
+        return System.Text.Json.JsonSerializer.Serialize(GetSaveSummary(saveFile), StellarisSaveSummaryContext.Default.StellarisSaveSummary);
+    }
+
     public StellarisSaveSummary GetSaveSummary(FileInfo saveFile)
     {
         try
         {
-            using var stream = File.OpenRead(saveFile.FullName);
-            using var zip = new GameSaveZip(stream);
-            var documents = zip.GetDocuments();
-            
-            // Extract meta information
-            var meta = documents.MetaDocument.Root as SaveObject;
-            var version = GetPropertyValue(meta, "version");
-            var date = GetPropertyValue(meta, "date");
-            var name = GetPropertyValue(meta, "name");
-            var ironman = GetPropertyValue(meta, "ironman");
-            var metaFleets = GetPropertyValue(meta, "meta_fleets");
-            var metaPlanets = GetPropertyValue(meta, "meta_planets");
-            
-            // Extract gamestate information
-            var gamestate = documents.GameStateDocument.Root as SaveObject;
-            var topLevelKeys = gamestate?.Properties.Select(p => p.Key).ToList() ?? new List<string>();
+            var stellarisSave = StellarisSave.FromSave(saveFile);
             
             return new StellarisSaveSummary
             {
@@ -53,13 +42,8 @@ public class StellarisSaveService(ILogger<StellarisSaveService> logger) : BaseGa
                 FilePath = saveFile.FullName,
                 FileSize = saveFile.Length,
                 LastModified = saveFile.LastWriteTime,
-                GameVersion = version,
-                GameDate = date,
-                EmpireName = name,
-                IsIronman = ironman == "True",
-                FleetCount = int.TryParse(metaFleets, out var fleets) ? fleets : 0,
-                PlanetCount = int.TryParse(metaPlanets, out var planets) ? planets : 0,
-                TopLevelSections = topLevelKeys
+                Meta = stellarisSave.Meta,
+                Error = string.Empty
             };
         }
         catch (Exception ex)
@@ -74,28 +58,5 @@ public class StellarisSaveService(ILogger<StellarisSaveService> logger) : BaseGa
                 Error = ex.Message
             };
         }
-    }
-
-    private string GetPropertyValue(SaveObject? saveObject, string propertyName)
-    {
-        try
-        {
-            if (saveObject == null)
-                return string.Empty;
-
-            var property = saveObject.Properties.FirstOrDefault(p => p.Key == propertyName);
-            if (property.Key != null)
-            {
-                // BAD: This is a hack to remove the "Scalar: " prefix from the string
-                // Should use correct library method to get the value
-                return property.Value.ToString().Replace("Scalar: ", "");
-            }
-        }
-        catch
-        {
-            // Ignore errors and return empty string
-        }
-        
-        return string.Empty;
     }
 }

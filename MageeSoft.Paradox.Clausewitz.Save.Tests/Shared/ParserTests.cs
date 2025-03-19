@@ -11,7 +11,8 @@ public class ParserTests
     public void Parse_SimpleArray_ReturnsArrayValues()
     {
         // Arrange
-        string input = "test={ 1 2 3 4 5 }";
+        int[] expectedValues = { 22, 27, 30, 37, 40 };
+        string input = "test={" + string.Join(" ", expectedValues) + "}";
         var parser = new Save.Parser.Parser(input);
 
         // Act
@@ -27,50 +28,13 @@ public class ParserTests
         Assert.IsInstanceOfType(testProp.Value, typeof(SaveArray));
         var array = (SaveArray)testProp.Value;
         
-        Assert.AreEqual(5, array.Items.Length, "Array should have 5 items");
-        
-        // Check each item is an integer with the expected value
+        Assert.AreEqual(expectedValues.Length, array.Items.Length, "Array should have same number of items");
+       
         for (int i = 0; i < 5; i++)
         {
             Assert.IsInstanceOfType(array.Items[i], typeof(Scalar<int>));
             var scalar = (Scalar<int>)array.Items[i];
             Assert.AreEqual(i + 1, scalar.Value, $"Item {i} should have value {i + 1}");
-        }
-    }
-
-    [TestMethod]
-    public void Parse_AchievementArray_ReturnsArrayValues()
-    {
-        // Arrange
-        string input = @"achievement={
-            22 27 30 37 40
-        }";
-        var parser = new Save.Parser.Parser(input);
-
-        // Act
-        var root = parser.Parse();
-
-        // Assert
-        Assert.IsInstanceOfType(root, typeof(SaveObject));        
-        
-        Assert.AreEqual(1, root.Properties.Length, "Root should have exactly one property");
-        var achievementProp = root.Properties[0];
-        Assert.AreEqual("achievement", achievementProp.Key, "Property key should be 'achievement'");
-        
-        Assert.IsInstanceOfType(achievementProp.Value, typeof(SaveArray));
-        var array = (SaveArray)achievementProp.Value;
-        
-        Assert.AreEqual(5, array.Items.Length, "Array should have 5 items");
-        
-        // Expected values
-        int[] expectedValues = { 22, 27, 30, 37, 40 };
-        
-        // Check each item is an integer with the expected value
-        for (int i = 0; i < expectedValues.Length; i++)
-        {
-            Assert.IsInstanceOfType(array.Items[i], typeof(Scalar<int>));
-            var scalar = (Scalar<int>)array.Items[i];
-            Assert.AreEqual(expectedValues[i], scalar.Value, $"Item {i} should have value {expectedValues[i]}");
         }
     }
 
