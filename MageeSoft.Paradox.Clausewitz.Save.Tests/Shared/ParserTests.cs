@@ -30,11 +30,11 @@ public class ParserTests
         
         Assert.AreEqual(expectedValues.Length, array.Items.Length, "Array should have same number of items");
        
-        for (int i = 0; i < 5; i++)
+        for (int i = 0; i < expectedValues.Length; i++)
         {
             Assert.IsInstanceOfType(array.Items[i], typeof(Scalar<int>));
             var scalar = (Scalar<int>)array.Items[i];
-            Assert.AreEqual(i + 1, scalar.Value, $"Item {i} should have value {i + 1}");
+            Assert.AreEqual(expectedValues[i], scalar.Value, $"Item {i} should have value {i + 1}");
         }
     }
 

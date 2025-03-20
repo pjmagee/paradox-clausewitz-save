@@ -1,33 +1,36 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+
     <OutputType>Exe</OutputType>
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
-    
-    <!-- Version Information - Using GitVersion -->
-    <AssemblyVersion>$(GitVersion_AssemblySemVer)</AssemblyVersion>
-    <FileVersion>$(GitVersion_AssemblySemFileVer)</FileVersion>
-    <InformationalVersion>$(GitVersion_InformationalVersion)</InformationalVersion>
-
+    <PackAsTool>false</PackAsTool>
+   
     <!-- Common settings -->
     <Authors>pjmagee</Authors>
     <Description>A command-line tool for parsing and analyzing paradox clausewitz engine game save files.</Description>
-    <PackageTags>stellaris paradox clausewitz engine game save parser</PackageTags>
+    <PackageTags>stellaris ck3 hoi4 paradox clausewitz engine game save parser</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/pjmagee/stellaris-sav-parser</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/pjmagee/stellaris-sav-parser</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/pjmagee/paradox-clausewitz-sav</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/pjmagee/paradox-clausewitz-sav</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
+
+     <!-- Version Information - Using GitVersion -->
+    <AssemblyVersion>$(GitVersion_AssemblySemVer)</AssemblyVersion>
+    <FileVersion>$(GitVersion_AssemblySemFileVer)</FileVersion>
+    <InformationalVersion>$(GitVersion_InformationalVersion)</InformationalVersion>
     
     <!-- JSON serialization settings for both AOT and non-AOT -->
     <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
+
   </PropertyGroup>
 
   <!-- Native AOT Configuration (default) -->
-  <PropertyGroup Condition="'$(Configuration)'=='Release' And '$(BuildAsTool)'!='true'">
-    <PublishAot>true</PublishAot>
+  <PropertyGroup Condition="'$(Configuration)'=='Release' And '$(PackAsTool)'!='true'">
+    <PublishAot>true</PublishAot>    
     <PublishTrimmed>true</PublishTrimmed>
     <StripSymbols>true</StripSymbols>
     <TrimMode>full</TrimMode>    
@@ -37,11 +40,12 @@
   </PropertyGroup>
 
   <!-- Tool Package Configuration (optional) -->
-  <PropertyGroup Condition="'$(BuildAsTool)'=='true'">
-    <PackAsTool>true</PackAsTool>
+  <PropertyGroup Condition="'$(PackAsTool)'=='true'">
+    <PackAsTool>$(PackAsTool)</PackAsTool>
     <ToolCommandName>paradox-clausewitz-sav</ToolCommandName>
+    <ToolCommandDescription>A CLI tool for parsing Paradox Clausewitz Save files.</ToolCommandDescription>
     <PackageOutputPath>./nupkg</PackageOutputPath>
-    <PackageId>MageeSoft.Paradox.Clausewitz.Save.Cli</PackageId>
+    <PackageId>MageeSoft.Paradox.Clausewitz.Save.Cli</PackageId>    
   </PropertyGroup>
 
   <ItemGroup>

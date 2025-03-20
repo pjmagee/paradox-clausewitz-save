@@ -1,37 +1,62 @@
-// A generated module for StellarisSavParser functions
-//
-// This module has been generated via dagger init and serves as a reference to
-// basic module structure as you get started with Dagger.
-//
-// Two functions have been pre-created. You can modify, delete, or add to them,
-// as needed. They demonstrate usage of arguments and return types using simple
-// echo and grep commands. The functions can be called from the dagger CLI or
-// from one of the SDKs.
-//
-// The first line in this comment block is a short description line and the
-// rest is a long description with more detail on the module's purpose or usage,
-// if appropriate. All modules should have a short description.
-
 package main
 
 import (
 	"context"
-	"dagger/paradox-clauswitz-sav-parser/internal/dagger"
+	"dagger/paradox-clausewitz-sav/internal/dagger"
 )
 
-type StellarisSavParser struct{}
+type ParadoxClausewitzSav struct{}
 
-// Returns a container that echoes whatever string argument is provided
-func (m *StellarisSavParser) ContainerEcho(stringArg string) *dagger.Container {
-	return dag.Container().From("alpine:latest").WithExec([]string{"echo", stringArg})
-}
+// Build the project
+func (m *ParadoxClausewitzSav) Build(
+	ctx context.Context,
+	// +defaultPath="./"
+	// +ignore=["**/obj", "**/bin"]
+	directoryArg *dagger.Directory,
+) *dagger.Container {
 
-// Returns lines that match a pattern in the files of the provided Directory
-func (m *StellarisSavParser) GrepDir(ctx context.Context, directoryArg *dagger.Directory, pattern string) (string, error) {
+	cacheVolume := dag.CacheVolume("nuget")
+
 	return dag.Container().
-		From("alpine:latest").
+		From("mcr.microsoft.com/dotnet/sdk:9.0").
+		WithMountedCache("/root/.nuget/packages", cacheVolume).
 		WithMountedDirectory("/mnt", directoryArg).
 		WithWorkdir("/mnt").
-		WithExec([]string{"grep", "-R", pattern, "."}).
+		WithExec([]string{"dotnet", "build"})
+}
+
+func (m *ParadoxClausewitzSav) VsTest(
+	ctx context.Context,
+	// +defaultPath="./"
+	// +ignore=["**/obj", "**/bin"]
+	directoryArg *dagger.Directory,
+) (string, error) {
+
+	cacheVolume := dag.CacheVolume("nuget")
+
+	return dag.Container().
+		From("mcr.microsoft.com/dotnet/sdk:9.0").
+		WithMountedCache("/root/.nuget/packages", cacheVolume).
+		WithMountedDirectory("/mnt", directoryArg).
+		WithWorkdir("/mnt").
+		WithExec([]string{"dotnet", "run", "--project", "MageeSoft.Paradox.Clausewitz.Save.Tests"}).
+		Stdout(ctx)
+}
+
+func (m *ParadoxClausewitzSav) Test(
+	ctx context.Context,
+	// +defaultPath="./"
+	// +ignore=["**/obj", "**/bin"]
+	directoryArg *dagger.Directory,
+) (string, error) {
+
+	cacheVolume := dag.CacheVolume("nuget")
+
+	return dag.Container().
+		From("mcr.microsoft.com/dotnet/sdk:9.0").
+		WithMountedCache("/root/.nuget/packages", cacheVolume).
+		WithMountedDirectory("/mnt", directoryArg).
+		WithWorkdir("/mnt").
+		WithExec([]string{"dotnet", "test"}).
 		Stdout(ctx)
 }

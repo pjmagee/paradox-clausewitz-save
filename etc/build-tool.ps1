@@ -14,7 +14,7 @@ Write-Host "Building .NET Tool package..." -ForegroundColor Cyan
 # Build the .NET Tool package
 dotnet pack $ProjectPath `
     -c $Configuration `
-    /p:BuildAsTool=true
+    /p:PackAsTool=true
 
 if ($LASTEXITCODE -eq 0) {
     $NupkgDir = "../MageeSoft.Paradox.Clausewitz.Save.Cli/nupkg"

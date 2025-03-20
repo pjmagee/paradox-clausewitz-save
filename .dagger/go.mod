@@ -1,4 +1,4 @@
-module dagger/stellaris-sav-parser
+module dagger/paradox-clausewitz-sav
 
 go 1.23.6
 

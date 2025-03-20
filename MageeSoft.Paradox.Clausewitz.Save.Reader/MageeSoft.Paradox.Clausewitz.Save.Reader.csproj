@@ -11,8 +11,11 @@
     <PackageId>MageeSoft.Paradox.Clausewitz.Save.Reader</PackageId>
     <Authors>Patrick Magee</Authors>
     <Company>MageeSoft</Company>
-    <Description>A high-level API for reading save files, providing easy access to game state information.</Description>
-    <PackageTags>stellaris;ck3;clauswitz;paradox;parser;gamestate;save;sav</PackageTags>
+    <Description>
+      A high-level API for reading save files, providing easy access to game state information.
+      Inspired by System.Text.Json.
+    </Description>
+    <PackageTags>stellaris;ck3;clausewitz;paradox;parser;gamestate;save;sav</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/pjmagee/stellaris-sav-parser</RepositoryUrl>

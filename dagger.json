@@ -1,6 +1,6 @@
 {
-  "name": "paradox-clauswitz-sav-parser",
-  "engineVersion": "v0.16.3",
+  "name": "paradox-clausewitz-sav",
+  "engineVersion": "v0.17.0-llm.9",
   "sdk": {
     "source": "go"
   },

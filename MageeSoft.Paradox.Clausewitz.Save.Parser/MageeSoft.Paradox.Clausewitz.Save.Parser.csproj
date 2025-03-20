@@ -8,11 +8,11 @@
     <IsAotCompatible>true</IsAotCompatible>
     
     <!-- NuGet Package Metadata -->
-    <PackageId>MageeSoft.StellarisSaveParser</PackageId>
+    <PackageId>MageeSoft.Paradox.Clausewitz.Save.Parser</PackageId>
     <Authors>Patrick Magee</Authors>
     <Company>MageeSoft</Company>
-    <Description>A .NET library for parsing Stellaris save files (.sav), providing easy access to both gamestate and meta information.</Description>
-    <PackageTags>stellaris;parser;gamestate;save;sav</PackageTags>
+    <Description>A .NET library for parsing paradox clausewitz engine game save files.</Description>
+    <PackageTags>stellaris ck3 victoria3 hoi4 eu4 paradox clausewitz engine game save parser</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/pjmagee/stellaris-sav-parser</RepositoryUrl>
