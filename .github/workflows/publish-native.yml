@@ -1,3 +1,17 @@
+# This workflow builds native executables for Windows, macOS, and Linux using GitVersion for versioning.
+# 
+# Architecture:
+# 1. setup-gitversion job: Determines version info using GitVersion
+# 2. Platform-specific jobs (Windows/macOS/Linux):
+#    - Build native executables for each architecture (x64/arm64)
+#    - Package with version info (using platform-specific scripts)
+#    - Upload to GitHub Release
+# 
+# File naming convention:
+# paradox-clausewitz-sav_[major.minor.patch]_[platform]_[arch].[ext]
+# 
+# For more details, see etc/build-scripts.md
+
 name: Build and Publish Native Executables
 
 on:
@@ -9,112 +23,146 @@ permissions:
   packages: write
 
 jobs:
-  build-windows:
-    runs-on: windows-latest
+  setup-gitversion:
+    runs-on: ubuntu-latest
+    outputs:
+      semVer: ${{ steps.gitversion.outputs.semVer }}
+      majorMinorPatch: ${{ steps.gitversion.outputs.majorMinorPatch }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for GitVersion
+          
+      - name: Install GitVersion
+        uses: gittools/actions/gitversion/setup@v0
+        with:
+          versionSpec: '5.x'
+          
+      - name: Determine Version
+        id: gitversion
+        uses: gittools/actions/gitversion/execute@v0
+        with:
+          useConfigFile: true
+          
+      - name: Display GitVersion outputs
+        run: |
+          echo "Major: ${{ steps.gitversion.outputs.major }}"
+          echo "Minor: ${{ steps.gitversion.outputs.minor }}"
+          echo "Patch: ${{ steps.gitversion.outputs.patch }}"
+          echo "SemVer: ${{ steps.gitversion.outputs.semVer }}"
+          echo "MajorMinorPatch: ${{ steps.gitversion.outputs.majorMinorPatch }}"
+
+  build-windows:
+    needs: setup-gitversion
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        arch: [x64, arm64]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for GitVersion
+          
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 9.0.x
-      - name: Build native executables for Windows
+          
+      - name: Install GitVersion
+        uses: gittools/actions/gitversion/setup@v0
+        with:
+          versionSpec: '5.x'
+          
+      - name: Build native executable for Windows
         run: .\etc\build-native-windows.ps1
-      - name: Upload Windows x64 artifact
+        
+      - name: Upload artifact
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ./native-build/stellaris-sav-win-x64.exe
-          asset_name: stellaris-sav-win-x64.exe
-          asset_content_type: application/octet-stream
-      - name: Upload Windows ARM64 artifact
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ./native-build/stellaris-sav-win-arm64.exe
-          asset_name: stellaris-sav-win-arm64.exe
-          asset_content_type: application/octet-stream
+          asset_path: ./artifacts/paradox-clausewitz-sav_${{ needs.setup-gitversion.outputs.majorMinorPatch }}_windows_${{ matrix.arch }}.zip
+          asset_name: paradox-clausewitz-sav_${{ needs.setup-gitversion.outputs.majorMinorPatch }}_windows_${{ matrix.arch }}.zip
+          asset_content_type: application/zip
 
   build-linux:
+    needs: setup-gitversion
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [x64, arm64]
     steps:
       - uses: actions/checkout@v4
-      
+        with:
+          fetch-depth: 0  # Fetch all history for GitVersion
+          
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build Linux x64
+      - name: Build Linux ${{ matrix.arch }}
         uses: docker/build-push-action@v5.1.0
         with:
           context: .
           file: ./etc/Dockerfile.linux-cross
           build-args: |
-            TARGETARCH=x64
-          outputs: type=local,dest=./native-build,from=output
-
-      - name: Build Linux ARM64
-        uses: docker/build-push-action@v5.1.0
-        with:
-          context: .
-          file: ./etc/Dockerfile.linux-cross
-          build-args: |
-            TARGETARCH=arm64
-          outputs: type=local,dest=./native-build,from=output
+            TARGETARCH=${{ matrix.arch }}
+          outputs: type=local,dest=./artifacts
 
       - name: List build outputs
-        run: ls -la ./native-build/
+        run: ls -la ./artifacts/
 
-      - name: Upload Linux x64 artifact
+      - name: Upload artifact
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ./native-build/stellaris-sav-linux-x64
-          asset_name: stellaris-sav-linux-x64
-          asset_content_type: application/octet-stream
-      - name: Upload Linux ARM64 artifact
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ./native-build/stellaris-sav-linux-arm64
-          asset_name: stellaris-sav-linux-arm64
-          asset_content_type: application/octet-stream
+          asset_path: ./artifacts/paradox-clausewitz-sav_${{ needs.setup-gitversion.outputs.majorMinorPatch }}_linux_${{ matrix.arch }}.tar.gz
+          asset_name: paradox-clausewitz-sav_${{ needs.setup-gitversion.outputs.majorMinorPatch }}_linux_${{ matrix.arch }}.tar.gz
+          asset_content_type: application/gzip
 
   build-macos:
+    needs: setup-gitversion
     runs-on: macos-latest
+    strategy:
+      matrix:
+        arch: [x64, arm64]
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for GitVersion
+          
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 9.0.x
+          
+      - name: Install GitVersion
+        uses: gittools/actions/gitversion/setup@v0
+        with:
+          versionSpec: '5.x'
+          
       - name: Install macOS workload
         run: dotnet workload install macos
-      - name: Build native executables for macOS
+        
+      - name: Make scripts executable
         run: |
           chmod +x ./etc/build-native-macos.sh
-          ./etc/build-native-macos.sh
-      - name: Upload macOS x64 artifact
+          chmod +x ./etc/package-native.sh
+          
+      - name: Build native executable for macOS
+        run: ./etc/build-native-macos.sh
+        
+      - name: List artifacts
+        run: ls -la ./artifacts/
+        
+      - name: Upload artifact
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ./native-build/stellaris-sav-osx-x64
-          asset_name: stellaris-sav-osx-x64
-          asset_content_type: application/octet-stream
-      - name: Upload macOS ARM64 artifact
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ./native-build/stellaris-sav-osx-arm64
-          asset_name: stellaris-sav-osx-arm64
-          asset_content_type: application/octet-stream
+          asset_path: ./artifacts/paradox-clausewitz-sav_${{ needs.setup-gitversion.outputs.majorMinorPatch }}_macos_${{ matrix.arch }}.tar.gz
+          asset_name: paradox-clausewitz-sav_${{ needs.setup-gitversion.outputs.majorMinorPatch }}_macos_${{ matrix.arch }}.tar.gz
+          asset_content_type: application/gzip

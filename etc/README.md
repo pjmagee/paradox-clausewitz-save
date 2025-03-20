@@ -2,43 +2,61 @@
 
 This directory contains scripts for building and publishing the Stellaris Save Parser.
 
-## Native AOT Builds
+## Primary Build Scripts (Used by GitHub Actions)
 
-### Windows
+| Script | Description | Used By |
+|--------|-------------|---------|
+| `build-native-windows.ps1` | Builds native executables for Windows (x64/arm64) | `publish-native.yml` |
+| `build-native-macos.sh` | Builds native executables for macOS (x64/arm64) | `publish-native.yml` |
+| `Dockerfile.linux-cross` | Docker image for cross-compiling Linux binaries | `publish-native.yml` |
+| `package-native.ps1` | Packages Windows builds with version info | `build-native-windows.ps1` |
+| `package-native.sh` | Packages macOS/Linux builds with version info | `build-native-macos.sh` |
+
+## Tool Package Scripts
+
+| Script | Description |
+|--------|-------------|
+| `build-tool.ps1` | Builds a .NET global tool package |
+| `publish-nuget.ps1` | Publishes packages to NuGet |
+
+## Legacy/Local Development Scripts
+
+The following scripts are kept for local development but are NOT used in the CI pipeline:
+
+| Script | Description |
+|--------|-------------|
+| `build-aot.ps1` | Simple AOT build script for local testing |
+| `build-native-wsl.sh` | Alternative build script using WSL |
+| `test-tool.ps1` | Script for testing the tool |
+
+## Using the Scripts
+
+### Building Native Executables
 
 ```powershell
-# Build a Native AOT executable for Windows
-./build-aot.ps1 -RuntimeIdentifier win-x64
+# Windows
+./build-native-windows.ps1  # Builds for x64 and arm64
 
-# Build for other platforms
-./build-aot.ps1 -RuntimeIdentifier linux-x64
-./build-aot.ps1 -RuntimeIdentifier osx-x64
+# macOS (on macOS)
+chmod +x ./build-native-macos.sh
+./build-native-macos.sh  # Builds for x64 and arm64
 
-# Specify configuration
-./build-aot.ps1 -RuntimeIdentifier win-x64 -Configuration Debug
+# Linux (using Docker)
+docker build -f Dockerfile.linux-cross --build-arg TARGETARCH=x64 -t linux-build .
 ```
 
-## .NET Tool Package
+### Building .NET Tool Package
 
 ```powershell
-# Build a .NET Tool package
 ./build-tool.ps1
-
-# Specify configuration
-./build-tool.ps1 -Configuration Debug
 ```
 
-## Using GitVersion
+## Versioning
 
-The build scripts automatically use GitVersion to determine version numbers from Git history.
+All builds use GitVersion to automatically determine version numbers. This creates consistent versioning across all platforms with filenames in this format:
 
-See the versioning.md file in the repo root for details on the versioning scheme and how to control version numbers with Git branches and commit messages.
+```
+paradox-clausewitz-sav_[major.minor.patch]_[platform]_[arch].[ext]
+```
 
-## Other Scripts
-
-- **build-native-windows.ps1** - Alternative script for building native binaries on Windows
-- **build-native-wsl.sh** - Script for building native binaries using WSL
-- **build-native-macos.sh** - Script for building native binaries on macOS
-- **publish-nuget.ps1** - Script for publishing NuGet packages
-- **test-tool.ps1** - Script for testing the tool
-- **Dockerfile.linux-cross** - Dockerfile for cross-compilation to Linux 
+For more details on the versioning approach, see the versioning.md file in the repo root.

@@ -3,9 +3,24 @@ $ErrorActionPreference = "Stop"
 
 # Define the matrix of runtime identifiers to build for using separate arrays
 $ridArray = @("win-x64", "win-arm64")
-$artifactNameArray = @("stellaris-sav-win-x64.exe", "stellaris-sav-win-arm64.exe")
-$binaryNameArray = @("stellaris-sav-win-x64.exe", "stellaris-sav-win-arm64.exe")
-$sourceBinaryArray = @("StellarisSaveParser.Cli.exe", "StellarisSaveParser.Cli.exe")
+$artifactNameArray = @("paradox-clausewitz-sav-win-x64.exe", "paradox-clausewitz-sav-win-arm64.exe")
+$binaryNameArray = @("paradox-clausewitz-sav-win-x64.exe", "paradox-clausewitz-sav-win-arm64.exe")
+$sourceBinaryArray = @("MageeSoft.Paradox.Clausewitz.Save.Cli.exe", "MageeSoft.Paradox.Clausewitz.Save.Cli.exe")
+$platformArchArray = @("windows/x64", "windows/arm64")
+
+# Make sure GitVersion is installed
+if (-not (Get-Command "dotnet-gitversion" -ErrorAction SilentlyContinue)) {
+    Write-Host "Installing GitVersion..." -ForegroundColor Cyan
+    dotnet tool install --global GitVersion.Tool
+}
+
+# Get version info
+$gitVersionInfo = dotnet gitversion /output json | ConvertFrom-Json
+Write-Host "Building version $($gitVersionInfo.SemVer)" -ForegroundColor Green
+
+# Create artifacts directory
+$artifactsDir = "./artifacts"
+New-Item -ItemType Directory -Force -Path $artifactsDir | Out-Null
 
 # https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/cross-compile#windows
 # Function to build a native executable for a specific runtime identifier
@@ -14,19 +29,23 @@ function Build-NativeExecutable {
         [string]$rid,
         [string]$artifactName,
         [string]$binaryName,
-        [string]$sourceBinary
+        [string]$sourceBinary,
+        [string]$platformArch
     )
     
     Write-Host "`n========================================================"
     Write-Host "Building native executable for $rid..."
     Write-Host "========================================================"
     
+    # Parse platform and architecture
+    $platform, $arch = $platformArch.Split('/')
+    
     # Create output directory
     $outputDir = "./native-build"
     New-Item -ItemType Directory -Force -Path $outputDir | Out-Null
     
     # Build the native executable
-    dotnet publish ./StellarisSaveParser.Cli/StellarisSaveParser.Cli.csproj `
+    dotnet publish ./MageeSoft.Paradox.Clausewitz.Save.Cli/MageeSoft.Paradox.Clausewitz.Save.Cli.csproj `
         -c Release `
         -r $rid `
         --self-contained true `
@@ -58,6 +77,13 @@ function Build-NativeExecutable {
             # Get file size
             $fileSize = (Get-Item $targetPath).Length
             Write-Host "Executable size: $([math]::Round($fileSize/1MB, 2)) MB"
+            
+            # Package using package-native.ps1
+            $packagedPath = & "$PSScriptRoot/package-native.ps1" -InputFile $targetPath -Platform $platform -Architecture $arch -OutputDir $artifactsDir
+            
+            if ($packagedPath -and (Test-Path $packagedPath)) {
+                Write-Host "Successfully packaged to: $packagedPath" -ForegroundColor Green
+            }
             
             return $true
         }
@@ -95,14 +121,16 @@ for ($i = 0; $i -lt $ridArray.Length; $i++) {
     $artifactName = $artifactNameArray[$i]
     $binaryName = $binaryNameArray[$i]
     $sourceBinary = $sourceBinaryArray[$i]
+    $platformArch = $platformArchArray[$i]
     
     Write-Host "Building with:"
     Write-Host "  RID: $rid"
     Write-Host "  Artifact: $artifactName"
     Write-Host "  Binary: $binaryName"
     Write-Host "  Source: $sourceBinary"
+    Write-Host "  Platform/Arch: $platformArch"
     
-    if (Build-NativeExecutable $rid $artifactName $binaryName $sourceBinary) {
+    if (Build-NativeExecutable $rid $artifactName $binaryName $sourceBinary $platformArch) {
         $successCount++
     }
     else {

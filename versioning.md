@@ -16,6 +16,19 @@ The version scheme follows Semantic Versioning: **MAJOR.MINOR.PATCH[-PRERELEASE]
 - **PRERELEASE**: Optional pre-release label (e.g., alpha, beta, rc)
 - **METADATA**: Build metadata, including git commit information
 
+## File Naming Convention
+
+All native builds use this naming convention:
+
+```txt
+paradox-clausewitz-sav_[major.minor.patch]_[platform]_[arch].[ext]
+```
+
+Where:
+- **platform**: windows, linux, or macos
+- **arch**: x64 or arm64
+- **ext**: .zip for Windows, .tar.gz for Linux/macOS
+
 ## Controlling Version Numbers
 
 ### Using Git Commit Messages
@@ -43,6 +56,13 @@ Different branches have different versioning rules:
 - **feature/xxx**: Pre-release with alpha tag (e.g., 1.3.0-alpha.xxx.1)
 - **release/xxx**: Release candidates (e.g., 1.3.0-rc.1)
 - **hotfix/xxx**: Hot fixes with fix tag (e.g., 1.2.4-fix.1)
+
+## Build Architecture
+
+For information on how the different build scripts interact and how GitVersion is integrated into the build process, see the following documentation:
+
+- [Build Script Architecture](etc/build-scripts.md)
+- [Build Scripts Documentation](etc/README.md)
 
 ## Building with Version Information
 

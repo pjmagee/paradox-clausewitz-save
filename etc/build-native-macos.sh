@@ -7,9 +7,29 @@ set -euo pipefail
 
 # Define the matrix of runtime identifiers to build for using separate arrays
 declare -a ridArray=("osx-x64" "osx-arm64")
-declare -a artifactNameArray=("stellaris-sav-osx-x64" "stellaris-sav-osx-arm64")
-declare -a binaryNameArray=("stellaris-sav-osx-x64" "stellaris-sav-osx-arm64")
-declare -a sourceBinaryArray=("StellarisSaveParser.Cli" "StellarisSaveParser.Cli")
+declare -a artifactNameArray=("paradox-clausewitz-sav-osx-x64" "paradox-clausewitz-sav-osx-arm64")
+declare -a binaryNameArray=("paradox-clausewitz-sav-osx-x64" "paradox-clausewitz-sav-osx-arm64")
+declare -a sourceBinaryArray=("MageeSoft.Paradox.Clausewitz.Save.Cli" "MageeSoft.Paradox.Clausewitz.Save.Cli")
+declare -a platformArchArray=("macos/x64" "macos/arm64")
+
+# Make script directory accessible
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# Create artifacts directory
+ARTIFACTS_DIR="./artifacts"
+mkdir -p "$ARTIFACTS_DIR"
+
+# Make sure GitVersion is installed
+if ! command -v dotnet-gitversion &> /dev/null; then
+    echo "Installing GitVersion..."
+    dotnet tool install --global GitVersion.Tool
+fi
+
+# Get GitVersion info
+echo "Getting version information..."
+VERSION_INFO=$(dotnet gitversion /output json)
+SEMVER=$(echo "$VERSION_INFO" | grep -o '"SemVer": *"[^"]*"' | cut -d '"' -f 4)
+echo "Building version $SEMVER"
 
 # Function to install dependencies
 install_dependencies() {
@@ -22,9 +42,6 @@ install_dependencies() {
     #brew install clang zlib zip
     brew install zip
     
-    # Install cross-compilation toolchain for ARM64
-    # brew install llvm
-    
     # Install additional dependencies for ARM64 builds
     # brew install gcc
 }
@@ -35,17 +52,21 @@ build_native_executable() {
     local artifactName=$2
     local binaryName=$3
     local sourceBinary=$4
+    local platformArch=$5
     
     echo -e "\n========================================================"
     echo -e "Building native executable for $rid..."
     echo -e "========================================================"
+    
+    # Parse platform and architecture
+    IFS='/' read -r platform arch <<< "$platformArch"
     
     # Create output directory
     local output_dir="./native-build"
     mkdir -p "$output_dir"
     
     # Build the native executable
-    dotnet publish ./StellarisSaveParser.Cli/StellarisSaveParser.Cli.csproj \
+    dotnet publish ./MageeSoft.Paradox.Clausewitz.Save.Cli/MageeSoft.Paradox.Clausewitz.Save.Cli.csproj \
         -c Release \
         -r $rid \
         --self-contained true \
@@ -79,6 +100,10 @@ build_native_executable() {
             # Get file size
             local file_size=$(stat -f%z "$target_path")
             echo -e "Executable size: $(bc <<< "scale=2; $file_size/1024/1024") MB"
+            
+            # Package the binary
+            echo "Packaging binary..."
+            "$SCRIPT_DIR/package-native.sh" "$target_path" "$platform" "$arch" "$ARTIFACTS_DIR"
             
             return 0
         else
@@ -117,14 +142,16 @@ for ((i=0; i<${#ridArray[@]}; i++)); do
     artifact_name="${artifactNameArray[$i]}"
     binary_name="${binaryNameArray[$i]}"
     source_binary="${sourceBinaryArray[$i]}"
+    platform_arch="${platformArchArray[$i]}"
     
     echo "Building with:"
     echo "  RID: $rid"
     echo "  Artifact: $artifact_name"
     echo "  Binary: $binary_name"
     echo "  Source: $source_binary"
+    echo "  Platform/Arch: $platform_arch"
     
-    if build_native_executable "$rid" "$artifact_name" "$binary_name" "$source_binary"; then
+    if build_native_executable "$rid" "$artifact_name" "$binary_name" "$source_binary" "$platform_arch"; then
         ((success_count++))
     else
         ((failure_count++))
