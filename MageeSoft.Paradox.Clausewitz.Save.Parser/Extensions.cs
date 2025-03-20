@@ -182,4 +182,22 @@ public static class Extensions
 
         return false;
     }
+
+    /// <summary>
+    /// Serializes a SaveElement to a string in Paradox save file format.
+    /// </summary>
+    public static string ToSaveString(this SaveElement element)
+    {
+        var serializer = new Serializer();
+        return serializer.Serialize(element);
+    }
+
+    /// <summary>
+    /// Serializes a SaveElement to a file in Paradox save file format.
+    /// </summary>
+    public static void ToSaveFile(this SaveElement element, string filePath)
+    {
+        var serializer = new Serializer();
+        serializer.SerializeToFile(element, filePath);
+    }
 } 

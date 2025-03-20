@@ -9,6 +9,10 @@ public abstract class SaveElement
 
     public override string ToString()
     {
+        var serializer = new Serializer();
+        serializer.Serialize(this);
+        return serializer.ToString();
+
         if (this is SaveArray array)
         {
             return $"Array: {string.Join(", ", array.Items.Select(i => i.ToString()))}";

@@ -9,6 +9,12 @@ public class Parser
 
     private Token _currentToken;
 
+    public static SaveObject Parse(string input)
+    {
+        var parser = new Parser(input);
+        return parser.Parse();
+    }
+
     public Parser(string input)
     {        
         ArgumentException.ThrowIfNullOrWhiteSpace(input, nameof(input));
