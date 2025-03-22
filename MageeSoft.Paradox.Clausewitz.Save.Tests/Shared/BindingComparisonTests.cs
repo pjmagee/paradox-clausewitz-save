@@ -12,7 +12,6 @@ namespace MageeSoft.Paradox.Clausewitz.Save.Tests.Shared;
 public class BindingComparisonTests
 {
     [TestMethod]
-    [Ignore("This test is ignored because it requires a complex object graph to be created and compared.")]
     public void ComplexModel_ReflectionVsSourceGenerated_ProduceIdenticalResults()
     {
         // Arrange - create a complex object graph

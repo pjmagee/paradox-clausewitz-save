@@ -1,27 +1,32 @@
 namespace MageeSoft.Paradox.Clausewitz.Save.Cli.Games;
 
 /// <summary>
-/// Represents the supported Paradox games using the Clausewitz engine.
+/// Enumeration of supported Paradox games.
 /// </summary>
 public enum GameType
 {
     /// <summary>
-    /// Stellaris - Grand strategy sci-fi game.
+    /// Stellaris
     /// </summary>
-    Stellaris,
-
+    Stellaris = 1,
+    
     /// <summary>
-    /// Crusader Kings III - Medieval grand strategy game.
+    /// Europa Universalis IV
     /// </summary>
-    CrusaderKings3,
-
+    EuropaUniversalisIV = 2,
+    
     /// <summary>
-    /// Hearts of Iron IV - World War II grand strategy game.
+    /// Hearts of Iron IV
     /// </summary>
-    HeartsOfIron4,
-
+    HeartsOfIronIV = 3,
+    
     /// <summary>
-    /// Victoria 3 - Victorian era grand strategy game.
+    /// Crusader Kings III
     /// </summary>
-    Victoria3
+    CrusaderKingsIII = 4,
+    
+    /// <summary>
+    /// Victoria 3
+    /// </summary>
+    Victoria3 = 5
 } 

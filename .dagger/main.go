@@ -60,3 +60,24 @@ func (m *ParadoxClausewitzSav) Test(
 		WithExec([]string{"dotnet", "test"}).
 		Stdout(ctx)
 }
+
+func (m *ParadoxClausewitzSav) LinuxTest(
+	ctx context.Context,
+	// +defaultPath="./"
+	// +ignore=["**/obj", "**/bin"]
+	directoryArg *dagger.Directory,
+) (string, error) {
+
+	cacheVolume := dag.CacheVolume("nuget")
+
+	savFile := dag.CurrentModule().Source().File("saves/stellaris/ironman.sav")
+
+	return dag.Container().
+		From("mcr.microsoft.com/dotnet/sdk:9.0").
+		WithMountedCache("/root/.nuget/packages", cacheVolume).
+		WithMountedDirectory("/mnt", directoryArg).
+		WithMountedFile("/root/Documents/Paradox Interactive/Stellaris/save games/my test empire/ironman.sav", savFile).
+		WithWorkdir("/mnt/MageeSoft.Paradox.Clausewitz.Save.Cli").
+		WithExec([]string{"dotnet", "run", "--", "list"}).
+		Stdout(ctx)
+}

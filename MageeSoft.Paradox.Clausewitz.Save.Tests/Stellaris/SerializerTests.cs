@@ -1,4 +1,3 @@
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MageeSoft.Paradox.Clausewitz.Save.Parser;
 
 namespace MageeSoft.Paradox.Clausewitz.Save.Tests.Stellaris;
@@ -44,8 +43,16 @@ public class SerializerTests
             try
             {
                 // Then verify the serialized output is stable
-                Assert.AreEqual(serialized, reserialized,
-                    $"Serialized output should be stable across multiple serializations for file {filename}");
+                var serializedLines = serialized.Split('\n');
+                var reserializedLines = reserialized.Split('\n');
+
+                Assert.AreEqual(serializedLines.Length, reserializedLines.Length,$"Serialized output should have the same number of lines as the original for file {filename}");
+
+
+                for (int i = 0; i < serializedLines.Length; i++)
+                {
+                    Assert.AreEqual(serializedLines[i], reserializedLines[i], $"Serialized output should be equal across multiple serializations for file {filename}");
+                }
             }
             catch (AssertFailedException)
             {
@@ -64,6 +71,12 @@ public class SerializerTests
     public void Serialize_Achievement_RoundTrip()
     {
         AssertSerializationRoundTrip("achievement.so");
+    }
+
+    [TestMethod]
+    public void Serialize_GameState_RoundTrip()
+    {
+        AssertSerializationRoundTrip("gamestate");
     }
 
     [TestMethod]

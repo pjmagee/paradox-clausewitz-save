@@ -20,14 +20,20 @@ public class GameSaveZipTests
             var gameStateEntry = archive.CreateEntry("gamestate");
             using (var writer = new StreamWriter(gameStateEntry.Open()))
             {
-                writer.Write(@"galaxy={ name={ key=""Test Galaxy"" } }");
+                writer.Write("""galaxy={ name={ key="Test Galaxy" } }""");
             }
 
             // Add meta file
             var metaEntry = archive.CreateEntry("meta");
             using (var writer = new StreamWriter(metaEntry.Open()))
             {
-                writer.Write(@"version=""3.10.0"" date=""2200.01.01"" player={    name=""Test Empire"" }");
+                writer.Write("""
+                             version=3.10.0
+                             date="2200.01.01" 
+                             player={ 
+                                name="Test Empire" 
+                             }
+                             """);
             }
         }
 
@@ -53,22 +59,23 @@ public class GameSaveZipTests
             Assert.IsNotNull(documents.MetaDocument);
 
             // Verify gamestate content
-            var gameState = documents.GameStateDocument.Root as SaveObject;
+            var gameState = documents.GameStateDocument.Root;
             Assert.IsNotNull(gameState);
-            var galaxy = gameState.Properties.First(p => p.Key == "galaxy");
             
-            var galaxyObj = galaxy.Value as SaveObject;
+            gameState.TryGetSaveObject("galaxy", out var galaxyObj);
             Assert.IsNotNull(galaxyObj);
-            var galaxyName = galaxyObj.Properties.First(p => p.Key == "name").Value;
-
-            Assert.Contains("Test Galaxy", galaxyName.ToString());
-
+            
+            galaxyObj.TryGetSaveObject("name", out var name);
+            Assert.IsNotNull(name);
+            
+            name.TryGetString("key", out var galaxyName);
+            Assert.AreEqual("Test Galaxy", galaxyName);
+            
             // Verify meta content
-            var meta = documents.MetaDocument.Root as SaveObject;
+            var meta = documents.MetaDocument.Root;
             Assert.IsNotNull(meta);
-            var version = meta.Properties.First(p => p.Key == "version").Value;
-
-            Assert.Contains("3.10.0", version.ToString());
+            meta.TryGetString("version", out var version);
+            Assert.Contains("3.10.0", version);
         }
         finally
         {
