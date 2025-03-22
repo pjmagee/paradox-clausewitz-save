@@ -12,6 +12,6 @@ public class ParadoxCliRootCommand : RootCommand
         AddCommand(new ListCommand());
         AddCommand(new SummaryCommand());
         AddCommand(new JsonCommand());
-        AddCommand(new Info());
+        AddCommand(new InfoCommand());
     }
 } 

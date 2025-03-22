@@ -49,7 +49,6 @@ public class StellarisSave
                     
                     try
                     {
-                        // meta = ReflectionBinder.Bind<Meta>(documents.MetaDocument.Root);
                         meta = Meta.Bind(documents.MetaDocument.Root);
                     }
                     catch (Exception ex)
@@ -59,12 +58,6 @@ public class StellarisSave
                     
                     try
                     {
-                        // TODO: Replace with source-generated binding once it's fully implemented
-                        // - Source generator should support cascading binding through nested objects
-                        // - All complex properties with [SaveObject] should be bound via their Bind() method
-                        // - Arrays of complex objects should be bound via their respective Bind() methods
-                        // - Dictionaries with complex values should be bound via their respective Bind() methods
-                        // gameState = ReflectionBinder.Bind<GameState>(documents.GameStateDocument.Root);
                         gameState = GameState.Bind(documents.GameStateDocument.Root);
                     }
                     catch (Exception ex)

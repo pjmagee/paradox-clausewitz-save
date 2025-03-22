@@ -1,13 +1,13 @@
 ﻿<Project Sdk="MSTest.Sdk/3.8.2">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
     <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
     <CompilerGeneratedFilesOutputPath>$(BaseIntermediateOutputPath)\GeneratedFiles</CompilerGeneratedFilesOutputPath>
-    
+    <LangVersion>default</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -21,13 +21,7 @@
   <ItemGroup>
     <Content Include="Stellaris\TestData\*">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Stellaris\Save\*.sav">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Stellaris\Save\*.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
+    </Content>   
   </ItemGroup>
 
   <ItemGroup>
@@ -40,10 +34,6 @@
     <PackageReference Update="Microsoft.Testing.Extensions.TrxReport" Version="1.6.3" />
     <PackageReference Update="MSTest.TestFramework" Version="3.8.3" />
     <PackageReference Update="MSTest.TestAdapter" Version="3.8.3" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="CK3\" />
   </ItemGroup>
 
 </Project>

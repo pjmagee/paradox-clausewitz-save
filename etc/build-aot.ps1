@@ -6,7 +6,7 @@ param (
     [string]$VersionSuffix = ""
 )
 
-$ProjectPath = "../MageeSoft.Paradox.Clausewitz.Save.Cli/MageeSoft.Paradox.Clausewitz.Save.Cli.csproj"
+$ProjectPath = "../src/MageeSoft.Paradox.Clausewitz.Save.Cli/MageeSoft.Paradox.Clausewitz.Save.Cli.csproj"
 $AotOutputDir = "../bin/aot-$RuntimeIdentifier"
 
 # Show GitVersion info
@@ -29,7 +29,6 @@ dotnet publish $ProjectPath `
     -c $Configuration `
     -r $RuntimeIdentifier `
     -o $AotOutputDir `
-    --self-contained true `
     $VersionArgs
 
 if ($LASTEXITCODE -eq 0) {
@@ -44,15 +43,15 @@ if ($LASTEXITCODE -eq 0) {
         Write-Host "Output: $ExePath" -ForegroundColor Green
         Write-Host "Size: $FileSizeMB MB" -ForegroundColor Green
         
-        # Get version info (Windows only)
+        # Get version info
         if ($RuntimeIdentifier.StartsWith("win")) {
             $VersionInfo = (Get-Item $ExePath).VersionInfo
             Write-Host "Version: $($VersionInfo.ProductVersion)" -ForegroundColor Green
         }
 
         # Run version command
-        Write-Host "`nExecuting version command:" -ForegroundColor Cyan
-        & $ExePath version
+        Write-Host "`nExecuting info command:" -ForegroundColor Cyan
+        & $ExePath info
     } else {
         Write-Host "Build completed but executable not found at expected location: $ExePath" -ForegroundColor Yellow
     }

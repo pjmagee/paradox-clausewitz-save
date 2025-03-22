@@ -16,11 +16,7 @@ var parser = new CommandLineBuilder(new ParadoxCliRootCommand())
                     services.AddSingleton<GameServiceManager>();
                     services.AddSingleton<GamePathResolver>();
                     services.AddSingleton<IGameFilesProvider, StellarisSaveService>();
-                    services.AddLogging(logging =>
-                        {
-                            logging.ClearProviders();
-                        }
-                    );
+                    services.AddLogging(loggingBuilder => loggingBuilder.ClearProviders());
                 }
             );
         }

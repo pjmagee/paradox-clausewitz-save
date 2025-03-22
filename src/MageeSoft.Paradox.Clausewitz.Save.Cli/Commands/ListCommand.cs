@@ -130,9 +130,6 @@ public class ListCommand : BaseCommand
                 console.WriteLine($"[{file.Number}] {file.Name} - {FormatFileSize(file.Size)} - {file.LastModified}");
             }
         }
-        
-        console.WriteLine("To view details of a save file, use:");
-        console.WriteLine("  dotnet run -- summary --number <number>");
     }
     
     private void CacheSaveFiles(List<SaveFileInfo> saveFiles)

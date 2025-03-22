@@ -8,9 +8,9 @@ namespace MageeSoft.Paradox.Clausewitz.Save.Cli.Commands;
 /// <summary>
 /// Command to display version information
 /// </summary>
-public class Info : BaseCommand
+public class InfoCommand : BaseCommand
 {
-    public Info() : base("info", "Display the version of the tool")
+    public InfoCommand() : base("info", "Display the version info of the tool")
     {
         Handler = CommandHandler.Create<IHost, IConsole>(HandleCommand);
     }
@@ -22,6 +22,7 @@ public class Info : BaseCommand
         var version = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "1.0.0";
         var buildConfig = assembly.GetCustomAttribute<AssemblyConfigurationAttribute>()?.Configuration ?? "Unknown";
         var isAot = System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported ? "No" : "Yes";
+        var architecture = System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture.ToString();
         
         string gitInfo = string.Empty;
         
@@ -34,9 +35,10 @@ public class Info : BaseCommand
             }
         }
 
-        console.WriteLine($"{productName} v{version}");
+        console.WriteLine($"Version: {version}");
         console.WriteLine($"Build: {buildConfig}");
-        console.WriteLine($"Native AOT: {isAot}");
+        console.WriteLine($"Native: {isAot}");
+        console.WriteLine($"Arch: {architecture}");
         
         if (!string.IsNullOrEmpty(gitInfo))
         {

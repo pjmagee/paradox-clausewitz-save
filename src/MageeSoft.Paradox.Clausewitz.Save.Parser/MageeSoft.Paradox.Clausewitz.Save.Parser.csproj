@@ -1,18 +1,23 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <IsTrimmable>true</IsTrimmable>
+    <Nullable>enable</Nullable>    
     <IsAotCompatible>true</IsAotCompatible>
     
     <!-- NuGet Package Metadata -->
     <PackageId>MageeSoft.Paradox.Clausewitz.Save.Parser</PackageId>
     <Authors>Patrick Magee</Authors>
     <Company>MageeSoft</Company>
-    <Description>A .NET library for parsing paradox clausewitz engine game save files.</Description>
-    <PackageTags>stellaris ck3 victoria3 hoi4 eu4 paradox clausewitz engine game save parser</PackageTags>
+    <Description>
+      A paradox clausewitz engine game save parser inspired by System.Text.Json.
+      Provides lower-level access to game state information from save files.
+      For higher-level access such as binding to POCOs, see MageeSoft.Paradox.Clausewitz.Save.Reader
+    </Description>
+    <PackageTags>
+      stellaris ck3 victoria3 hoi4 eu4 paradox clausewitz engine game save parser reader
+    </PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/pjmagee/stellaris-sav-parser</RepositoryUrl>
@@ -23,15 +28,16 @@
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <LangVersion>default</LangVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <StripSymbols>true</StripSymbols>
   </PropertyGroup>
 
   <ItemGroup>
     <None Include="..\README.md" Pack="true" PackagePath="\" />
     <None Include="..\LICENSE" Pack="true" PackagePath="\" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
   </ItemGroup>
 
 </Project>

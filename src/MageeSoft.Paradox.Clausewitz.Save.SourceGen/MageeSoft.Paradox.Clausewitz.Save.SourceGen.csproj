@@ -6,7 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
-    <IsRoslynComponent>true</IsRoslynComponent>
+    <IsRoslynComponent>true</IsRoslynComponent>  
   </PropertyGroup>
 
   <ItemGroup>

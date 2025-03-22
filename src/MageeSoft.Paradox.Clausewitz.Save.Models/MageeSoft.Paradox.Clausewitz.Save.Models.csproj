@@ -1,21 +1,25 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <IsTrimmable>true</IsTrimmable>
         <IsAotCompatible>true</IsAotCompatible>
         <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
         <CompilerGeneratedFilesOutputPath>$(BaseIntermediateOutputPath)\GeneratedFiles</CompilerGeneratedFilesOutputPath>
+        <LangVersion>default</LangVersion>
     </PropertyGroup>
 
-    <ItemGroup>       
-        <ProjectReference Include="..\MageeSoft.Paradox.Clausewitz.Save.SourceGen\MageeSoft.Paradox.Clausewitz.Save.SourceGen.csproj" 
-                    OutputItemType="Analyzer" 
-                    ReferenceOutputAssembly="false" />
+    <PropertyGroup Condition="'$(Configuration)'=='Release'">
+        <StripSymbols>true</StripSymbols>
+    </PropertyGroup>
+
+    <ItemGroup>
         <ProjectReference Include="..\MageeSoft.Paradox.Clausewitz.Save.Parser\MageeSoft.Paradox.Clausewitz.Save.Parser.csproj" />
-        <ProjectReference Include="..\MageeSoft.Paradox.Clausewitz.Save.SourceGen\MageeSoft.Paradox.Clausewitz.Save.SourceGen.csproj" />
+         <ProjectReference
+            Include="..\MageeSoft.Paradox.Clausewitz.Save.SourceGen\MageeSoft.Paradox.Clausewitz.Save.SourceGen.csproj"
+            OutputItemType="Analyzer"
+            ReferenceOutputAssembly="false" />
     </ItemGroup>
 
 </Project>
