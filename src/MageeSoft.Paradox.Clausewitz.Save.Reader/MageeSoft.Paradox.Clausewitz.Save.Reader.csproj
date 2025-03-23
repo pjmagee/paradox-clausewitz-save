@@ -36,12 +36,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="..\README.md" Pack="true" PackagePath="\" />
-    <None Include="..\LICENSE" Pack="true" PackagePath="\" />
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+    <None Include="..\..\LICENSE" Pack="true" PackagePath="\" />
   </ItemGroup>
 
-  <ItemGroup>
-    <!-- <ProjectReference Include="..\MageeSoft.Paradox.Clausewitz.Save.Binder.Reflection\MageeSoft.Paradox.Clausewitz.Save.Binder.Reflection.csproj" /> -->
+  <ItemGroup>    
     <ProjectReference Include="..\MageeSoft.Paradox.Clausewitz.Save.Parser\MageeSoft.Paradox.Clausewitz.Save.Parser.csproj" />
     <ProjectReference Include="..\MageeSoft.Paradox.Clausewitz.Save.Models\MageeSoft.Paradox.Clausewitz.Save.Models.csproj" />
   </ItemGroup>

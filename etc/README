@@ -1,0 +1,15 @@
+# PowerShell Scripts and Configuration
+
+The `/etc` directory contains configuration files and utility scripts used for development, building, and maintaining the project. This follows the Unix-like convention of storing system-wide configuration files in `/etc`.
+
+## Why PowerShell?
+
+PowerShell is used across all platforms (Windows, Linux, macOS) in this project because:
+
+1. It provides true cross-platform support through PowerShell Core (Pwsh)
+2. Maintains a single codebase for scripts rather than maintaining separate bash and PowerShell versions
+3. Offers consistent behavior across different operating systems
+4. Provides rich object manipulation and .NET integration
+5. Reduces maintenance overhead by avoiding platform-specific script variants
+
+All scripts in this directory are written in PowerShell and can be executed using PowerShell Core (pwsh) on any supported platform.

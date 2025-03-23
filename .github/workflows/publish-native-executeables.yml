@@ -1,18 +1,4 @@
-# This workflow builds native executables for Windows, macOS, and Linux using GitVersion for versioning.
-# 
-# Architecture:
-# 1. setup-gitversion job: Determines version info using GitVersion
-# 2. Platform-specific jobs (Windows/macOS/Linux):
-#    - Build native executables for each architecture (x64/arm64)
-#    - Package with version info (using platform-specific scripts)
-#    - Upload to GitHub Release
-# 
-# File naming convention:
-# paradox-clausewitz-sav_[major.minor.patch]_[platform]_[arch].[ext]
-# 
-# For more details, see etc/build-scripts.md
-
-name: Build and Publish Native Executables
+name: Publish Native Executables
 
 on:
   release:
@@ -66,7 +52,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 9.0.x
+          dotnet-version: 10.0.x-preview2
           
       - name: Install GitVersion
         uses: gittools/actions/gitversion/setup@v0
@@ -74,7 +60,7 @@ jobs:
           versionSpec: '5.x'
           
       - name: Build native executable for Windows
-        run: .\etc\build-native-windows.ps1
+        run: .\etc\build-native-executable.ps1 -RuntimeIdentifier win-${{ matrix.arch }}
         
       - name: Upload artifact
         uses: actions/upload-release-asset@v1
@@ -136,7 +122,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 9.0.x
+          dotnet-version: 10.0.x-preview2
           
       - name: Install GitVersion
         uses: gittools/actions/gitversion/setup@v0
@@ -148,11 +134,11 @@ jobs:
         
       - name: Make scripts executable
         run: |
-          chmod +x ./etc/build-native-macos.sh
-          chmod +x ./etc/package-native.sh
+          chmod +x ./etc/build-native-executable.ps1
+          chmod +x ./etc/package-native-executable.ps1 -Platform macos
           
       - name: Build native executable for macOS
-        run: ./etc/build-native-macos.sh
+        run: ./etc/build-native-executable.ps1 -RuntimeIdentifier osx-${{ matrix.arch }}
         
       - name: List artifacts
         run: ls -la ./artifacts/
@@ -166,3 +152,4 @@ jobs:
           asset_path: ./artifacts/paradox-clausewitz-sav_${{ needs.setup-gitversion.outputs.majorMinorPatch }}_macos_${{ matrix.arch }}.tar.gz
           asset_name: paradox-clausewitz-sav_${{ needs.setup-gitversion.outputs.majorMinorPatch }}_macos_${{ matrix.arch }}.tar.gz
           asset_content_type: application/gzip
+

@@ -1,13 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-
     <OutputType>Exe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
     <PackAsTool>false</PackAsTool>
+    <ToolCommandName>paradox-clausewitz-sav</ToolCommandName>
     <StripSymbols>true</StripSymbols>
    
     <!-- Common settings -->
@@ -18,6 +18,8 @@
     <PackageProjectUrl>https://github.com/pjmagee/paradox-clausewitz-sav</PackageProjectUrl>
     <RepositoryUrl>https://github.com/pjmagee/paradox-clausewitz-sav</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
+    <PackageId>MageeSoft.Paradox.Clausewitz.Save.Cli</PackageId>
+    <PackageOutputPath>./nupkg</PackageOutputPath>
 
      <!-- Version Information - Using GitVersion -->
     <AssemblyVersion>$(GitVersion_AssemblySemVer)</AssemblyVersion>
@@ -27,7 +29,6 @@
     <!-- JSON serialization settings for both AOT and non-AOT -->
     <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
     <LangVersion>default</LangVersion>
-
   </PropertyGroup>
 
   <!-- Native AOT Configuration (default) -->
@@ -39,16 +40,6 @@
     <DebugType>none</DebugType>
     <SuppressTrimAnalysisWarnings>false</SuppressTrimAnalysisWarnings>
     <DebugSymbols>false</DebugSymbols>
-  </PropertyGroup>
-
-  <!-- Tool Package Configuration (optional) -->
-  <PropertyGroup Condition="'$(PackAsTool)'=='true'">
-    <PackAsTool>$(PackAsTool)</PackAsTool>
-    <StripSymbols>true</StripSymbols>
-    <ToolCommandName>paradox-clausewitz-sav</ToolCommandName>
-    <ToolCommandDescription>A CLI tool for parsing Paradox Clausewitz Save files.</ToolCommandDescription>
-    <PackageOutputPath>./nupkg</PackageOutputPath>
-    <PackageId>MageeSoft.Paradox.Clausewitz.Save.Cli</PackageId>    
   </PropertyGroup>
 
   <ItemGroup>   

@@ -8,6 +8,17 @@ import (
 type ParadoxClausewitzSav struct {
 }
 
+var matrix = []struct {
+	os      string
+	rid     string
+	address string
+}{
+	{os: "linux", rid: "linux-x64", address: "mcr.microsoft.com/dotnet/sdk:10.0.100-preview.2-noble-aot-amd64"},
+	{os: "linux", rid: "linux-arm64", address: "mcr.microsoft.com/dotnet/sdk:10.0.100-preview.2-noble-aot-arm64v8"},
+	{os: "darwin", rid: "osx-x64", address: "sickcodes/docker-osx:auto"},
+	{os: "darwin", rid: "osx-arm64", address: "sickcodes/docker-osx:auto"},
+}
+
 // Build the project
 func (m *ParadoxClausewitzSav) Build(
 	ctx context.Context,
@@ -54,18 +65,6 @@ func (m *ParadoxClausewitzSav) Publish(
 		WithExec([]string{"dotnet", "publish"})
 }
 
-var matrix = []struct {
-	os      string
-	rid     string
-	address string
-}{
-	{os: "linux", rid: "linux-x64", address: "mcr.microsoft.com/dotnet/sdk:10.0.100-preview.2-noble-aot-amd64"},
-	{os: "linux", rid: "linux-arm64", address: "mcr.microsoft.com/dotnet/sdk:10.0.100-preview.2-noble-aot-arm64v8"},
-
-	{os: "darwin", rid: "osx-x64", address: "sickcodes/docker-osx:latest"},
-	{os: "darwin", rid: "osx-arm64", address: "sickcodes/docker-osx:latest"},
-}
-
 func (m *ParadoxClausewitzSav) BuildNativeLinux(
 	// +defaultPath="./"
 	// +ignore=["**/obj", "**/bin"]
@@ -103,6 +102,7 @@ func (m *ParadoxClausewitzSav) BuildNativeDarwin(
 		if m.os == "darwin" {
 			ctr := dag.Container().
 				From(m.address).
+				WithEnvVariable("GENERATE_UNIQUE", "true").
 				WithExec([]string{"bash", "-c", "curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 10.0.100-preview.2"}).
 				WithExec([]string{"bash", "-c", "echo 'export DOTNET_ROOT=$HOME/.dotnet' >> ~/.bashrc && echo 'export PATH=$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools' >> ~/.bashrc"}).
 				WithExec([]string{"bash", "-c", "source ~/.bashrc"}).

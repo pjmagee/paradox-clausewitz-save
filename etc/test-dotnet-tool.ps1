@@ -1,7 +1,7 @@
 param(
     [string]$ProjectPath = (Join-Path -Path ".." -ChildPath "src/MageeSoft.Paradox.Clausewitz.Save.Cli"),
     [switch]$Clean,
-    [string]$CommandToTest = "list"
+    [string]$CommandToTest = "info"
 )
 
 # Normalize paths for cross-platform compatibility
