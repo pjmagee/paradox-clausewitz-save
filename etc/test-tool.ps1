@@ -1,12 +1,15 @@
 param(
-    [string]$ProjectPath = "..\MageeSoft.Paradox.Clausewitz.Save.Cli",
+    [string]$ProjectPath = (Join-Path -Path ".." -ChildPath "src/MageeSoft.Paradox.Clausewitz.Save.Cli"),
     [switch]$Clean,
     [string]$CommandToTest = "list"
 )
 
-$OutputDir = "$ProjectPath/bin"
-$NupkgDir = "$ProjectPath/nupkg"
-$ToolManifestPath = "./.config/dotnet-tools.json"
+# Normalize paths for cross-platform compatibility
+$ProjectPath = (Resolve-Path $ProjectPath).Path
+$OutputDir = Join-Path -Path $ProjectPath -ChildPath "bin"
+$NupkgDir = Join-Path -Path $ProjectPath -ChildPath "nupkg"
+$ToolManifestPath = Join-Path -Path (Get-Location) -ChildPath ".config/dotnet-tools.json"
+$ObjDir = Join-Path -Path $ProjectPath -ChildPath "obj"
 $PackageId = "mageesoft.paradox.clausewitz.save.cli"
 $ToolCommand = "paradox-clausewitz-sav"
 
@@ -23,7 +26,6 @@ if (Test-Path $OutputDir) {
 }
 
 # Clean obj directory too to ensure a clean build
-$ObjDir = "$ProjectPath/obj"
 if (Test-Path $ObjDir) {
     Remove-Item -Recurse -Force $ObjDir -ErrorAction SilentlyContinue
 }
@@ -115,4 +117,4 @@ if ($CommandToTest) {
 Write-Host "`nUninstalling the tool..." -ForegroundColor Cyan
 dotnet tool uninstall --local $PackageId
 
-Write-Host "`nTest completed successfully!" -ForegroundColor Green 
+Write-Host "`nTest completed successfully!" -ForegroundColor Green

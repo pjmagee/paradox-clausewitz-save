@@ -19,7 +19,7 @@ $gitVersionInfo = dotnet gitversion /output json | ConvertFrom-Json
 Write-Host "Building version $($gitVersionInfo.SemVer)" -ForegroundColor Green
 
 # Create artifacts directory
-$artifactsDir = "./artifacts"
+$artifactsDir = Join-Path -Path "." -ChildPath "artifacts"
 New-Item -ItemType Directory -Force -Path $artifactsDir | Out-Null
 
 # https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/cross-compile#windows
@@ -41,11 +41,15 @@ function Build-NativeExecutable {
     $platform, $arch = $platformArch.Split('/')
     
     # Create output directory
-    $outputDir = "./native-build"
+    $outputDir = Join-Path -Path "." -ChildPath "native-build"
     New-Item -ItemType Directory -Force -Path $outputDir | Out-Null
     
+    # Use Join-Path for the project path
+    $projectPath = Join-Path -Path "." -ChildPath "MageeSoft.Paradox.Clausewitz.Save.Cli"
+    $csprojPath = Join-Path -Path $projectPath -ChildPath "MageeSoft.Paradox.Clausewitz.Save.Cli.csproj"
+    
     # Build the native executable
-    dotnet publish ./MageeSoft.Paradox.Clausewitz.Save.Cli/MageeSoft.Paradox.Clausewitz.Save.Cli.csproj `
+    dotnet publish $csprojPath `
         -c Release `
         -r $rid `
         --self-contained true `
@@ -79,7 +83,8 @@ function Build-NativeExecutable {
             Write-Host "Executable size: $([math]::Round($fileSize/1MB, 2)) MB"
             
             # Package using package-native.ps1
-            $packagedPath = & "$PSScriptRoot/package-native.ps1" -InputFile $targetPath -Platform $platform -Architecture $arch -OutputDir $artifactsDir
+            $packageScript = Join-Path -Path $PSScriptRoot -ChildPath "package-native.ps1"
+            $packagedPath = & $packageScript -InputFile $targetPath -Platform $platform -Architecture $arch -OutputDir $artifactsDir
             
             if ($packagedPath -and (Test-Path $packagedPath)) {
                 Write-Host "Successfully packaged to: $packagedPath" -ForegroundColor Green

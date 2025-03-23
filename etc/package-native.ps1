@@ -11,7 +11,7 @@ param (
     [ValidateSet("x64", "arm64")]
     [string]$Architecture,
     
-    [string]$OutputDir = "../artifacts"
+    [string]$OutputDir = (Join-Path -Path ".." -ChildPath "artifacts")
 )
 
 # Create output directory if it doesn't exist
@@ -51,7 +51,7 @@ Built at: $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")
 # Package the files
 Write-Host "Packaging $targetFileName to $outputPath..." -ForegroundColor Cyan
 if ($Platform -eq "windows") {
-    Compress-Archive -Path "$tempDir\*" -DestinationPath $outputPath -Force
+    Compress-Archive -Path (Join-Path -Path $tempDir -ChildPath "*") -DestinationPath $outputPath -Force
 } else {
     # For Linux/macOS, use tar to create .tar.gz
     if ($IsWindows) {
@@ -64,7 +64,7 @@ if ($Platform -eq "windows") {
             Write-Warning "7-Zip not found. Install it to create .tar.gz on Windows, or use WSL."
             # Fallback to zip on Windows if 7-Zip is not available
             $outputPath = [System.IO.Path]::ChangeExtension($outputPath, ".zip")
-            Compress-Archive -Path "$tempDir\*" -DestinationPath $outputPath -Force
+            Compress-Archive -Path (Join-Path -Path $tempDir -ChildPath "*") -DestinationPath $outputPath -Force
         }
     } else {
         # On Linux/macOS, use native tar command
@@ -89,4 +89,4 @@ if (Test-Path $outputPath) {
 } else {
     Write-Host "Packaging failed - output file not found: $outputPath" -ForegroundColor Red
     return $null
-} 
+}

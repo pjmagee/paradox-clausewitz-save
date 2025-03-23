@@ -3,7 +3,10 @@ param (
     [string]$Configuration = "Release"
 )
 
-$ProjectPath = "../MageeSoft.Paradox.Clausewitz.Save.Cli/MageeSoft.Paradox.Clausewitz.Save.Cli.csproj"
+# Use Join-Path for cross-platform path handling
+$SrcDir = Join-Path -Path ".." -ChildPath "src"
+$ProjectPath = Join-Path -Path $SrcDir -ChildPath "MageeSoft.Paradox.Clausewitz.Save.Cli"
+$CsprojPath = Join-Path -Path $ProjectPath -ChildPath "MageeSoft.Paradox.Clausewitz.Save.Cli.csproj"
 
 # Show GitVersion info
 Write-Host "Retrieving version information from GitVersion..." -ForegroundColor Cyan
@@ -12,12 +15,12 @@ dotnet gitversion | Out-Host
 Write-Host "Building .NET Tool package..." -ForegroundColor Cyan
 
 # Build the .NET Tool package
-dotnet pack $ProjectPath `
+dotnet pack $CsprojPath `
     -c $Configuration `
     /p:PackAsTool=true
 
 if ($LASTEXITCODE -eq 0) {
-    $NupkgDir = "../MageeSoft.Paradox.Clausewitz.Save.Cli/nupkg"
+    $NupkgDir = Join-Path -Path $ProjectPath -ChildPath "nupkg"
     
     if (Test-Path $NupkgDir) {
         $Packages = Get-ChildItem -Path $NupkgDir -Filter "*.nupkg" | Sort-Object LastWriteTime -Descending
@@ -44,4 +47,4 @@ if ($LASTEXITCODE -eq 0) {
     }
 } else {
     Write-Host "Build failed with exit code $LASTEXITCODE" -ForegroundColor Red
-} 
+}

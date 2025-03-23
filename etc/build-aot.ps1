@@ -6,8 +6,20 @@ param (
     [string]$VersionSuffix = ""
 )
 
-$ProjectPath = "../src/MageeSoft.Paradox.Clausewitz.Save.Cli/MageeSoft.Paradox.Clausewitz.Save.Cli.csproj"
-$AotOutputDir = "../bin/aot-$RuntimeIdentifier"
+# Use Join-Path for cross-platform path handling
+$SrcDir = Join-Path -Path ".." -ChildPath "src"
+$ProjectPath = Join-Path -Path $SrcDir -ChildPath "MageeSoft.Paradox.Clausewitz.Save.Cli"
+$CsprojPath = Join-Path -Path $ProjectPath -ChildPath "MageeSoft.Paradox.Clausewitz.Save.Cli.csproj"
+$BinDir = Join-Path -Path ".." -ChildPath "bin"
+$AotOutputDir = Join-Path -Path $BinDir -ChildPath "aot-$RuntimeIdentifier"
+
+# Check if GitVersion.Tool is installed
+if (-not (dotnet tool list --global | Select-String -Pattern "gitversion")) {
+    Write-Host "GitVersion.Tool not found. Installing..." -ForegroundColor Yellow
+    dotnet tool install --global GitVersion.Tool
+} else {
+    Write-Host "GitVersion.Tool is already installed." -ForegroundColor Green
+}
 
 # Show GitVersion info
 Write-Host "Retrieving version information from GitVersion..." -ForegroundColor Cyan
@@ -25,14 +37,19 @@ if ($VersionSuffix) {
 Write-Host "Building Native AOT executable for $RuntimeIdentifier..." -ForegroundColor Cyan
 
 # Build the AOT executable
-dotnet publish $ProjectPath `
+dotnet publish $CsprojPath `
     -c $Configuration `
     -r $RuntimeIdentifier `
     -o $AotOutputDir `
     $VersionArgs
 
 if ($LASTEXITCODE -eq 0) {
-    $ExeName = if ($RuntimeIdentifier.StartsWith("win")) { "MageeSoft.Paradox.Clausewitz.Save.Cli.exe" } else { "MageeSoft.Paradox.Clausewitz.Save.Cli" }
+    $ExeName = if ($RuntimeIdentifier.StartsWith("win")) { 
+        "MageeSoft.Paradox.Clausewitz.Save.Cli.exe" 
+    } else { 
+        "MageeSoft.Paradox.Clausewitz.Save.Cli" 
+    }
+
     $ExePath = Join-Path -Path $AotOutputDir -ChildPath $ExeName
     
     if (Test-Path $ExePath) {
@@ -43,12 +60,8 @@ if ($LASTEXITCODE -eq 0) {
         Write-Host "Output: $ExePath" -ForegroundColor Green
         Write-Host "Size: $FileSizeMB MB" -ForegroundColor Green
         
-        # Get version info
-        if ($RuntimeIdentifier.StartsWith("win")) {
-            $VersionInfo = (Get-Item $ExePath).VersionInfo
-            Write-Host "Version: $($VersionInfo.ProductVersion)" -ForegroundColor Green
-        }
-
+        $VersionInfo = (Get-Item $ExePath).VersionInfo
+        Write-Host "Version: $($VersionInfo.ProductVersion)" -ForegroundColor Green
         # Run version command
         Write-Host "`nExecuting info command:" -ForegroundColor Cyan
         & $ExePath info
@@ -57,4 +70,4 @@ if ($LASTEXITCODE -eq 0) {
     }
 } else {
     Write-Host "Build failed with exit code $LASTEXITCODE" -ForegroundColor Red
-} 
+}
