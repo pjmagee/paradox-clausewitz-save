@@ -11,14 +11,14 @@ jobs:
     runs-on: ubuntu-latest    
     steps:
     
-    - uses: actions/checkout@v3    
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0    # Fetch all history for GitVersion
     
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 10.0.x
-        dotnet-quality: preview
-        global-json-file: ./src/global.json        
     
     - name: Restore dependencies
       run: dotnet restore ./src/MageeSoft.Paradox.Clausewitz.Save.slnx      
