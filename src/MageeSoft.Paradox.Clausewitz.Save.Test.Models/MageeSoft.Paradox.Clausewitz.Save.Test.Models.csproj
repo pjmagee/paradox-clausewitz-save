@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+        <CompilerGeneratedFilesOutputPath>$(BaseIntermediateOutputPath)\GeneratedFiles</CompilerGeneratedFilesOutputPath>
+        <LangVersion>default</LangVersion>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\MageeSoft.Paradox.Clausewitz.Save.Parser\MageeSoft.Paradox.Clausewitz.Save.Parser.csproj" />
+        <ProjectReference Include="..\MageeSoft.Paradox.Clausewitz.Save.Models\MageeSoft.Paradox.Clausewitz.Save.Models.csproj" />
+        <ProjectReference Include="..\MageeSoft.Paradox.Clausewitz.Save.SourceGen\MageeSoft.Paradox.Clausewitz.Save.SourceGen.csproj" 
+                        OutputItemType="Analyzer"
+                        ReferenceOutputAssembly="false" />      
+    </ItemGroup>
+
+</Project>

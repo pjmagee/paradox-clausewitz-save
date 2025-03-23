@@ -16,19 +16,24 @@ jobs:
         fetch-depth: 0  # Shallow clones should be disabled for better coverage reporting
     
     - name: Setup .NET
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 9.0.x
+        dotnet-version: 10.0.x-preview2
+        
+    - name: Install GitVersion
+      uses: gittools/actions/gitversion/setup@v0
+      with:
+        versionSpec: '5.x'
         
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore ./src/MageeSoft.Paradox.Clausewitz.Save.slnx
       
     - name: Build
-      run: dotnet build --no-restore
+      run: dotnet build ./src/MageeSoft.Paradox.Clausewitz.Save.slnx --no-restore
       
     - name: Test with coverage
       # https://github.com/codecov/example-csharp
-      run: dotnet test --no-build --verbosity normal /p:CollectCoverage=true /p:CoverletOutputFormat=opencover /p:CoverletOutput="./coverage.opencover.xml"
+      run: dotnet test ./src/MageeSoft.Paradox.Clausewitz.Save.slnx --no-build --verbosity normal /p:CollectCoverage=true /p:CoverletOutputFormat=opencover /p:CoverletOutput="./coverage.opencover.xml"
       
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v5
@@ -36,11 +41,8 @@ jobs:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        slug: pjmagee/stellaris-sav-parser
+        slug: pjmagee/paradox-clausewitz-save
         name: codecov-umbrella
         fail_ci_if_error: true
         verbose: false
-        directory: ./StellarisSaveParser.Tests/
-        files: ./StellarisSaveParser.Tests/coverage.opencover.xml
-        
-        
+        files: ./src/MageeSoft.Paradox.Clausewitz.Save.Tests/coverage.opencover.xml

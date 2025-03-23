@@ -1,0 +1,63 @@
+name: Publish .NET Tool
+
+on:
+  release:
+    types: [published]
+
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0  # Required for GitVersion
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 10.0.x-preview2
+        
+    - name: Install GitVersion
+      uses: gittools/actions/gitversion/setup@v0
+      with:
+        versionSpec: '5.x'
+          
+    - name: Determine Version
+      id: gitversion
+      uses: gittools/actions/gitversion/execute@v0
+      with:
+        useConfigFile: true
+        
+    - name: Restore dependencies
+      run: dotnet restore
+      
+    - name: Build
+      run: dotnet build --configuration Release --no-restore
+      
+    - name: Test
+      run: dotnet test --configuration Release --no-build
+      
+    - name: Pack
+      run: dotnet pack MageeSoft.Paradox.Clausewitz.Save.Cli/MageeSoft.Paradox.Clausewitz.Save.Cli.csproj --configuration Release --no-build /p:PackAsTool=true --output ./nupkg
+      
+    # - name: Push to NuGet
+    #   if: ${{ github.event_name == 'release' }}
+    #   run: |
+    #     dotnet nuget push "./nupkg/MageeSoft.Paradox.Clausewitz.Save.Cli.*.nupkg" \
+    #       --api-key ${{ secrets.NUGET_API_KEY }} \
+    #       --source "https://api.nuget.org/v3/index.json" \
+    #       --skip-duplicate
+      
+    - name: Push to GitHub Packages
+      if: ${{ github.event_name == 'release' }}
+      run: |
+        dotnet nuget push "./nupkg/MageeSoft.Paradox.Clausewitz.Save.Cli.*.nupkg" \
+          --api-key ${{ secrets.GITHUB_TOKEN }} \
+          --source "https://nuget.pkg.github.com/pjmagee/index.json" \
+          --skip-duplicate 
