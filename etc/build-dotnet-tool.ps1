@@ -4,13 +4,27 @@ param (
 )
 
 # Use Join-Path for cross-platform path handling
-$SrcDir = Join-Path -Path ".." -ChildPath "src"
+$RootDir = Join-Path -Path (Get-Location) -ChildPath ".."
+$SrcDir = Join-Path -Path $RootDir -ChildPath "src"
+$SolutionPath = Join-Path -Path $SrcDir -ChildPath "MageeSoft.Paradox.Clausewitz.Save.slnx"
 $ProjectPath = Join-Path -Path $SrcDir -ChildPath "MageeSoft.Paradox.Clausewitz.Save.Cli"
 $CsprojPath = Join-Path -Path $ProjectPath -ChildPath "MageeSoft.Paradox.Clausewitz.Save.Cli.csproj"
+
+# Check if GitVersion.Tool is installed
+if (-not (dotnet tool list --global | Select-String -Pattern "gitversion")) {
+    Write-Host "GitVersion.Tool not found. Installing..." -ForegroundColor Yellow
+    dotnet tool install --global GitVersion.Tool
+} else {
+    Write-Host "GitVersion.Tool is already installed." -ForegroundColor Green
+}
 
 # Show GitVersion info
 Write-Host "Retrieving version information from GitVersion..." -ForegroundColor Cyan
 dotnet gitversion | Out-Host
+
+# First restore solution dependencies
+Write-Host "Restoring dependencies for the solution..." -ForegroundColor Cyan
+dotnet restore $SolutionPath
 
 Write-Host "Building .NET Tool package..." -ForegroundColor Cyan
 

@@ -24,15 +24,11 @@ jobs:
         dotnet-version: 10.0.x
         
     - name: Install GitVersion
-      uses: gittools/actions/gitversion/setup@v0
-      with:
-        versionSpec: '5.x'
+      uses: gittools/actions/gitversion/setup@v3
           
     - name: Determine Version
       id: gitversion
-      uses: gittools/actions/gitversion/execute@v0
-      with:
-        useConfigFile: true
+      uses: gittools/actions/gitversion/execute@v3
         
     - name: Display GitVersion outputs
       run: |
@@ -40,13 +36,13 @@ jobs:
         echo "MajorMinorPatch: ${{ steps.gitversion.outputs.majorMinorPatch }}"
         
     - name: Restore dependencies
-      run: dotnet restore ./src/MageeSoft.Paradox.Clausewitz.Save.sln
+      run: dotnet restore ./src/MageeSoft.Paradox.Clausewitz.Save.slnx
       
     - name: Build
-      run: dotnet build ./src/MageeSoft.Paradox.Clausewitz.Save.sln --configuration Release --no-restore
+      run: dotnet build ./src/MageeSoft.Paradox.Clausewitz.Save.slnx --configuration Release --no-restore
       
     - name: Test
-      run: dotnet test ./src/MageeSoft.Paradox.Clausewitz.Save.sln --configuration Release --no-build
+      run: dotnet test ./src/MageeSoft.Paradox.Clausewitz.Save.slnx --configuration Release --no-build
       
     - name: Pack Parser
       run: dotnet pack ./src/MageeSoft.Paradox.Clausewitz.Save.Parser/MageeSoft.Paradox.Clausewitz.Save.Parser.csproj --configuration Release --no-build --output nupkgs /p:Version=${{ steps.gitversion.outputs.semVer }}

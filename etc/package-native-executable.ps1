@@ -19,6 +19,14 @@ if (-not (Test-Path $OutputDir)) {
     New-Item -ItemType Directory -Path $OutputDir -Force | Out-Null
 }
 
+# Check if GitVersion.Tool is installed
+if (-not (dotnet tool list --global | Select-String -Pattern "gitversion")) {
+    Write-Host "GitVersion.Tool not found. Installing..." -ForegroundColor Yellow
+    dotnet tool install --global GitVersion.Tool
+} else {
+    Write-Host "GitVersion.Tool is already installed." -ForegroundColor Green
+}
+
 # Get version info from GitVersion
 Write-Host "Getting version information from GitVersion..." -ForegroundColor Cyan
 $gitVersionInfo = dotnet gitversion /output json | ConvertFrom-Json

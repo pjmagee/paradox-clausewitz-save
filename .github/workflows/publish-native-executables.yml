@@ -20,15 +20,11 @@ jobs:
           fetch-depth: 0  # Fetch all history for GitVersion
           
       - name: Install GitVersion
-        uses: gittools/actions/gitversion/setup@v0
-        with:
-          versionSpec: '5.x'
+        uses: gittools/actions/gitversion/setup@v3
           
       - name: Determine Version
         id: gitversion
-        uses: gittools/actions/gitversion/execute@v0
-        with:
-          useConfigFile: true
+        uses: gittools/actions/gitversion/execute@v3
           
       - name: Display GitVersion outputs
         run: |
@@ -54,11 +50,6 @@ jobs:
         with:
           dotnet-version: 10.0.x
           
-      - name: Install GitVersion
-        uses: gittools/actions/gitversion/setup@v0
-        with:
-          versionSpec: '5.x'
-          
       - name: Build native executable for Windows
         run: | 
           .\etc\build-native-executable.ps1 -RuntimeIdentifier win-${{ matrix.rid }}
@@ -67,14 +58,13 @@ jobs:
               -InputFile bin\aot-win-${{ matrix.rid }}\paradox-clausewitz-sav.exe
         
       - name: Upload artifact
-        uses: actions/upload-release-asset@v1
+        uses: actions/upload-artifact@v4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ./artifacts/paradox-clausewitz-sav_${{ needs.setup-gitversion.outputs.majorMinorPatch }}_windows_${{ matrix.rid }}.zip
-          asset_name: paradox-clausewitz-sav_${{ needs.setup-gitversion.outputs.majorMinorPatch }}_windows_${{ matrix.rid }}.zip
-          asset_content_type: application/zip
+           
+          path: ./artifacts/paradox-clausewitz-sav_${{ needs.setup-gitversion.outputs.majorMinorPatch }}_windows_${{ matrix.rid }}.zip
+          name: paradox-clausewitz-sav_${{ needs.setup-gitversion.outputs.majorMinorPatch }}_windows_${{ matrix.rid }}.zip
 
   build-linux:
     needs: setup-gitversion
@@ -85,7 +75,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0 # Fetch all history for GitVersion
 
       - name: Install PowerShell
         run: |
@@ -104,12 +94,7 @@ jobs:
           
           # Verify PowerShell is installed
           pwsh --version
-
-      - name: Install GitVersion
-        uses: gittools/actions/gitversion/setup@v0
-        with:
-          versionSpec: '5.x'
-          
+           
       - name: Set up Docker Buildx
         uses: dagger/dagger-for-github@8.0.0
         with:
@@ -130,14 +115,12 @@ jobs:
         run: ls -la ./artifacts/
 
       - name: Upload artifact
-        uses: actions/upload-release-asset@v1
+        uses: actions/upload-artifact@v4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ./artifacts/paradox-clausewitz-sav_${{ needs.setup-gitversion.outputs.majorMinorPatch }}_linux_${{ matrix.arch }}.tar.gz
-          asset_name: paradox-clausewitz-sav_${{ needs.setup-gitversion.outputs.majorMinorPatch }}_linux_${{ matrix.arch }}.tar.gz
-          asset_content_type: application/gzip
+          path: ./artifacts/paradox-clausewitz-sav_${{ needs.setup-gitversion.outputs.majorMinorPatch }}_linux_${{ matrix.arch }}.tar.gz
+          name: paradox-clausewitz-sav_${{ needs.setup-gitversion.outputs.majorMinorPatch }}_linux_${{ matrix.arch }}.tar.gz
 
   build-macos:
     needs: setup-gitversion
@@ -154,11 +137,6 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.x
-          
-      - name: Install GitVersion
-        uses: gittools/actions/gitversion/setup@v0
-        with:
-          versionSpec: '5.x'
           
       - name: Install macOS workload
         run: dotnet workload install macos
@@ -182,11 +160,9 @@ jobs:
         run: ls -la ./artifacts/
         
       - name: Upload artifact
-        uses: actions/upload-release-asset@v1
+        uses: actions/upload-artifact@v4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ./artifacts/paradox-clausewitz-sav_${{ needs.setup-gitversion.outputs.majorMinorPatch }}_macos_${{ matrix.arch }}.tar.gz
-          asset_name: paradox-clausewitz-sav_${{ needs.setup-gitversion.outputs.majorMinorPatch }}_macos_${{ matrix.arch }}.tar.gz
-          asset_content_type: application/gzip
+        with: 
+          path: ./artifacts/paradox-clausewitz-sav_${{ needs.setup-gitversion.outputs.majorMinorPatch }}_macos_${{ matrix.arch }}.tar.gz
+          name: paradox-clausewitz-sav_${{ needs.setup-gitversion.outputs.majorMinorPatch }}_macos_${{ matrix.arch }}.tar.gz          

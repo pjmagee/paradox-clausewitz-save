@@ -23,15 +23,11 @@ jobs:
         dotnet-version: 10.0.x
         
     - name: Install GitVersion
-      uses: gittools/actions/gitversion/setup@v0
-      with:
-        versionSpec: '5.x'
+      uses: gittools/actions/gitversion/setup@v3
           
     - name: Determine Version
       id: gitversion
-      uses: gittools/actions/gitversion/execute@v0
-      with:
-        useConfigFile: true
+      uses: gittools/actions/gitversion/execute@v3
         
     - name: Restore dependencies
       run: dotnet restore ./src/MageeSoft.Paradox.Clausewitz.Save.slnx
