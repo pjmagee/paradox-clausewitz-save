@@ -8,8 +8,7 @@
     <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
     <PackAsTool>false</PackAsTool>
     <ToolCommandName>paradox-clausewitz-sav</ToolCommandName>
-    <AssemblyName>paradox-clausewitz-sav</AssemblyName>
-    <StripSymbols>true</StripSymbols>
+    <AssemblyName>paradox-clausewitz-sav</AssemblyName>    
    
     <!-- Common settings -->
     <Authors>pjmagee</Authors>
@@ -30,6 +29,7 @@
     <ToolCommandName>paradox-clausewitz-sav</ToolCommandName>
     <PackageTags>stellaris ck3 hoi4 paradox clausewitz engine game save parser</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageProjectUrl>https://github.com/pjmagee/paradox-clausewitz-sav</PackageProjectUrl>
     <RepositoryUrl>https://github.com/pjmagee/paradox-clausewitz-sav</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
@@ -54,7 +54,11 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
   </ItemGroup>
-
+  
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />    
+  </ItemGroup>
+  
   <ItemGroup>
     <ProjectReference Include="..\MageeSoft.Paradox.Clausewitz.Save.Parser\MageeSoft.Paradox.Clausewitz.Save.Parser.csproj" />
     <ProjectReference Include="..\MageeSoft.Paradox.Clausewitz.Save.Reader\MageeSoft.Paradox.Clausewitz.Save.Reader.csproj" />

@@ -2,7 +2,7 @@ name: Publish .NET Tool
 
 on:
   release:
-    types: [published]
+    types: [created]
 
 permissions:
   contents: write
@@ -24,6 +24,8 @@ jobs:
         
     - name: Install GitVersion
       uses: gittools/actions/gitversion/setup@v3
+      with:
+          versionSpec: '6.0.x'
           
     - name: Determine Version
       id: gitversion
@@ -40,17 +42,9 @@ jobs:
       
     - name: Pack
       run: dotnet pack ./src/MageeSoft.Paradox.Clausewitz.Save.Cli/MageeSoft.Paradox.Clausewitz.Save.Cli.csproj --configuration Release --no-build /p:PackAsTool=true --output ./nupkg
-      
-    # - name: Push to NuGet
-    #   if: ${{ github.event_name == 'release' }}
-    #   run: |
-    #     dotnet nuget push "./nupkg/MageeSoft.Paradox.Clausewitz.Save.Cli.*.nupkg" \
-    #       --api-key ${{ secrets.NUGET_API_KEY }} \
-    #       --source "https://api.nuget.org/v3/index.json" \
-    #       --skip-duplicate
-      
+            
     - name: Push to GitHub Packages
-      if: ${{ github.event_name == 'release' }}
+      if: ${{ github.event_name == 'created' }}
       run: |
         dotnet nuget push "./nupkg/MageeSoft.Paradox.Clausewitz.Save.Cli.*.nupkg" \
           --api-key ${{ secrets.GITHUB_TOKEN }} \

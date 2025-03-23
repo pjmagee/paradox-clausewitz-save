@@ -3,17 +3,22 @@ param (
     [string]$RuntimeIdentifier = "win-x64",
     [string]$Configuration = "Release",
     [string]$VersionPrefix = "",
-    [string]$VersionSuffix = ""
+    [string]$VersionSuffix = "",
+    [string]$SrcDir  = ""
 )
 
-# Use Join-Path for cross-platform path handling
-$RootDir = Join-Path -Path (Get-Location) -ChildPath ".."
-$SrcDir = Join-Path -Path $RootDir -ChildPath "src"
+$RootDir = Join-Path -Path $SrcDir -ChildPath ".."
 $SolutionPath = Join-Path -Path $SrcDir -ChildPath "MageeSoft.Paradox.Clausewitz.Save.slnx"
 $ProjectPath = Join-Path -Path $SrcDir -ChildPath "MageeSoft.Paradox.Clausewitz.Save.Cli"
 $CsprojPath = Join-Path -Path $ProjectPath -ChildPath "MageeSoft.Paradox.Clausewitz.Save.Cli.csproj"
 $BinDir = Join-Path -Path $RootDir -ChildPath "bin"
 $AotOutputDir = Join-Path -Path $BinDir -ChildPath "aot-$RuntimeIdentifier"
+
+# Display paths for debugging
+Write-Host "Repository root: $RootDir" -ForegroundColor Cyan
+Write-Host "Solution path: $SolutionPath" -ForegroundColor Cyan
+Write-Host "Project path: $CsprojPath" -ForegroundColor Cyan
+Write-Host "Output directory: $AotOutputDir" -ForegroundColor Cyan
 
 # Check if GitVersion.Tool is installed
 if (-not (dotnet tool list --global | Select-String -Pattern "gitversion")) {
@@ -43,11 +48,7 @@ dotnet restore $SolutionPath
 Write-Host "Building Native AOT executable for $RuntimeIdentifier..." -ForegroundColor Cyan
 
 # Build the AOT executable
-dotnet publish $CsprojPath `
-    -c $Configuration `
-    -r $RuntimeIdentifier `
-    -o $AotOutputDir `
-    $VersionArgs
+dotnet publish $CsprojPath -c $Configuration -r $RuntimeIdentifier -o $AotOutputDir $VersionArgs
 
 if ($LASTEXITCODE -eq 0) {
     $ExeName = if ($RuntimeIdentifier.StartsWith("win")) { 

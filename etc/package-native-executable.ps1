@@ -11,13 +11,19 @@ param (
     [ValidateSet("x64", "arm64")]
     [string]$Architecture,
     
-    [string]$OutputDir = (Join-Path -Path ".." -ChildPath "artifacts")
+    [string]$OutputDir = (Join-Path -Path (Join-Path -Path $PSScriptRoot -ChildPath "..") -ChildPath "artifacts")
 )
+
+# Resolve output directory to absolute path
+$OutputDir = [System.IO.Path]::GetFullPath($OutputDir)
 
 # Create output directory if it doesn't exist
 if (-not (Test-Path $OutputDir)) {
     New-Item -ItemType Directory -Path $OutputDir -Force | Out-Null
 }
+
+# Display output directory for debugging
+Write-Host "Artifacts will be placed in: $OutputDir" -ForegroundColor Cyan
 
 # Check if GitVersion.Tool is installed
 if (-not (dotnet tool list --global | Select-String -Pattern "gitversion")) {

@@ -8,33 +8,27 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest    
+    runs-on: ubuntu-latest
     steps:
 
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0    # Fetch all history for GitVersion
-    
+
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 10.0.x
-        
-    - name: Install GitVersion
-      uses: gittools/actions/gitversion/setup@v0
-      with:
-        versionSpec: '5.x'
-        
+
     - name: Restore dependencies
       run: dotnet restore ./src/MageeSoft.Paradox.Clausewitz.Save.slnx
-      
+
     - name: Build
       run: dotnet build ./src/MageeSoft.Paradox.Clausewitz.Save.slnx --no-restore
-      
+
     - name: Test with coverage
-      # https://github.com/codecov/example-csharp
       run: dotnet test ./src/MageeSoft.Paradox.Clausewitz.Save.slnx --no-build --verbosity normal /p:CollectCoverage=true /p:CoverletOutputFormat=opencover /p:CoverletOutput="./coverage.opencover.xml"
-      
+
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v5
       env:
