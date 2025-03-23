@@ -8,21 +8,23 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-    
+    runs-on: ubuntu-latest    
     steps:
-    - uses: actions/checkout@v3
+    
+    - uses: actions/checkout@v3    
     
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 10.0.x-preview2
-        
+        dotnet-version: 10.0.x
+        dotnet-quality: preview
+        global-json-file: ./src/global.json        
+    
     - name: Restore dependencies
-      run: dotnet restore ./src/MageeSoft.Paradox.Clausewitz.Save.slnx
-      
+      run: dotnet restore ./src/MageeSoft.Paradox.Clausewitz.Save.slnx      
+
     - name: Build
-      run: dotnet build ./src/MageeSoft.Paradox.Clausewitz.Save.slnx --no-restore
-      
+      run: dotnet build ./src/MageeSoft.Paradox.Clausewitz.Save.slnx --no-restore    
+
     - name: Test
       run: dotnet test ./src/MageeSoft.Paradox.Clausewitz.Save.slnx --no-build --verbosity normal
