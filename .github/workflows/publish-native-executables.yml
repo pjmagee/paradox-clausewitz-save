@@ -43,7 +43,7 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        arch: [x64, arm64]
+        rid: [x64, arm64]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -60,7 +60,11 @@ jobs:
           versionSpec: '5.x'
           
       - name: Build native executable for Windows
-        run: .\etc\build-native-executable.ps1 -RuntimeIdentifier win-${{ matrix.arch }}
+        run: | 
+          .\etc\build-native-executable.ps1 -RuntimeIdentifier win-${{ matrix.rid }}
+          .\etc\package-native-executable.ps1 -Platform windows `
+              -Architecture ${{ matrix.rid }} `
+              -InputFile bin\aot-win-${{ matrix.rid }}\paradox-clausewitz-sav.exe
         
       - name: Upload artifact
         uses: actions/upload-release-asset@v1
@@ -68,8 +72,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ./artifacts/paradox-clausewitz-sav_${{ needs.setup-gitversion.outputs.majorMinorPatch }}_windows_${{ matrix.arch }}.zip
-          asset_name: paradox-clausewitz-sav_${{ needs.setup-gitversion.outputs.majorMinorPatch }}_windows_${{ matrix.arch }}.zip
+          asset_path: ./artifacts/paradox-clausewitz-sav_${{ needs.setup-gitversion.outputs.majorMinorPatch }}_windows_${{ matrix.rid }}.zip
+          asset_name: paradox-clausewitz-sav_${{ needs.setup-gitversion.outputs.majorMinorPatch }}_windows_${{ matrix.rid }}.zip
           asset_content_type: application/zip
 
   build-linux:
@@ -81,20 +85,47 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Fetch all history for GitVersion
+          fetch-depth: 0
+
+      - name: Install PowerShell
+        run: |
+          # Download the Microsoft repository GPG keys
+          wget -q "https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/packages-microsoft-prod.deb"
+          
+          # Register the Microsoft repository GPG keys
+          sudo dpkg -i packages-microsoft-prod.deb
+          rm packages-microsoft-prod.deb
+          
+          # Update the list of packages
+          sudo apt-get update
+          
+          # Install PowerShell
+          sudo apt-get install -y powershell
+          
+          # Verify PowerShell is installed
+          pwsh --version
+
+      - name: Install GitVersion
+        uses: gittools/actions/gitversion/setup@v0
+        with:
+          versionSpec: '5.x'
           
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build Linux ${{ matrix.arch }}
-        uses: docker/build-push-action@v5.1.0
+        uses: dagger/dagger-for-github@8.0.0
         with:
-          context: .
-          file: ./etc/Dockerfile.linux-cross
-          build-args: |
-            TARGETARCH=${{ matrix.arch }}
-          outputs: type=local,dest=./artifacts
+          version: "latest"
+          call: |
+            publish-aot --rid=linux-${{ matrix.arch }} \
+            export --path ./bin/aot-linux-${{ matrix.arch }}/paradox-clausewitz-sav \
+            --allow-parent-dir-path
 
+      - name: Build & package native executable
+        run: |         
+          chmod +x ./etc/package-native-executable.ps1  
+          ./etc/package-native-executable.ps1 -Platform linux `
+              -Architecture ${{ matrix.arch }} `
+              -InputFile bin\aot-linux-${{ matrix.arch }}\paradox-clausewitz-sav        
+      
       - name: List build outputs
         run: ls -la ./artifacts/
 
@@ -132,13 +163,23 @@ jobs:
       - name: Install macOS workload
         run: dotnet workload install macos
         
+      - name: Install PowerShell
+        run: |
+          brew install --cask powershell
+          echo "PowerShell version:" 
+          pwsh --version
+        
       - name: Make scripts executable
         run: |
           chmod +x ./etc/build-native-executable.ps1
-          chmod +x ./etc/package-native-executable.ps1 -Platform macos
+          chmod +x ./etc/package-native-executable.ps1
           
-      - name: Build native executable for macOS
-        run: ./etc/build-native-executable.ps1 -RuntimeIdentifier osx-${{ matrix.arch }}
+      - name: Build & package native executable
+        run: | 
+          ./etc/build-native-executable.ps1 -RuntimeIdentifier osx-${{ matrix.arch }}
+          ./etc/package-native-executable.ps1 -Platform macos `
+              -Architecture ${{ matrix.arch }} `
+              -InputFile bin\aot-osx-${{ matrix.arch }}\paradox-clausewitz-sav        
         
       - name: List artifacts
         run: ls -la ./artifacts/
@@ -152,4 +193,3 @@ jobs:
           asset_path: ./artifacts/paradox-clausewitz-sav_${{ needs.setup-gitversion.outputs.majorMinorPatch }}_macos_${{ matrix.arch }}.tar.gz
           asset_name: paradox-clausewitz-sav_${{ needs.setup-gitversion.outputs.majorMinorPatch }}_macos_${{ matrix.arch }}.tar.gz
           asset_content_type: application/gzip
-

@@ -8,18 +8,12 @@
     <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
     <PackAsTool>false</PackAsTool>
     <ToolCommandName>paradox-clausewitz-sav</ToolCommandName>
+    <AssemblyName>paradox-clausewitz-sav</AssemblyName>
     <StripSymbols>true</StripSymbols>
    
     <!-- Common settings -->
     <Authors>pjmagee</Authors>
     <Description>A command-line tool for parsing and analyzing paradox clausewitz engine game save files.</Description>
-    <PackageTags>stellaris ck3 hoi4 paradox clausewitz engine game save parser</PackageTags>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/pjmagee/paradox-clausewitz-sav</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/pjmagee/paradox-clausewitz-sav</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
-    <PackageId>MageeSoft.Paradox.Clausewitz.Save.Cli</PackageId>
-    <PackageOutputPath>./nupkg</PackageOutputPath>
 
      <!-- Version Information - Using GitVersion -->
     <AssemblyVersion>$(GitVersion_AssemblySemVer)</AssemblyVersion>
@@ -28,17 +22,27 @@
     
     <!-- JSON serialization settings for both AOT and non-AOT -->
     <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
-    <LangVersion>default</LangVersion>
+    <LangVersion>default</LangVersion>    
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'=='Release' And $(PackAsTool) == 'true'">    
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>paradox-clausewitz-sav</ToolCommandName>
+    <PackageTags>stellaris ck3 hoi4 paradox clausewitz engine game save parser</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/pjmagee/paradox-clausewitz-sav</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/pjmagee/paradox-clausewitz-sav</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageId>MageeSoft.Paradox.Clausewitz.Save.Cli</PackageId>
+    <PackageOutputPath>./nupkg</PackageOutputPath>    
   </PropertyGroup>
 
   <!-- Native AOT Configuration (default) -->
   <PropertyGroup Condition="'$(Configuration)'=='Release' And '$(PackAsTool)'!='true'">
     <PublishAot>true</PublishAot>    
     <PublishTrimmed>true</PublishTrimmed>
-    <StripSymbols>true</StripSymbols>
     <TrimMode>full</TrimMode>
     <DebugType>none</DebugType>
-    <SuppressTrimAnalysisWarnings>false</SuppressTrimAnalysisWarnings>
     <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
 
@@ -58,7 +62,7 @@
 
   <!-- Trimming settings -->
   <ItemGroup>
-    <TrimmerRootAssembly Include="MageeSoft.Paradox.Clausewitz.Save.Cli" />
+    <TrimmerRootAssembly Include="paradox-clausewitz-sav" />
   </ItemGroup>
 
 </Project>
