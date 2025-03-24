@@ -25,6 +25,7 @@ paradox-clausewitz-sav_[major.minor.patch]_[platform]_[arch].[ext]
 ```
 
 Where:
+
 - **platform**: windows, linux, or macos
 - **arch**: x64 or arm64
 - **ext**: .zip for Windows, .tar.gz for Linux/macOS
@@ -41,7 +42,8 @@ You can specify version increments in commit messages using:
 - `+semver:none` or `+semver:skip` - Don't increment version
 
 Example commit message:
-```
+
+```txt
 Add new feature for handling complex save files
 
 +semver:minor
@@ -80,6 +82,4 @@ For information on how the different build scripts interact and how GitVersion i
 
 ## Customizing GitVersion
 
-The version calculation rules are defined in `GitVersion.yml` in the repository root.
-
-For more details on configuration options, see the [GitVersion documentation](https://gitversion.net/docs/reference/configuration). 
+For more details on configuration options, see the [GitVersion documentation](https://gitversion.net/docs/reference/configuration).
