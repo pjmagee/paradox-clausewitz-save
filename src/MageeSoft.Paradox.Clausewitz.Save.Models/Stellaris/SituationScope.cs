@@ -11,32 +11,32 @@ public partial class SituationScope
     /// <summary>
     /// Gets or sets the type.
     /// </summary>
-    public string Type { get;set; }
+    public string? Type { get;set; }
 
     /// <summary>
     /// Gets or sets the ID.
     /// </summary>
-    public long Id { get;set; }
+    public long? Id { get;set; }
 
     /// <summary>
     /// Gets or sets the country.
     /// </summary>
-    public long Country { get;set; }
+    public long? Country { get;set; }
 
     /// <summary>
     /// Gets or sets the systems.
     /// </summary>
-    public ImmutableArray<long> Systems { get;set; }
+    public List<long>? Systems { get;set; }
 
     /// <summary>
     /// Gets or sets the planets.
     /// </summary>
-    public ImmutableArray<long> Planets { get;set; }
+    public List<long>? Planets { get;set; }
 
     /// <summary>
     /// Gets or sets the fleets.
     /// </summary>
-    public ImmutableArray<long> Fleets { get;set; }
+    public List<long>? Fleets { get;set; }
 } 
 
 

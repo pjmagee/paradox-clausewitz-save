@@ -6,32 +6,32 @@ namespace MageeSoft.Paradox.Clausewitz.Save.Test.Models;
 public partial class ComplexModel
 {
     [SaveScalar("name")]
-    public string Name { get; set; } = string.Empty;
+    public string? Name { get; set; }
 
     [SaveScalar("capital")]
-    public int Capital { get; set; }
+    public int? Capital { get; set; }
 
     [SaveObject("resources")]
-    public NestedModel Resources { get; set; } = new();
+    public NestedModel? Resources { get; set; }
 
     [SaveArray("planets")]
-    public List<NestedModel> Planets { get; set; } = new();
+    public List<NestedModel>? Planets { get; set; }
 
     [SaveArray("values")]
-    public float[] Values { get; set; } = [];
+    public float[]? Values { get; set; } = [];
 
     [SaveArray("tags")]
-    public string[] Tags { get; set; } = [];
+    public string[]? Tags { get; set; }
 
     [SaveScalar("enabled")]
-    public bool Enabled { get; set; }
+    public bool? Enabled { get; set; }
 
     [SaveScalar("disabled")]
-    public bool Disabled { get; set; }
+    public bool? Disabled { get; set; }
 
     [SaveScalar("start_date")]
-    public DateOnly StartDate { get; set; }
+    public DateOnly? StartDate { get; set; }
 
     [SaveObject("nested")]
-    public NestedModel Nested { get; set; } = new();
+    public NestedModel? Nested { get; set; }
 }

@@ -20,7 +20,7 @@ public class SourceGenDictionaryTests
         var saveObject = parser.Parse();
         
         // Act
-        var model = ImmutableDictionaryModel.Bind(saveObject);
+        var model = DictionaryModel.Bind(saveObject);
         
         // Assert
         Assert.IsNotNull(model);
@@ -53,15 +53,15 @@ public class SourceGenDictionaryTests
         var saveObject = parser.Parse();
         
         // Act
-        var model = ImmutableDictionaryModel.Bind(saveObject);
+        var model = DictionaryModel.Bind(saveObject);
         
         // Assert
         Assert.IsNotNull(model);
         Assert.IsNotNull(model.Resources);
         Assert.AreEqual(2, model.Resources.Count);
-        Assert.AreEqual(10, model.Resources[0]?.Value);
-        Assert.AreEqual("Test Resource", model.Resources[0]?.Name);
-        Assert.AreEqual(20, model.Resources[1]?.Value);
-        Assert.AreEqual("Another Resource", model.Resources[1]?.Name);
+        Assert.AreEqual(10, model.Resources[0]!.Value);
+        Assert.AreEqual("Test Resource", model.Resources[0]!.Name);
+        Assert.AreEqual(20, model.Resources[1]!.Value);
+        Assert.AreEqual("Another Resource", model.Resources[1]!.Name);
     }
 } 

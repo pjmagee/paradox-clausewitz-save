@@ -7,5 +7,5 @@ namespace MageeSoft.Paradox.Clausewitz.Save.Test.Models;
 public partial class ExhibitsContainer
 {
     [SaveIndexedDictionary("exhibits")]
-    public ImmutableDictionary<int, Exhibit> Exhibits { get; set; }
+    public Dictionary<int, Exhibit>? Exhibits { get; set; }
 }

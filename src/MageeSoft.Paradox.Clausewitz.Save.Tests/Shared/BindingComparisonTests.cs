@@ -51,9 +51,9 @@ public class BindingComparisonTests
         
         // Compare properties directly
         Assert.AreEqual(reflectionResult.Name, sourceGenResult.Name);
-        Assert.AreEqual(reflectionResult.NestedObject.Name, sourceGenResult.NestedObject.Name);
+        Assert.AreEqual(reflectionResult.NestedObject!.Name, sourceGenResult.NestedObject!.Name);
         Assert.AreEqual(reflectionResult.NestedObject.Value, sourceGenResult.NestedObject.Value);
-        Assert.AreEqual(reflectionResult.ItemArray.Length, sourceGenResult.ItemArray.Length);
+        Assert.AreEqual(reflectionResult.ItemArray!.Length, sourceGenResult.ItemArray!.Length);
         
         for (int i = 0; i < reflectionResult.ItemArray.Length; i++)
         {
@@ -91,7 +91,7 @@ public class BindingComparisonTests
         // Assert
         Assert.IsNotNull(reflectionResult);
         Assert.IsNotNull(sourceGenResult);
-        Assert.AreEqual(reflectionResult.DictValue.Count, sourceGenResult.DictValue.Count);
+        Assert.AreEqual(reflectionResult.DictValue!.Count, sourceGenResult.DictValue!.Count);
         
         foreach (var key in reflectionResult.DictValue.Keys)
         {

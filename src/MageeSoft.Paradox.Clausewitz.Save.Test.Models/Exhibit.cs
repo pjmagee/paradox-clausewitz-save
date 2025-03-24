@@ -6,14 +6,14 @@ namespace MageeSoft.Paradox.Clausewitz.Save.Test.Models;
 public partial class Exhibit
 {
     [SaveScalar("exhibit_state")]
-    public string State { get; set; } = "";
+    public string? State { get; set; } = "";
 
     [SaveObject("specimen")]
     public ExhibitSpecimen? Specimen { get; set; }
 
     [SaveScalar("owner")]
-    public string Owner { get; set; } = "";
+    public string? Owner { get; set; } = "";
 
     [SaveScalar("date_added")]
-    public DateOnly DateAdded { get; set; }
+    public DateOnly? DateAdded { get; set; }
 }

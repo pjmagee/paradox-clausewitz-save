@@ -6,7 +6,7 @@ namespace MageeSoft.Paradox.Clausewitz.Save.Models.Stellaris;
 public partial class Achievements
 {    
     [SaveArray("achievement")]
-    public ImmutableList<int> Values { get;set; }
+    public List<int>? Values { get; set; }
 } 
 
 

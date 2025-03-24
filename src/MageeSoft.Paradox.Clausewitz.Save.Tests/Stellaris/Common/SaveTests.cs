@@ -21,7 +21,7 @@ public class SaveTests
         Assert.AreEqual(expected: "Circinus v3.14.15926", actual: save.Meta.Version);
         Assert.AreEqual(new DateOnly(2250, 11, 15), save.Meta.Date);
         Assert.AreEqual("United Nations of Earth", save.Meta.Name);
-        Assert.AreEqual(25, save.Meta.RequiredDlcs.Count);
+        Assert.AreEqual(25, save.Meta.RequiredDlcs!.Count);
     }
 
     [TestMethod]

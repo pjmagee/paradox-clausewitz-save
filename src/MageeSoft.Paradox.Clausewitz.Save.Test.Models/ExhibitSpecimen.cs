@@ -6,8 +6,8 @@ namespace MageeSoft.Paradox.Clausewitz.Save.Test.Models;
 public partial class ExhibitSpecimen
 {
     [SaveScalar("id")]
-    public string Id { get; set; } = "";
+    public string? Id { get; set; }
 
     [SaveScalar("origin")]
-    public string Origin { get; set; } = "";
+    public string? Origin { get; set; }
 }

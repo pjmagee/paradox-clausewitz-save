@@ -9,31 +9,31 @@ public partial class Exhibit
     /// <summary>
     /// Gets or sets the type.
     /// </summary>
-    public string Type { get;set; }
+    public string? Type { get;set; }
 
     /// <summary>
     /// Gets or sets the planet.
     /// </summary>
-    public int Planet { get;set; }
+    public int? Planet { get;set; }
 
     /// <summary>
     /// Gets or sets whether the exhibit is active.
     /// </summary>
-    public bool IsActive { get;set; }
+    public bool? IsActive { get;set; }
 
     /// <summary>
     /// Gets or sets the exhibit state.
     /// </summary>
-    public string ExhibitState { get;set; }
+    public string? ExhibitState { get;set; }
 
     /// <summary>
     /// Gets or sets the owner.
     /// </summary>
-    public int Owner { get;set; }
+    public int? Owner { get;set; }
 
     /// <summary>
     /// Gets or sets the specimen.
     /// </summary>
-    public ExhibitSpecimen Specimen { get;set; }
+    public ExhibitSpecimen? Specimen { get;set; }
 
 }

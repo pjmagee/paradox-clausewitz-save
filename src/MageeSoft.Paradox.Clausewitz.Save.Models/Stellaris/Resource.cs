@@ -9,12 +9,12 @@ public partial class Resource
     /// <summary>
     /// Gets or sets the type.
     /// </summary>
-    public string Type { get;set; }
+    public string? Type { get;set; }
 
     /// <summary>
     /// Gets or sets the amount.
     /// </summary>
-    public float Amount { get;set; }
+    public float? Amount { get;set; }
 
 } 
 

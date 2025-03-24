@@ -9,12 +9,12 @@ public partial class Orbit
     /// <summary>
     /// Gets or sets the orbitable.
     /// </summary>
-    public Orbitable Orbitable { get;set; }
+    public Orbitable? Orbitable { get;set; }
 
     /// <summary>
     /// Gets or sets the index.
     /// </summary>
-    public int Index { get;set; }
+    public int? Index { get;set; }
 }
 
 

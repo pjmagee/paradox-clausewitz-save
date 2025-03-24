@@ -9,17 +9,17 @@ public partial class Deposit
     /// <summary>
     /// Gets or sets the type.
     /// </summary>
-    public string Type { get;set; }
+    public string? Type { get;set; }
 
     /// <summary>
     /// Gets or sets the amount.
     /// </summary>
-    public int Amount { get;set; }
+    public int? Amount { get;set; }
 
     /// <summary>
     /// Gets or sets whether the deposit is infinite.
     /// </summary>
-    public bool Infinite { get;set; }
+    public bool? Infinite { get;set; }
 
     /// <summary>
     /// Gets or sets the position.

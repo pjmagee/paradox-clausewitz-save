@@ -11,32 +11,32 @@ public partial class AmbientObjectProperties
     /// <summary>
     /// Gets or sets the coordinate of the properties.
     /// </summary>
-    public Coordinate Coordinate { get;set; }
+    public Coordinate? Coordinate { get;set; }
 
     /// <summary>
     /// Gets or sets the attach information.
     /// </summary>
-    public AttachInfo Attach { get;set; }
+    public AttachInfo? Attach { get;set; }
 
     /// <summary>
     /// Gets or sets the offset values.
     /// </summary>
-    public ImmutableArray<float> Offset { get;set; }
+    public List<float>? Offset { get;set; }
 
     /// <summary>
     /// Gets or sets the scale value.
     /// </summary>
-    public int Scale { get;set; }
+    public int? Scale { get;set; }
 
     /// <summary>
     /// Gets or sets the entity face object information.
     /// </summary>
-    public AttachInfo EntityFaceObject { get;set; }
+    public AttachInfo? EntityFaceObject { get;set; }
 
     /// <summary>
     /// Gets or sets the appear state.
     /// </summary>
-    public string AppearState { get;set; }
+    public string? AppearState { get;set; }
 
 }
 

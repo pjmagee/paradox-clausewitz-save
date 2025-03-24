@@ -9,20 +9,20 @@ namespace MageeSoft.Paradox.Clausewitz.Save.Models.Stellaris;
 public partial class FormationPosition
 {
     [SaveScalar("x")]
-    public float X { get; set; }
+    public float? X { get; set; }
 
     [SaveScalar("y")]
-    public float Y { get; set; }
+    public float? Y { get; set; }
 
     [SaveScalar("speed")]
-    public float Speed { get; set; }
+    public float? Speed { get; set; }
 
     [SaveScalar("rotation")]
-    public float Rotation { get; set; }
+    public float? Rotation { get; set; }
 
     [SaveScalar("forward_x")]
-    public  float ForwardX { get; set; }
+    public  float? ForwardX { get; set; }
 
     [SaveScalar("forward_y")]
-    public float ForwardY { get; set; }
+    public float? ForwardY { get; set; }
 }

@@ -12,27 +12,27 @@ public partial class Construction
     /// <summary>
     /// Gets or sets the type.
     /// </summary>
-    public string Type { get;set; }
+    public string? Type { get;set; }
 
     /// <summary>
     /// Gets or sets the planet.
     /// </summary>
-    public int Planet { get;set; }
+    public int? Planet { get;set; }
 
     /// <summary>
     /// Gets or sets the progress.
     /// </summary>
-    public float Progress { get;set; }
+    public float? Progress { get;set; }
 
     /// <summary>
     /// Gets or sets whether the construction is active.
     /// </summary>
-    public bool IsActive { get;set; }
+    public bool? IsActive { get;set; }
 
     /// <summary>
     /// Gets or sets the resources.
     /// </summary>
-    public ImmutableDictionary<string, float> Resources { get;set; }
+    public Dictionary<string, float>? Resources { get;set; }
 } 
 
 

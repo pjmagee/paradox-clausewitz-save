@@ -11,22 +11,22 @@ public partial class Cluster
     /// <summary>
     /// Gets or sets the cluster ID.
     /// </summary>
-    public long Id { get;set; }
+    public long? Id { get;set; }
 
     /// <summary>
     /// Gets or sets the position of the cluster.
     /// </summary>
-    public ClusterPosition Position { get;set; }
+    public ClusterPosition? Position { get;set; }
 
     /// <summary>
     /// Gets or sets the radius of the cluster.
     /// </summary>
-    public float Radius { get;set; }
+    public float? Radius { get;set; }
 
     /// <summary>
     /// Gets or sets the object IDs in the cluster.
     /// </summary>
-    public ImmutableArray<int> Objects { get;set; } = ImmutableArray<int>.Empty;
+    public List<int>? Objects { get;set; }
 
     /// <summary>
     /// Gets or sets the origin ID of the cluster.

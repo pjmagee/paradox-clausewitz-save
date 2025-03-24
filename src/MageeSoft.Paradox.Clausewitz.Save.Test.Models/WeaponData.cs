@@ -6,11 +6,11 @@ namespace MageeSoft.Paradox.Clausewitz.Save.Test.Models;
 public partial class WeaponData
 {
     [SaveScalar("index")]
-    public int Index { get; set; }
+    public int? Index { get; set; }
 
     [SaveScalar("template")]
-    public string Template { get; set; } = "";
+    public string? Template { get; set; } = "";
 
     [SaveScalar("component_slot")]
-    public string ComponentSlot { get; set; } = "";
+    public string? ComponentSlot { get; set; } = "";
 }

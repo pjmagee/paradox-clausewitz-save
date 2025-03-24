@@ -1,4 +1,3 @@
-using System.Collections.Immutable;
 using MageeSoft.Paradox.Clausewitz.Save.Binder.Reflection;
 using MageeSoft.Paradox.Clausewitz.Save.Parser;
 using MageeSoft.Paradox.Clausewitz.Save.Test.Models;
@@ -25,7 +24,7 @@ public class ReflectionBinderTests
 
         var model = ReflectionBinder.Bind<TestModel>(saveObject);
 
-        Assert.AreEqual("Test Empire", model.Name);
+        Assert.AreEqual("Test Empire", model!.Name);
         Assert.AreEqual(5, model.Capital);
         Assert.AreEqual(new DateOnly(2200, 1, 1), model.StartDate);
         Assert.IsTrue(model.Ironman);
@@ -77,17 +76,17 @@ public class ReflectionBinderTests
 
         var model = ReflectionBinder.Bind<ComplexModel>(saveObject);
 
-        Assert.AreEqual("Galactic Empire", model.Name);
+        Assert.AreEqual("Galactic Empire", model!.Name);
         Assert.AreEqual(42, model.Capital);
         
         // Check resources
-        Assert.AreEqual(500, model.Resources.Energy);
+        Assert.AreEqual(500, model.Resources!.Energy);
         Assert.AreEqual(1000, model.Resources.Minerals);
         Assert.AreEqual("Main Hub", model.Resources.Name);
         Assert.AreEqual(0.75f, model.Resources.Efficiency);
 
         // Check planets
-        Assert.AreEqual(2, model.Planets.Count);
+        Assert.AreEqual(2, model.Planets!.Count);
         
         Assert.AreEqual(100, model.Planets[0].Energy);
         Assert.AreEqual(200, model.Planets[0].Minerals);
@@ -100,8 +99,8 @@ public class ReflectionBinderTests
         Assert.AreEqual(0.95f, model.Planets[1].Efficiency);
 
         // Check arrays
-        CollectionAssert.AreEqual(new float[] { 1f, 2.5f, 3f, 4.75f }, model.Values);
-        CollectionAssert.AreEqual(new string[] { "alpha", "beta", "gamma" }, model.Tags);
+        CollectionAssert.AreEqual(new[] { 1f, 2.5f, 3f, 4.75f }, model.Values);
+        CollectionAssert.AreEqual(new[] { "alpha", "beta", "gamma" }, model.Tags);
 
         // Check booleans
         Assert.IsTrue(model.Enabled);
@@ -111,7 +110,7 @@ public class ReflectionBinderTests
         Assert.AreEqual(new DateOnly(2200, 1, 1), model.StartDate);
 
         // Check nested object
-        Assert.AreEqual(50, model.Nested.Energy);
+        Assert.AreEqual(50, model.Nested!.Energy);
         Assert.AreEqual(75, model.Nested.Minerals);
         Assert.AreEqual("Nested Hub", model.Nested.Name);
         Assert.AreEqual(0.65f, model.Nested.Efficiency);
@@ -149,7 +148,7 @@ public class ReflectionBinderTests
         var result = ReflectionBinder.Bind<ExhibitsContainer>(root);
 
         Assert.IsNotNull(result);
-        Assert.AreEqual(2, result.Exhibits.Count);
+        Assert.AreEqual(2, result.Exhibits!.Count);
 
         var exhibit1 = result.Exhibits[1];
         Assert.AreEqual("active", exhibit1.State);
@@ -201,13 +200,13 @@ public class ReflectionBinderTests
         var result = ReflectionBinder.Bind<ShipData>(saveObject);
 
         Assert.IsNotNull(result);
-        Assert.AreEqual(3, result.Sections.Count);
+        Assert.AreEqual(3, result.Sections!.Count);
 
         // Check first section
         var section1 = result.Sections[0];
         Assert.AreEqual("STARHOLD_STARBASE_SECTION", section1.Design);
         Assert.AreEqual("core", section1.Slot);
-        Assert.AreEqual(2, section1.Weapons.Count);
+        Assert.AreEqual(2, section1.Weapons!.Count);
 
         var weapon1 = section1.Weapons[0];
         Assert.AreEqual(47, weapon1.Index);
@@ -223,13 +222,13 @@ public class ReflectionBinderTests
         var section2 = result.Sections[1];
         Assert.AreEqual("ASSEMBLYYARD_STARBASE_SECTION", section2.Design);
         Assert.AreEqual("1", section2.Slot);
-        Assert.AreEqual(0, section2.Weapons.Count);
+        Assert.AreEqual(0, section2.Weapons!.Count);
 
         // Check third section
         var section3 = result.Sections[2];
         Assert.AreEqual("REFINERY_STARBASE_SECTION", section3.Design);
         Assert.AreEqual("2", section3.Slot);
-        Assert.AreEqual(0, section3.Weapons.Count);
+        Assert.AreEqual(0, section3.Weapons!.Count);
     }
 
     [TestMethod]
@@ -258,12 +257,12 @@ public class ReflectionBinderTests
         Console.WriteLine("SaveObject properties:");
         foreach (var prop in saveObject.Properties)
         {
-            Console.WriteLine($"Key: {prop.Key}, Value type: {prop.Value?.GetType().Name ?? "null"}");
+            Console.WriteLine($"Key: {prop.Key}, Value type: {prop.Value.GetType().Name}");
             if (prop.Value is SaveObject so)
             {
                 foreach (var innerProp in so.Properties)
                 {
-                    Console.WriteLine($"  Inner Key: {innerProp.Key}, Value type: {innerProp.Value?.GetType().Name ?? "null"}");
+                    Console.WriteLine($"  Inner Key: {innerProp.Key}, Value type: {innerProp.Value.GetType().Name ?? "null"}");
                 }
             }
         }
@@ -276,25 +275,25 @@ public class ReflectionBinderTests
 
         // First section
         Assert.IsNotNull(result.Sections[0], "First section should not be null");
-        Assert.AreEqual("SECTION_1", result.Sections[0].Design, "First section design mismatch");
-        Assert.AreEqual("1", result.Sections[0].Slot, "First section slot mismatch");
+        Assert.AreEqual("SECTION_1", result.Sections[0]!.Design, "First section design mismatch");
+        Assert.AreEqual("1", result.Sections[0]!.Slot, "First section slot mismatch");
 
         // Second section
         Assert.IsNotNull(result.Sections[1], "Second section should not be null");
-        Assert.AreEqual("SECTION_2", result.Sections[1].Design, "Second section design mismatch");
-        Assert.AreEqual("2", result.Sections[1].Slot, "Second section slot mismatch");
+        Assert.AreEqual("SECTION_2", result.Sections[1]!.Design, "Second section design mismatch");
+        Assert.AreEqual("2", result.Sections[1]!.Slot, "Second section slot mismatch");
 
         // Third section (none)
         Assert.IsNull(result.Sections[2], "Third section should be null");
 
         // Fourth section
         Assert.IsNotNull(result.Sections[3], "Fourth section should not be null");
-        Assert.AreEqual("SECTION_3", result.Sections[3].Design, "Fourth section design mismatch");
-        Assert.AreEqual("3", result.Sections[3].Slot, "Fourth section slot mismatch");
+        Assert.AreEqual("SECTION_3", result.Sections[3]!.Design, "Fourth section design mismatch");
+        Assert.AreEqual("3", result.Sections[3]!.Slot, "Fourth section slot mismatch");
     }
 
     [TestMethod]
-    public void Bind_ImmutableList_ReturnsCorrectValues()
+    public void Bind_List_ReturnsCorrectValues()
     {
         var input = """
             values={ 1 2 3 4 5 }
@@ -317,12 +316,12 @@ public class ReflectionBinderTests
 
         var parser = new Parser.Parser(input);
         var saveObject = parser.Parse();
-        var result = ReflectionBinder.Bind<ImmutableListModel>(saveObject);
+        var result = ReflectionBinder.Bind<ListModel>(saveObject);
 
         // Check that we got ImmutableList instances
-        Assert.IsInstanceOfType(result.Values, typeof(ImmutableList<int>));
-        Assert.IsInstanceOfType(result.Strings, typeof(ImmutableList<string>));
-        Assert.IsInstanceOfType(result.Nested, typeof(ImmutableList<NestedModel>));
+        Assert.IsInstanceOfType(result!.Values, typeof(List<int>));
+        Assert.IsInstanceOfType(result.Strings, typeof(List<string>));
+        Assert.IsInstanceOfType(result.Nested, typeof(List<NestedModel>));
 
         // Check values
         CollectionAssert.AreEqual(new[] { 1, 2, 3, 4, 5 }, result.Values.ToArray());
@@ -331,28 +330,21 @@ public class ReflectionBinderTests
         // Check resources
         Assert.AreEqual(2, result.Nested.Count);
         
-        var resource1 = result.Nested[0];
+        var resource1 = result.Nested[0]!;
         Assert.AreEqual(100, resource1.Energy);
         Assert.AreEqual(200, resource1.Minerals);
         Assert.AreEqual("Resource 1", resource1.Name);
         Assert.AreEqual(0.75f, resource1.Efficiency);
 
-        var resource2 = result.Nested[1];
+        var resource2 = result.Nested[1]!;
         Assert.AreEqual(300, resource2.Energy);
         Assert.AreEqual(400, resource2.Minerals);
         Assert.AreEqual("Resource 2", resource2.Name);
         Assert.AreEqual(0.85f, resource2.Efficiency);
-
-        // Verify immutability
-        Assert.ThrowsException<NotSupportedException>(() => 
-        {
-            var list = result.Values as IList<int>;
-            list!.Add(6);
-        });
     }
 
     [TestMethod]
-    public void Bind_ImmutableDictionary_ReturnsCorrectValues()
+    public void Bind_Dictionary_ReturnsCorrectValues()
     {
         // Arrange
         var input = """
@@ -377,26 +369,24 @@ public class ReflectionBinderTests
             }
             """;
 
-        #pragma warning disable CS0618 // Type or member is obsolete
         var parser = new Parser.Parser(input);
         var saveObject = parser.Parse();
-        var result = ReflectionBinder.Bind<ImmutableDictionaryModel>(saveObject);
-        #pragma warning restore CS0618 // Type or member is obsolete
+        var result = ReflectionBinder.Bind<DictionaryModel>(saveObject)!;
 
         // Check that we got ImmutableDictionary instances
-        Assert.IsInstanceOfType(result.Resources, typeof(ImmutableDictionary<int, NestedModel?>));
-        Assert.IsInstanceOfType(result.Scores, typeof(ImmutableDictionary<int, float>));
+        Assert.IsInstanceOfType(result.Resources, typeof(Dictionary<int, NestedModel>));
+        Assert.IsInstanceOfType(result.Scores, typeof(Dictionary<int, float>));
 
         // Check resources
         Assert.AreEqual(2, result.Resources.Count);
         
-        var resourceAlpha = result.Resources[1];
+        var resourceAlpha = result.Resources[1]!;
         Assert.AreEqual(100, resourceAlpha.Energy);
         Assert.AreEqual(200, resourceAlpha.Minerals);
         Assert.AreEqual("Resource Alpha", resourceAlpha.Name);
         Assert.AreEqual(0.75f, resourceAlpha.Efficiency);
 
-        var resourceBeta = result.Resources[2];
+        var resourceBeta = result.Resources[2]!;
         Assert.AreEqual(300, resourceBeta.Energy);
         Assert.AreEqual(400, resourceBeta.Minerals);
         Assert.AreEqual("Resource Beta", resourceBeta.Name);
@@ -407,14 +397,5 @@ public class ReflectionBinderTests
         Assert.AreEqual(3.14f, result.Scores[1]);
         Assert.AreEqual(6.28f, result.Scores[2]);
         Assert.AreEqual(9.42f, result.Scores[3]);
-
-        // Verify immutability
-        Assert.ThrowsException<NotSupportedException>(() => 
-        {
-            #pragma warning disable CS8974 // Converting method group to non-delegate type
-            var dict = result.Resources as IDictionary<int, NestedModel>;
-            dict.Add(3, new NestedModel { Energy = 500, Minerals = 600, Name = "Resource Gamma", Efficiency = 0.95f });
-            #pragma warning restore CS8974 // Converting method group to non-delegate type
-        });
     }
 }

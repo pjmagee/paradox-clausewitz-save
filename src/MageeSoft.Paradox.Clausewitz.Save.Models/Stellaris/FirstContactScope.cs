@@ -11,52 +11,52 @@ public partial class FirstContactScope
     /// <summary>
     /// Gets or sets the type.
     /// </summary>
-    public string Type { get;set; }
+    public string? Type { get;set; }
 
     /// <summary>
     /// Gets or sets the ID.
     /// </summary>
-    public long Id { get;set; }
+    public long? Id { get;set; }
 
     /// <summary>
     /// Gets or sets the opener ID.
     /// </summary>
-    public long OpenerId { get;set; }
+    public long? OpenerId { get;set; }
 
     /// <summary>
     /// Gets or sets whether random is allowed.
     /// </summary>
-    public bool RandomAllowed { get;set; }
+    public bool? RandomAllowed { get;set; }
 
     /// <summary>
     /// Gets or sets the random value.
     /// </summary>
-    public float Random { get;set; }
+    public float? Random { get;set; }
 
     /// <summary>
     /// Gets or sets the root.
     /// </summary>
-    public long Root { get;set; }
+    public long? Root { get;set; }
 
     /// <summary>
     /// Gets or sets the from value.
     /// </summary>
-    public long From { get;set; }
+    public long? From { get;set; }
 
     /// <summary>
     /// Gets or sets the systems.
     /// </summary>
-    public ImmutableArray<long> Systems { get;set; }
+    public List<long>? Systems { get;set; }
 
     /// <summary>
     /// Gets or sets the planets.
     /// </summary>
-    public ImmutableArray<long> Planets { get;set; }
+    public List<long>? Planets { get;set; }
 
     /// <summary>
     /// Gets or sets the fleets.
     /// </summary>
-    public ImmutableArray<long> Fleets { get;set; }
+    public List<long>? Fleets { get;set; }
 }
 
 

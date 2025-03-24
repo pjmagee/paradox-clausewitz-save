@@ -9,14 +9,14 @@ namespace MageeSoft.Paradox.Clausewitz.Save.Test.Models;
 public partial class ParentModel
 {
     [SaveScalar("name")]
-    public string Name { get; set; } = string.Empty;
+    public string? Name { get; set; }
     
     [SaveObject("nested_object")]
-    public NestedModel NestedObject { get; set; } = new();
+    public NestedModel? NestedObject { get; set; }
     
     [SaveArray("item_array")]
-    public ItemModel[] ItemArray { get; set; } = Array.Empty<ItemModel>();
+    public ItemModel[]? ItemArray { get; set; }
     
     [SaveScalar("value")]
-    public int Value { get; set; }
+    public int? Value { get; set; }
 }

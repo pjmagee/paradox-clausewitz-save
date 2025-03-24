@@ -9,10 +9,10 @@ public partial class MovementPathNode
     /// <summary>
     /// Gets or sets the coordinate.
     /// </summary>
-    public Coordinate Coordinate { get;set; }
+    public Coordinate? Coordinate { get;set; }
 
     /// <summary>
     /// Gets or sets the FTL type.
     /// </summary>
-    public string Ftl { get;set; }
+    public string? Ftl { get;set; }
 }

@@ -9,7 +9,7 @@ public partial class FtlJump
     /// <summary>
     /// Gets or sets the origin coordinate.
     /// </summary>
-    public Coordinate From { get;set; }
+    public Coordinate? From { get;set; }
 
     /// <summary>
     /// Gets or sets the destination system ID.
@@ -19,22 +19,22 @@ public partial class FtlJump
     /// <summary>
     /// Gets or sets the fleet ID.
     /// </summary>
-    public long Fleet { get;set; }
+    public long? Fleet { get;set; }
 
     /// <summary>
     /// Gets or sets the jump method.
     /// </summary>
-    public string JumpMethod { get;set; }
+    public string? JumpMethod { get;set; }
 
     /// <summary>
     /// Gets or sets the bypass from ID.
     /// </summary>
-    public long BypassFrom { get;set; }
+    public long? BypassFrom { get;set; }
 
     /// <summary>
     /// Gets or sets the bypass to ID.
     /// </summary>
-    public long BypassTo { get;set; }
+    public long? BypassTo { get;set; }
 }
 
 

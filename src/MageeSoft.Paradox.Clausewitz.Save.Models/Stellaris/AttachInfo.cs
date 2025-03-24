@@ -9,10 +9,10 @@ public partial class AttachInfo
     /// <summary>
     /// Gets or sets the type.
     /// </summary>
-    public int Type { get;set; }
+    public int? Type { get;set; }
 
     /// <summary>
     /// Gets or sets the ID.
     /// </summary>
-    public long Id { get;set; }
+    public long? Id { get;set; }
 }

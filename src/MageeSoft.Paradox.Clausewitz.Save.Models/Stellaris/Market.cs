@@ -11,32 +11,32 @@ public partial class Market
     /// <summary>
     /// Gets or sets the ID.
     /// </summary>
-    public long Id { get;set; }
+    public long? Id { get;set; }
 
     /// <summary>
     /// Gets or sets the type.
     /// </summary>
-    public string Type { get;set; }
+    public string? Type { get;set; }
 
     /// <summary>
     /// Gets or sets the owner.
     /// </summary>
-    public Owner Owner { get;set; }
+    public Owner? Owner { get;set; }
 
     /// <summary>
     /// Gets or sets the resources.
     /// </summary>
-    public ImmutableArray<MarketResource> Resources { get;set; }
+    public List<MarketResource>? Resources { get;set; }
 
     /// <summary>
     /// Gets or sets the orders.
     /// </summary>
-    public ImmutableArray<MarketOrder> Orders { get;set; }
+    public List<MarketOrder>? Orders { get;set; }
 
     /// <summary>
     /// Gets or sets the history.
     /// </summary>
-    public ImmutableArray<MarketHistory> History { get;set; }
+    public List<MarketHistory>? History { get;set; }
 } 
 
 

@@ -11,72 +11,72 @@ public partial class FirstContact
     /// <summary>
     /// Gets or sets the ID of the first contact.
     /// </summary>
-    public long Id { get;set; }
+    public long? Id { get;set; }
 
     /// <summary>
     /// Gets or sets the country involved in the first contact.
     /// </summary>
-    public long Country { get;set; }
+    public long? Country { get;set; }
 
     /// <summary>
     /// Gets or sets the target involved in the first contact.
     /// </summary>
-    public long Target { get;set; }
+    public long? Target { get;set; }
 
     /// <summary>
     /// Gets or sets the stage of the first contact.
     /// </summary>
-    public string Stage { get;set; }
+    public string? Stage { get;set; }
 
     /// <summary>
     /// Gets or sets the type of the first contact.
     /// </summary>
-    public string Type { get;set; }
+    public string? Type { get;set; }
 
     /// <summary>
     /// Gets or sets the state of the first contact.
     /// </summary>
-    public string State { get;set; }
+    public string? State { get;set; }
 
     /// <summary>
     /// Gets or sets the status of the first contact.
     /// </summary>
-    public string Status { get;set; }
+    public string? Status { get;set; }
 
     /// <summary>
     /// Gets or sets the progress of the first contact.
     /// </summary>
-    public float Progress { get;set; }
+    public float? Progress { get;set; }
 
     /// <summary>
     /// Gets or sets the speed of the first contact.
     /// </summary>
-    public float Speed { get;set; }
+    public float? Speed { get;set; }
 
     /// <summary>
     /// Gets or sets the cost of the first contact.
     /// </summary>
-    public float Cost { get;set; }
+    public float? Cost { get;set; }
 
     /// <summary>
     /// Gets or sets the result of the first contact.
     /// </summary>
-    public string Result { get;set; }
+    public string? Result { get;set; }
 
     /// <summary>
     /// Gets or sets the event of the first contact.
     /// </summary>
-    public string Event { get;set; }
+    public string? Event { get;set; }
 
     /// <summary>
     /// Gets or sets the events associated with the first contact.
     /// </summary>
-    public ImmutableArray<FirstContactEvent> Events { get;set; }
+    public List<FirstContactEvent>? Events { get;set; }
 
     /// <summary>
     /// Gets or sets the scope of the first contact.
     /// </summary>
-    public FirstContactScope Scope { get;set; }
+    public FirstContactScope? Scope { get;set; }
 }
 
 

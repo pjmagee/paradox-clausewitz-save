@@ -9,17 +9,17 @@ public partial class SubjectConversionProcess
     /// <summary>
     /// Gets or sets the ID.
     /// </summary>
-    public long Id { get;set; }
+    public long? Id { get;set; }
 
     /// <summary>
     /// Gets or sets the type.
     /// </summary>
-    public string Type { get;set; }
+    public string? Type { get;set; }
 
     /// <summary>
     /// Gets or sets the progress.
     /// </summary>
-    public float Progress { get;set; }
+    public float? Progress { get;set; }
 }
 
 

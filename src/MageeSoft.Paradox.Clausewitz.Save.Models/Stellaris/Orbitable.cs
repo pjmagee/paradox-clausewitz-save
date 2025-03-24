@@ -9,7 +9,7 @@ public partial class Orbitable
     /// <summary>
     /// Gets or sets the planet ID.
     /// </summary>
-    public long Planet { get;set; }
+    public long? Planet { get;set; }
 
 }
 

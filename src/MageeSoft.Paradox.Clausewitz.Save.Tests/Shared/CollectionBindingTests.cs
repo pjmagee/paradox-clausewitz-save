@@ -55,7 +55,7 @@ public class CollectionBindingTests
         var saveObject = CreateListTestObject();
         
         // Act
-        var result = ReflectionBinder.Bind<ImmutableListModel>(saveObject);
+        var result = ReflectionBinder.Bind<ListModel>(saveObject);
         
         // Assert
         Assert.IsNotNull(result);
@@ -71,7 +71,7 @@ public class CollectionBindingTests
         var saveObject = CreateListTestObject();
         
         // Act
-        var result = ImmutableListModel.Bind(saveObject);
+        var result = ListModel.Bind(saveObject);
         
         // Assert
         Assert.IsNotNull(result);
@@ -85,13 +85,13 @@ public class CollectionBindingTests
     #region Dictionary Tests
     
     [TestMethod]
-    public void ImmutableDictionary_ReflectionBinding_BindsCorrectly()
+    public void Dictionary_ReflectionBinding_BindsCorrectly()
     {
         // Arrange
-        var saveObject = CreateImmutableDictionaryTestObject();
+        var saveObject = CreateDictionaryTestObject();
         
         // Act
-        var result = ReflectionBinder.Bind<ImmutableDictionaryModel>(saveObject);
+        var result = ReflectionBinder.Bind<DictionaryModel>(saveObject);
         
         // Assert
         Assert.IsNotNull(result);
@@ -99,12 +99,12 @@ public class CollectionBindingTests
         Assert.AreEqual(2, result.Resources.Count);
         
         Assert.IsNotNull(result.Resources[1]);
-        Assert.AreEqual("First Item", result.Resources[1].Name);
-        Assert.AreEqual(100, result.Resources[1].Value);
+        Assert.AreEqual("First Item", result.Resources[1]!.Name);
+        Assert.AreEqual(100, result.Resources[1]!.Value);
         
         Assert.IsNotNull(result.Resources[2]);
-        Assert.AreEqual("Second Item", result.Resources[2].Name);
-        Assert.AreEqual(200, result.Resources[2].Value);
+        Assert.AreEqual("Second Item", result.Resources[2]!.Name);
+        Assert.AreEqual(200, result.Resources[2]!.Value);
         
         // Check scores
         Assert.IsNotNull(result.Scores);
@@ -114,13 +114,13 @@ public class CollectionBindingTests
     }
     
     [TestMethod]
-    public void ImmutableDictionary_SourceGenBinding_BindsCorrectly()
+    public void Dictionary_SourceGenBinding_BindsCorrectly()
     {
         // Arrange
-        var saveObject = CreateImmutableDictionaryTestObject();
+        var saveObject = CreateDictionaryTestObject();
         
         // Act
-        var result = ImmutableDictionaryModel.Bind(saveObject);
+        var result = DictionaryModel.Bind(saveObject);
         
         // Assert
         Assert.IsNotNull(result);
@@ -128,12 +128,12 @@ public class CollectionBindingTests
         Assert.AreEqual(2, result.Resources.Count);
         
         Assert.IsNotNull(result.Resources[1]);
-        Assert.AreEqual("First Item", result.Resources[1].Name);
-        Assert.AreEqual(100, result.Resources[1].Value);
+        Assert.AreEqual("First Item", result.Resources[1]!.Name);
+        Assert.AreEqual(100, result.Resources[1]!.Value);
         
         Assert.IsNotNull(result.Resources[2]);
-        Assert.AreEqual("Second Item", result.Resources[2].Name);
-        Assert.AreEqual(200, result.Resources[2].Value);
+        Assert.AreEqual("Second Item", result.Resources[2]!.Name);
+        Assert.AreEqual(200, result.Resources[2]!.Value);
         
         // Check scores
         Assert.IsNotNull(result.Scores);
@@ -160,16 +160,16 @@ public class CollectionBindingTests
         Assert.IsNotNull(result.Sections);
         Assert.AreEqual(4, result.Sections.Count);
         
-        Assert.AreEqual("SECTION_1", result.Sections[0].Design);
-        Assert.AreEqual("1", result.Sections[0].Slot);
+        Assert.AreEqual("SECTION_1", result.Sections[0]!.Design);
+        Assert.AreEqual("1", result.Sections[0]!.Slot);
         
-        Assert.AreEqual("SECTION_2", result.Sections[1].Design);
-        Assert.AreEqual("2", result.Sections[1].Slot);
+        Assert.AreEqual("SECTION_2", result.Sections[1]!.Design);
+        Assert.AreEqual("2", result.Sections[1]!.Slot);
         
         // The 3rd section is 'none', which is included by the ReflectionBinder
         
-        Assert.AreEqual("SECTION_3", result.Sections[3].Design);
-        Assert.AreEqual("3", result.Sections[3].Slot);
+        Assert.AreEqual("SECTION_3", result.Sections[3]!.Design);
+        Assert.AreEqual("3", result.Sections[3]!.Slot);
     }
     
     [TestMethod]
@@ -186,14 +186,14 @@ public class CollectionBindingTests
         Assert.IsNotNull(result.Sections);
         Assert.AreEqual(3, result.Sections.Count);
         
-        Assert.AreEqual("SECTION_1", result.Sections[0].Design);
-        Assert.AreEqual("1", result.Sections[0].Slot);
+        Assert.AreEqual("SECTION_1", result.Sections[0]!.Design);
+        Assert.AreEqual("1", result.Sections[0]!.Slot);
         
-        Assert.AreEqual("SECTION_2", result.Sections[1].Design);
-        Assert.AreEqual("2", result.Sections[1].Slot);
+        Assert.AreEqual("SECTION_2", result.Sections[1]!.Design);
+        Assert.AreEqual("2", result.Sections[1]!.Slot);
         
-        Assert.AreEqual("SECTION_3", result.Sections[2].Design);
-        Assert.AreEqual("3", result.Sections[2].Slot);
+        Assert.AreEqual("SECTION_3", result.Sections[2]!.Design);
+        Assert.AreEqual("3", result.Sections[2]!.Slot);
     }
     
     #endregion
@@ -231,7 +231,7 @@ public class CollectionBindingTests
         );
     }
     
-    private static SaveObject CreateImmutableDictionaryTestObject()
+    private static SaveObject CreateDictionaryTestObject()
     {
         return new SaveObject(
             [

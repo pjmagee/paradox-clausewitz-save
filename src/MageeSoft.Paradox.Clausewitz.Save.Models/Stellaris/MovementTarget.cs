@@ -10,7 +10,7 @@ public partial class MovementTarget
     /// Gets or sets the coordinate.
     /// </summary>
     [SaveObject("coordinate")]
-    public Coordinate Coordinate { get;set; }
+    public Coordinate? Coordinate { get;set; }
 
 }
 

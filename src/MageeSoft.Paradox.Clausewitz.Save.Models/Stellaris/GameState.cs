@@ -6,32 +6,32 @@ namespace MageeSoft.Paradox.Clausewitz.Save.Models.Stellaris;
 public partial class GameState
 {
     [SaveIndexedDictionary("country")]
-    public Dictionary<int, Country> Countries { get;set; } = new();
+    public Dictionary<int, Country>? Countries { get;set; } = new();
 
     [SaveIndexedDictionary("fleet")]
-    public Dictionary<int, Fleet> Fleets { get;set; } = new();
+    public Dictionary<int, Fleet>? Fleets { get;set; } = new();
 
     [SaveObject("galaxy")]
-    public Galaxy Galaxy { get;set; } = new();
+    public Galaxy? Galaxy { get;set; } = new();
 
     [SaveIndexedDictionary("pop")]
-    public Dictionary<int, Pop> Pops { get;set; } = new();
+    public Dictionary<int, Pop>? Pops { get;set; } = new();
 
     [SaveIndexedDictionary("planets")]
-    public Dictionary<int, Planet> Planets { get;set; } = new();
+    public Dictionary<int, Planet>? Planets { get;set; } = new();
 
     [SaveIndexedDictionary("ships")]
-    public ImmutableDictionary<int, Ship> Ships { get; set; } = ImmutableDictionary<int, Ship>.Empty;
+    public Dictionary<int, Ship>? Ships { get; set; }
     
     [SaveIndexedDictionary("sectors")]
-    public ImmutableDictionary<int, object> Sectors { get; set; } = ImmutableDictionary<int, object>.Empty;
+    public Dictionary<int, object>? Sectors { get; set; }
     
     [SaveIndexedDictionary("megastructures")]
-    public ImmutableDictionary<int, Megastructure> Megastructures { get; set; } = ImmutableDictionary<int, Megastructure>.Empty;
+    public Dictionary<int, Megastructure>? Megastructures { get; set; }
     
     [SaveIndexedDictionary("armies")]
-    public ImmutableDictionary<int, object> Armies { get; set; } = ImmutableDictionary<int, object>.Empty;
+    public Dictionary<int, object>? Armies { get; set; }
     
     [SaveObject("achievements")]
-    public Achievements Achievements { get;set; } = new();
+    public Achievements? Achievements { get;set; } = new();
 } 

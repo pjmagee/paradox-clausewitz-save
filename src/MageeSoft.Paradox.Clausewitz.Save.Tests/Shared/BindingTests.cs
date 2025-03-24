@@ -73,7 +73,7 @@ public class BindingTests
         
         // Assert
         Assert.IsNotNull(result);
-        Assert.AreEqual(3, result.DictValue.Count);
+        Assert.AreEqual(3, result.DictValue!.Count);
         Assert.AreEqual("one", result.DictValue[1]);
         Assert.AreEqual("two", result.DictValue[2]);
         Assert.AreEqual("three", result.DictValue[3]);
@@ -91,7 +91,7 @@ public class BindingTests
         
         // Assert
         Assert.IsNotNull(result);
-        Assert.AreEqual(3, result.DictValue.Count);
+        Assert.AreEqual(3, result.DictValue!.Count);
         Assert.AreEqual("one", result.DictValue[1]);
         Assert.AreEqual("two", result.DictValue[2]);
         Assert.AreEqual("three", result.DictValue[3]);
@@ -112,7 +112,7 @@ public class BindingTests
         // Assert
         Assert.IsNotNull(reflectionResult);
         Assert.IsNotNull(sourceGenResult);
-        Assert.AreEqual(reflectionResult.DictValue.Count, sourceGenResult.DictValue.Count);
+        Assert.AreEqual(reflectionResult.DictValue!.Count, sourceGenResult.DictValue!.Count);
         
         foreach (var key in reflectionResult.DictValue.Keys)
         {
@@ -136,7 +136,7 @@ public class BindingTests
         var result = ReflectionBinder.Bind<ParentModel>(saveObject);
         
         // Assert
-        AssertNestedObjectBoundCorrectly(result);
+        AssertNestedObjectBoundCorrectly(result!);
     }
     
     [TestMethod]
@@ -171,9 +171,9 @@ public class BindingTests
         
         // Compare properties directly
         Assert.AreEqual(reflectionResult.Name, sourceGenResult.Name);
-        Assert.AreEqual(reflectionResult.NestedObject.Name, sourceGenResult.NestedObject.Name);
+        Assert.AreEqual(reflectionResult.NestedObject!.Name, sourceGenResult.NestedObject!.Name);
         Assert.AreEqual(reflectionResult.NestedObject.Value, sourceGenResult.NestedObject.Value);
-        Assert.AreEqual(reflectionResult.ItemArray.Length, sourceGenResult.ItemArray.Length);
+        Assert.AreEqual(reflectionResult.ItemArray!.Length, sourceGenResult.ItemArray!.Length);
         
         for (int i = 0; i < reflectionResult.ItemArray.Length; i++)
         {

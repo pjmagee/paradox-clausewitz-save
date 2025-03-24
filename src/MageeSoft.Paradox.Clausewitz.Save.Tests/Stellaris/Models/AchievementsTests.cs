@@ -16,7 +16,7 @@ public class AchievementsTests
 
         var achievements = ReflectionBinder.Bind<Achievements>(document.Root);
         Assert.IsNotNull(achievements);
-        Assert.IsTrue(achievements.Values.Count > 0, "Achievements should have items");
+        Assert.IsTrue(achievements.Values!.Count > 0, "Achievements should have items");
 
         Assert.AreEqual(191, achievements.Values.Max());
         Assert.AreEqual(22, achievements.Values.Min());
@@ -31,7 +31,7 @@ public class AchievementsTests
 
         var achievements = Achievements.Bind(document.Root);
         Assert.IsNotNull(achievements);
-        Assert.IsTrue(achievements.Values.Count > 0, "Achievements should have items");
+        Assert.IsTrue(achievements.Values!.Count > 0, "Achievements should have items");
 
         Assert.AreEqual(191, achievements.Values.Max());
         Assert.AreEqual(22, achievements.Values.Min());

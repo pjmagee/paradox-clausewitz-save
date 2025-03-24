@@ -7,5 +7,5 @@ namespace MageeSoft.Paradox.Clausewitz.Save.Test.Models;
 public partial class RepeatedPropertyModel
 {
     [SaveArray("section")]
-    public ImmutableList<SectionData?> Sections { get; set; } = [];
+    public List<SectionData?>? Sections { get; set; }
 }

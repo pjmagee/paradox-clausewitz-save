@@ -67,8 +67,8 @@ public class StellarisSaveService(IConsole console, GamePathResolver pathResolve
                 FileName = saveFile.Name,
                 FileSize = saveFile.Length,
                 LastModified = saveFile.LastWriteTime,
-                Ironman = save.Meta.Ironman,
-                Version = save.Meta.Version,
+                Ironman = save.Meta.Ironman!.Value,
+                Version = save.Meta.Version!,
                 Error = null,
             };
 

@@ -12,16 +12,16 @@ public partial class SubjectSpecialization
     /// Gets or sets the level.
     /// </summary>
    
-    public float Level { get;set; }
+    public float? Level { get;set; }
 
     /// <summary>
     /// Gets or sets the experience.
     /// </summary>
-    public float Experience { get;set; }
+    public float? Experience { get;set; }
 
     /// <summary>
     /// Gets or sets the conversion process.
     /// </summary>
     [SaveObject("conversion_process")]
-    public ConversionProcess ConversionProcess { get;set; }
+    public ConversionProcess? ConversionProcess { get;set; }
 }

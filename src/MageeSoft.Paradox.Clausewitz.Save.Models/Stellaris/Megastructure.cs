@@ -10,14 +10,14 @@ public partial class Megastructure
     /// Gets or sets the type.
     /// </summary>
     [SaveScalar("type")]
-    public string Type { get;set; }
+    public string? Type { get;set; }
 
     /// <summary>
     /// Gets or sets the coordinate.
     /// </summary>
     [SaveObject("coordinate")]
-    public Coordinate Coordinate { get;set; }
+    public Coordinate? Coordinate { get;set; }
     
     [SaveScalar("owner")]
-    public int Owner { get; set; }
+    public int? Owner { get; set; }
 }

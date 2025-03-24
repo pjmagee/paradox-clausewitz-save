@@ -6,27 +6,26 @@ namespace MageeSoft.Paradox.Clausewitz.Save.Test.Models;
 public partial class SimpleTestModel
 {
     [SaveScalar("int_value")]
-    public int IntValue { get; set; }
+    public int? IntValue { get; set; }
 
     [SaveScalar("string_value")]
-    public string StringValue { get; set; } = string.Empty;
+    public string? StringValue { get; set; }
 
     [SaveScalar("bool_value")]
-    public bool BoolValue { get; set; }
+    public bool? BoolValue { get; set; }
 
     [SaveScalar("float_value")]
-    public float FloatValue { get; set; }
+    public float? FloatValue { get; set; }
 
     [SaveScalar("long_value")]
-    public long LongValue { get; set; }
+    public long? LongValue { get; set; }
 
     [SaveScalar("date_value")]
-    public DateOnly DateValue { get; set; }
+    public DateOnly? DateValue { get; set; }
 
     [SaveScalar("guid_value")]
-    public Guid GuidValue { get; set; }
-    
+    public Guid? GuidValue { get; set; }
     
     [SaveArray("array_value")]
-    public int[] ArrayValue { get; set; } = Array.Empty<int>();
+    public int[]? ArrayValue { get; set; }
 }

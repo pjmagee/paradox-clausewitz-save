@@ -9,60 +9,60 @@ public partial class ArchaeologicalSite
     /// <summary>
     /// Gets or sets the site ID.
     /// </summary>
-    public long Id { get;set; }
+    public long? Id { get;set; }
 
     /// <summary>
     /// Gets or sets the planet ID where the site is located.
     /// </summary>
-    public long Planet { get;set; }
+    public long? Planet { get;set; }
 
     /// <summary>
     /// Gets or sets the owner ID.
     /// </summary>
-    public long Owner { get;set; }
+    public long? Owner { get;set; }
 
     /// <summary>
     /// Gets or sets the type of the archaeological site.
     /// </summary>
-    public string Type { get;set; }
+    public string? Type { get;set; }
 
     /// <summary>
     /// Gets or sets the current stage of the excavation.
     /// </summary>
-    public int Stage { get;set; }
+    public int? Stage { get;set; }
 
     /// <summary>
     /// Gets or sets the current progress of the excavation.
     /// </summary>
-    public int Progress { get;set; }
+    public int? Progress { get;set; }
 
     /// <summary>
     /// Gets or sets the total progress required for the current stage.
     /// </summary>
-    public int TotalProgress { get;set; }
+    public int? TotalProgress { get;set; }
 
     /// <summary>
     /// Gets or sets the total number of stages.
     /// </summary>
-    public int TotalStages { get;set; }
+    public int? TotalStages { get;set; }
 
     /// <summary>
     /// Gets or sets the total number of clues found.
     /// </summary>
-    public int TotalClues { get;set; }
+    public int? TotalClues { get;set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether the site is being excavated.
     /// </summary>
-    public bool IsActive { get;set; }
+    public bool? IsActive { get;set; }
 
     /// <summary>
     /// Gets or sets the current chapter of the excavation.
     /// </summary>
-    public int Chapter { get;set; }
+    public int? Chapter { get;set; }
 
     /// <summary>
     /// Gets or sets the researcher ID.
     /// </summary>
-    public long Researcher { get;set; }
+    public long? Researcher { get;set; }
 }

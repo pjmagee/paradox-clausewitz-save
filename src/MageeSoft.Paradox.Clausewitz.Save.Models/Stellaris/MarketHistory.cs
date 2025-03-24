@@ -11,12 +11,12 @@ public partial class MarketHistory
     /// <summary>
     /// Gets or sets the date.
     /// </summary>
-    public string Date { get;set; }
+    public string? Date { get;set; }
 
     /// <summary>
     /// Gets or sets the resources.
     /// </summary>
-    public ImmutableArray<MarketResource> Resources { get;set; }
+    public List<MarketResource>? Resources { get;set; }
 } 
 
 

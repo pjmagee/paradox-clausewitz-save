@@ -7,11 +7,11 @@ namespace MageeSoft.Paradox.Clausewitz.Save.Test.Models;
 public partial class SectionData
 {
     [SaveScalar("design")]
-    public string Design { get; set; } = "";
+    public string? Design { get; set; }
 
     [SaveScalar("slot")]
-    public string Slot { get; set; } = "";
+    public string? Slot { get; set; }
 
     [SaveArray("weapon")]
-    public ImmutableList<WeaponData> Weapons { get; set; }
+    public List<WeaponData>? Weapons { get; set; }
 }

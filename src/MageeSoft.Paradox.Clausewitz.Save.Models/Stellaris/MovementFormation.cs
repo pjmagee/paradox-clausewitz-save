@@ -9,17 +9,17 @@ public partial class MovementFormation
     /// <summary>
     /// Gets or sets the scale.
     /// </summary>
-    public float Scale { get;set; }
+    public float? Scale { get;set; }
 
     /// <summary>
     /// Gets or sets the angle.
     /// </summary>
-    public float Angle { get;set; }
+    public float? Angle { get;set; }
 
     /// <summary>
     /// Gets or sets the type.
     /// </summary>
-    public string Type { get;set; }
+    public string? Type { get;set; }
 }
 
 

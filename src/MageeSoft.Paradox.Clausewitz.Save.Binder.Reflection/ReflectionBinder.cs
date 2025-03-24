@@ -98,7 +98,7 @@ public static class ReflectionBinder
         return bindMethod.MakeGenericMethod(propertyType).Invoke(null, [obj]);
     }
 
-    static object? BindImmutableDictionary(SaveObject saveObject, Type keyType, Type valueType)
+    static object? BindDictionary(SaveObject saveObject, Type keyType, Type valueType)
     {
         var dictionaryType = typeof(Dictionary<,>).MakeGenericType(keyType, valueType);
         var dictionary = (IDictionary)Activator.CreateInstance(dictionaryType)!;
@@ -136,11 +136,7 @@ public static class ReflectionBinder
                 dictionary.Add(key, value);
         }
 
-        var toImmutableMethod = typeof(ImmutableDictionary).GetMethods()
-            .First(m => m.Name == "CreateRange" && m.IsGenericMethod)
-            .MakeGenericMethod(keyType, valueType);
-
-        return toImmutableMethod.Invoke(null, [dictionary]);
+        return dictionary;
     }
 
     static object? BindArray(SaveArray saveArray, Type targetType)
@@ -290,14 +286,7 @@ public static class ReflectionBinder
             var genericTypeDef = propertyType.GetGenericTypeDefinition();
             if (genericTypeDef == typeof(ImmutableArray<>))
             {                
-                var toImmutableMethod = typeof(ImmutableArray).GetMethods()
-                    .First(m => m.Name == "CreateRange" && m.IsGenericMethod)
-                    .MakeGenericMethod(elementType);
-                return toImmutableMethod.Invoke(null, [list]);
-            }
-            else if (genericTypeDef == typeof(ImmutableList<>))
-            {
-                var toImmutableMethod = typeof(ImmutableList).GetMethods()
+                var toImmutableMethod = typeof(Array).GetMethods()
                     .First(m => m.Name == "CreateRange" && m.IsGenericMethod)
                     .MakeGenericMethod(elementType);
                 return toImmutableMethod.Invoke(null, [list]);
@@ -364,7 +353,7 @@ public static class ReflectionBinder
                         var genArgs = property.PropertyType.GetGenericArguments();
                         var keyType = genArgs[0];
                         var valueType = genArgs[1];
-                        var value = BindImmutableDictionary(obj, keyType, valueType);
+                        var value = BindDictionary(obj, keyType, valueType);
                         if (value != null)
                             property.SetValue(result, value);
                     }

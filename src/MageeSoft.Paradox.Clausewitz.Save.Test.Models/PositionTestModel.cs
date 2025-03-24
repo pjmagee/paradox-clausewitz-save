@@ -9,8 +9,8 @@ namespace MageeSoft.Paradox.Clausewitz.Save.Test.Models;
 public partial class PositionTestModel
 {
     [SaveScalar("name")]
-    public string Name { get; set; } = string.Empty;
+    public string? Name { get; set; }
     
     [SaveObject("position")]
-    public Position Position { get; set; }
+    public Position? Position { get; set; }
 }

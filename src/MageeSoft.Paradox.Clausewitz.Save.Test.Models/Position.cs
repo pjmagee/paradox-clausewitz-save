@@ -9,11 +9,11 @@ namespace MageeSoft.Paradox.Clausewitz.Save.Test.Models;
 public partial class Position
 {
     [SaveScalar("x")]
-    public float X { get; set; }
+    public float? X { get; set; }
     
     [SaveScalar("y")]
-    public float Y { get; set; }
+    public float? Y { get; set; }
     
     [SaveScalar("z")]
-    public float Z { get; set; }
+    public float? Z { get; set; }
 }

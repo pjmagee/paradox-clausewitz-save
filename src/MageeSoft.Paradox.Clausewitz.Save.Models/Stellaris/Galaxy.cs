@@ -4,5 +4,5 @@ namespace MageeSoft.Paradox.Clausewitz.Save.Models.Stellaris;
 public partial class Galaxy
 {
     [SaveScalar("shape")]
-    public string Shape { get;set; } = string.Empty;
+    public string? Shape { get;set; } = string.Empty;
 } 

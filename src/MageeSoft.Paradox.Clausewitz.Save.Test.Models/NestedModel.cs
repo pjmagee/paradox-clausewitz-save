@@ -6,17 +6,17 @@ namespace MageeSoft.Paradox.Clausewitz.Save.Test.Models;
 public partial class NestedModel
 {
     [SaveScalar("energy")]
-    public int Energy { get;set; }
+    public int? Energy { get;set; }
 
     [SaveScalar("minerals")]
-    public int Minerals { get;set; }
+    public int? Minerals { get;set; }
 
     [SaveScalar("name")]
-    public string Name { get;set; }
+    public string? Name { get;set; }
 
     [SaveScalar("efficiency")]
-    public float Efficiency { get;set; }
+    public float? Efficiency { get;set; }
     
     [SaveScalar("value")]
-    public int Value { get; set; }
+    public int? Value { get; set; }
 }

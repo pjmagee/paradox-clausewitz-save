@@ -299,9 +299,9 @@ namespace {{namespaceName}}
     {
         string typeName = propertyType.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
         var nullableUnderlyingType = GetNullableUnderlyingType(propertyType);
-        bool isNullable = nullableUnderlyingType != null;
+        bool isNullable = nullableUnderlyingType != null || propertyType.NullableAnnotation == NullableAnnotation.Annotated || propertyType.IsReferenceType;
         
-        string underlyingTypeName = isNullable 
+        string underlyingTypeName = isNullable && nullableUnderlyingType != null
             ? nullableUnderlyingType.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)
             : typeName;
             
@@ -324,14 +324,7 @@ namespace {{namespaceName}}
         }
         else if (underlyingTypeName == "string" || underlyingTypeName == "String")
         {
-            if (isNullable)
-            {
-                sb.AppendLine($"                    {propertyName} = obj.TryGetString(\"{propertyKey}\", out var {varName}) ? ({varName} == \"none\" ? null : {varName}) : {GetDefaultValueForType(propertyType)},");
-            }
-            else
-            {
-                sb.AppendLine($"                    {propertyName} = obj.TryGetString(\"{propertyKey}\", out var {varName}) ? {varName} : {GetDefaultValueForType(propertyType)},");
-            }
+            sb.AppendLine($"                    {propertyName} = obj.TryGetString(\"{propertyKey}\", out var {varName}) ? ({varName} == \"none\" ? null : {varName}) : {GetDefaultValueForType(propertyType)},");
         }
         else if (underlyingTypeName == "Guid")
         {
@@ -356,13 +349,11 @@ namespace {{namespaceName}}
     private static void GenerateArrayBinding(StringBuilder sb, string propertyName, string propertyKey, string varName, ITypeSymbol propertyType)
     {
         string elementTypeName;
-        bool isImmutableCollection = false;
-        bool isImmutableArray = false;
-        bool isImmutableList = false;
         bool isList = false;
         bool isArray = false;
         INamedTypeSymbol? elementNamedType = null;
         ITypeSymbol? elementTypeSymbol = null;
+        bool isElementValueType = false;
         
         // Determine the type of collection and the element type
         if (propertyType is IArrayTypeSymbol arrayTypeSymbol)
@@ -370,24 +361,16 @@ namespace {{namespaceName}}
             elementTypeName = arrayTypeSymbol.ElementType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
             elementTypeSymbol = arrayTypeSymbol.ElementType;
             isArray = true;
+            isElementValueType = elementTypeSymbol.IsValueType;
         }
         else if (propertyType is INamedTypeSymbol namedType && namedType.IsGenericType && namedType.TypeArguments.Length > 0)
         {
             elementTypeName = namedType.TypeArguments[0].ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
             elementTypeSymbol = namedType.TypeArguments[0];
             elementNamedType = namedType.TypeArguments[0] as INamedTypeSymbol;
+            isElementValueType = elementTypeSymbol.IsValueType;
             
-            if (namedType.ToDisplayString().Contains("ImmutableArray"))
-            {
-                isImmutableArray = true;
-                isImmutableCollection = true;
-            }
-            else if (namedType.ToDisplayString().Contains("ImmutableList"))
-            {
-                isImmutableList = true;
-                isImmutableCollection = true;
-            }
-            else if (namedType.ToDisplayString().Contains("List"))
+            if (namedType.ToDisplayString().Contains("List"))
             {
                 isList = true;
             }
@@ -398,26 +381,31 @@ namespace {{namespaceName}}
             return;
         }
         
-        // Check if this is a nullable reference type
-        bool isNullableElementType = elementTypeSymbol?.NullableAnnotation == NullableAnnotation.Annotated || 
-                                  (elementTypeSymbol?.IsReferenceType == true && !elementTypeSymbol.IsValueType);
+        // Always treat element types as potentially nullable unless they are value types
+        bool isNullableElementType = !isElementValueType;
         
         bool hasBindMethod = elementTypeSymbol != null && HasBindMethod(elementTypeSymbol); 
         
         // Use a helper method to bind array properties
-        sb.AppendLine($"                    {propertyName} = Bind{propertyName}FromSaveObject(obj),");
+        sb.AppendLine($"                    {propertyName} = obj.Properties.Any(p => p.Key == \"{propertyKey}\") ? Bind{propertyName}FromSaveObject(obj) : {GetDefaultValueForType(propertyType)},");
         
         // Create a helper method for binding this array property
         StringBuilder methodSb = new StringBuilder();
         methodSb.AppendLine();
         methodSb.AppendLine($"        private static {propertyType.ToDisplayString()} Bind{propertyName}FromSaveObject(SaveObject obj)");
         methodSb.AppendLine($"        {{");
+        methodSb.AppendLine($"            if (obj == null)");
+        methodSb.AppendLine($"                return {GetDefaultValueForType(propertyType)};");
+        methodSb.AppendLine($"                ");
         methodSb.AppendLine($"            var elementsList = new List<{elementTypeName}>();");
         
         // First try using the direct array accessor
         methodSb.AppendLine($"            // First try direct array access");
         methodSb.AppendLine($"            if (obj.TryGetSaveArray(\"{propertyKey}\", out var arrayValue))");
         methodSb.AppendLine($"            {{");
+        methodSb.AppendLine($"                if (arrayValue == null)");
+        methodSb.AppendLine($"                    return {GetDefaultValueForType(propertyType)};");
+        methodSb.AppendLine($"                    ");
         methodSb.AppendLine($"                foreach (var item in arrayValue.Items)");
         methodSb.AppendLine($"                {{");
         
@@ -442,7 +430,7 @@ namespace {{namespaceName}}
             {
                 methodSb.AppendLine($"                    else if (item.ToString() == \"none\")");
                 methodSb.AppendLine($"                    {{");
-                methodSb.AppendLine($"                        elementsList.Add(null);");
+                methodSb.AppendLine($"                        elementsList.Add(default({elementTypeName}));");
                 methodSb.AppendLine($"                    }}");
             }
         }
@@ -466,7 +454,7 @@ namespace {{namespaceName}}
         else if (isNullableElementType)
         {
             methodSb.AppendLine($"                        // Handling a SaveObject for a non-object element type with nullable reference");
-            methodSb.AppendLine($"                        elementsList.Add(null);");
+            methodSb.AppendLine($"                        elementsList.Add(default({elementTypeName}));");
         }
         else
         {
@@ -500,7 +488,7 @@ namespace {{namespaceName}}
             {
                 methodSb.AppendLine($"                            else if (item.ToString() == \"none\")");
                 methodSb.AppendLine($"                            {{");
-                methodSb.AppendLine($"                                elementsList.Add(null);");
+                methodSb.AppendLine($"                                elementsList.Add(default({elementTypeName}));");
                 methodSb.AppendLine($"                            }}");
             }
         }
@@ -569,7 +557,7 @@ namespace {{namespaceName}}
             {
                 methodSb.AppendLine($"                        else if (element.ToString() == \"none\")");
                 methodSb.AppendLine($"                        {{");
-                methodSb.AppendLine($"                            elementsList.Add(null);");
+                methodSb.AppendLine($"                            elementsList.Add(default({elementTypeName}));");
                 methodSb.AppendLine($"                        }}");
             }
         }
@@ -582,14 +570,6 @@ namespace {{namespaceName}}
         if (isArray)
         {
             methodSb.AppendLine($"            return elementsList.ToArray();");
-        }
-        else if (isImmutableArray)
-        {
-            methodSb.AppendLine($"            return elementsList.ToArray().ToImmutableArray();");
-        }
-        else if (isImmutableList)
-        {
-            methodSb.AppendLine($"            return elementsList.ToImmutableList();");
         }
         else // List or other collection types
         {
@@ -615,7 +595,7 @@ namespace {{namespaceName}}
 
         if (hasBindMethod)
         {
-            sb.AppendLine($"                    {propertyName} = obj.TryGetSaveObject(\"{propertyKey}\", out var {varName}Obj) ? {typeName}.Bind({varName}Obj) : new {typeName}(),");
+            sb.AppendLine($"                    {propertyName} = obj.TryGetSaveObject(\"{propertyKey}\", out var {varName}Obj) ? {typeName}.Bind({varName}Obj) : null,");
         }
         else
         {
@@ -637,7 +617,7 @@ namespace {{namespaceName}}
                 // Additional handling for arrays, dictionaries, and nested objects can be added here
             }
 
-            sb.AppendLine($"                    }} : new {typeName}(),");
+            sb.AppendLine($"                    }} : null,");
         }
     }
 
@@ -655,7 +635,6 @@ namespace {{namespaceName}}
         
         string keyTypeName = keyType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
         string valueTypeName = valueType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-        bool isImmutableDictionary = propertyType.ToDisplayString().Contains("ImmutableDictionary");
         bool isValueComplexType = !IsSimpleType(valueTypeName);
         bool hasValueSaveModelAttribute = HasBindMethod(valueType);
         
@@ -685,11 +664,11 @@ namespace {{namespaceName}}
         string valueConverter;
         if (isValueComplexType && hasValueSaveModelAttribute)
         {
-            valueConverter = $"kvp.Value is SaveObject valueObj ? {valueTypeName}.Bind(valueObj) : new {valueTypeName}()";
+            valueConverter = $"kvp.Value is SaveObject valueObj ? {valueTypeName}.Bind(valueObj) : null";
         }
         else if (valueTypeName == "System.String" || valueTypeName == "string")
         {
-            valueConverter = "kvp.Value is Scalar<string> s ? s.Value : string.Empty";
+            valueConverter = "kvp.Value is Scalar<string> s ? s.Value : null";
         }
         else if (valueTypeName == "System.Int32" || valueTypeName == "int")
         {
@@ -713,37 +692,23 @@ namespace {{namespaceName}}
         }
         
         // Start the dictionary creation code
-        sb.AppendLine($"                    {propertyName} = obj.TryGetSaveObject(\"{propertyKey}\", out var {varName}Dict) ?");
-        
-        // If immutable dictionary, we need to use ToDictionary first, then create immutable
-        if (isImmutableDictionary)
-        {
-            sb.AppendLine($"                        System.Collections.Immutable.ImmutableDictionary.CreateRange(");
-            sb.AppendLine($"                            {varName}Dict.Properties");
-            sb.AppendLine($"                                .Where(kvp => {whereClause})");
-            sb.AppendLine($"                                .ToDictionary(");
-            sb.AppendLine($"                                    kvp => {keyConverter},");
-            sb.AppendLine($"                                    kvp => {valueConverter})) :");
-            sb.AppendLine($"                        System.Collections.Immutable.ImmutableDictionary<{keyTypeName}, {valueTypeName}>.Empty,");
-        }
-        else
-        {
-            sb.AppendLine($"                        {varName}Dict.Properties");
-            sb.AppendLine($"                            .Where(kvp => {whereClause})");
-            sb.AppendLine($"                            .ToDictionary(");
-            sb.AppendLine($"                                kvp => {keyConverter},");
-            sb.AppendLine($"                                kvp => {valueConverter}) :");
-            sb.AppendLine($"                        new Dictionary<{keyTypeName}, {valueTypeName}>(),");
-        }
+        sb.AppendLine($"                    {propertyName} = obj.TryGetSaveObject(\"{propertyKey}\", out var {varName}Dict) && {varName}Dict != null ?");
+        sb.AppendLine($"                        {varName}Dict.Properties");
+        sb.AppendLine($"                            .Where(kvp => {whereClause})");
+        sb.AppendLine($"                            .ToDictionary(");
+        sb.AppendLine($"                                kvp => {keyConverter},");
+        sb.AppendLine($"                                kvp => {valueConverter}) :");
+        sb.AppendLine($"                        new Dictionary<{keyTypeName}, {valueTypeName}>(),");
     }
 
     private static string GetDefaultValueForType(ITypeSymbol type)
     {
-        if (type.IsReferenceType && type.NullableAnnotation != NullableAnnotation.Annotated)
+        // Always treat reference types as nullable
+        if (type.IsReferenceType)
         {
-            // Non-nullable reference type
+            // For string, return null instead of empty string
             if (type.SpecialType == SpecialType.System_String)
-                return "string.Empty";
+                return "null";
                 
             // Check if it's a collection type
             string typeName = type.ToDisplayString();
@@ -772,37 +737,9 @@ namespace {{namespaceName}}
                     return $"new Dictionary<{keyType}, {valueType}>()";
                 }
             }
-            else if (typeName.Contains("ImmutableList<"))
-            {
-                // For ImmutableList, use Empty
-                if (type is INamedTypeSymbol namedType && namedType.TypeArguments.Length > 0)
-                {
-                    var elementType = namedType.TypeArguments[0].ToDisplayString();
-                    return $"System.Collections.Immutable.ImmutableList<{elementType}>.Empty";
-                }
-            }
-            else if (typeName.Contains("ImmutableArray<"))
-            {
-                // For ImmutableArray, use Empty
-                if (type is INamedTypeSymbol namedType && namedType.TypeArguments.Length > 0)
-                {
-                    var elementType = namedType.TypeArguments[0].ToDisplayString();
-                    return $"System.Collections.Immutable.ImmutableArray<{elementType}>.Empty";
-                }
-            }
-            else if (typeName.Contains("ImmutableDictionary<"))
-            {
-                // For ImmutableDictionary, use Empty
-                if (type is INamedTypeSymbol namedType && namedType.TypeArguments.Length > 1)
-                {
-                    var keyType = namedType.TypeArguments[0].ToDisplayString();
-                    var valueType = namedType.TypeArguments[1].ToDisplayString();
-                    return $"System.Collections.Immutable.ImmutableDictionary<{keyType}, {valueType}>.Empty";
-                }
-            }
             
-            // For other complex types, create a new instance
-            return $"new {type.ToDisplayString()}()";
+            // For complex types, return null instead of new instance
+            return "null";
         }
         else if (type.TypeKind == TypeKind.Enum)
         {
@@ -842,7 +779,97 @@ namespace {{namespaceName}}
                     string typeName = type.ToDisplayString();
                     if (typeName.Contains("DateOnly"))
                     {
-                        return "new DateOnly(1, 1, 1)";
+                        return "default(DateOnly)";
+                    }
+                    else if (typeName.Contains("Guid"))
+                    {
+                        return "Guid.Empty";
+                    }
+                    
+                    return "default";
+            }
+        }
+    }
+
+    private static string GetDefaultValueLiteral(ITypeSymbol type)
+    {
+        // Always treat reference types as nullable
+        if (type.IsReferenceType)
+        {
+            // For string, return null
+            if (type.SpecialType == SpecialType.System_String)
+                return "null";
+                
+            // Check if it's a collection type
+            string typeName = type.ToDisplayString();
+            if (typeName.Contains("[]"))
+            {
+                // For arrays, create an empty array
+                var elementType = ((IArrayTypeSymbol)type).ElementType.ToDisplayString();
+                return $"Array.Empty<{elementType}>()";
+            }
+            else if (typeName.Contains("List<"))
+            {
+                // For lists, create a new list
+                if (type is INamedTypeSymbol namedType && namedType.TypeArguments.Length > 0)
+                {
+                    var elementType = namedType.TypeArguments[0].ToDisplayString();
+                    return $"new List<{elementType}>()";
+                }
+            }
+            else if (typeName.Contains("Dictionary<"))
+            {
+                // For dictionaries, create a new dictionary
+                if (type is INamedTypeSymbol namedType && namedType.TypeArguments.Length > 1)
+                {
+                    var keyType = namedType.TypeArguments[0].ToDisplayString();
+                    var valueType = namedType.TypeArguments[1].ToDisplayString();
+                    return $"new Dictionary<{keyType}, {valueType}>()";
+                }
+            }
+            
+            // For complex types, return null instead of new instance
+            return "null";
+        }
+        else if (type.TypeKind == TypeKind.Enum)
+        {
+            // For enums, use 0 or the first value
+            return $"({type.ToDisplayString()})0";
+        }
+        else
+        {
+            // Handle primitive types
+            switch (type.SpecialType)
+            {
+                case SpecialType.System_Boolean:
+                    return "false";
+                case SpecialType.System_Char:
+                    return "'\\0'";
+                case SpecialType.System_SByte:
+                case SpecialType.System_Byte:
+                case SpecialType.System_Int16:
+                case SpecialType.System_UInt16:
+                case SpecialType.System_Int32:
+                case SpecialType.System_UInt32:
+                case SpecialType.System_Int64:
+                case SpecialType.System_UInt64:
+                case SpecialType.System_Decimal:
+                case SpecialType.System_Single:
+                case SpecialType.System_Double:
+                    return "0";
+                default:
+                    // For nullable types, use null
+                    if (type.NullableAnnotation == NullableAnnotation.Annotated || 
+                        (type.OriginalDefinition != null && type.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T))
+                    {
+                        return "null";
+                    }
+                    
+                    // Special handling for common types
+                    string typeName = type.ToDisplayString();
+                    if (typeName.Contains("DateOnly"))
+                    {
+                        return "default(DateOnly)";
                     }
                     else if (typeName.Contains("Guid"))
                     {
@@ -972,123 +999,6 @@ namespace {{namespaceName}}
         }
 
         return result.ToString();
-    }
-
-    private static string GetDefaultValueLiteral(ITypeSymbol type)
-    {
-        if (type.IsReferenceType && type.NullableAnnotation != NullableAnnotation.Annotated)
-        {
-            // Non-nullable reference type
-            if (type.SpecialType == SpecialType.System_String)
-                return "\"\"";
-                
-            // Check if it's a collection type
-            string typeName = type.ToDisplayString();
-            if (typeName.Contains("[]"))
-            {
-                // For arrays, create an empty array
-                var elementType = ((IArrayTypeSymbol)type).ElementType.ToDisplayString();
-                return $"Array.Empty<{elementType}>()";
-            }
-            else if (typeName.Contains("List<"))
-            {
-                // For lists, create a new list
-                if (type is INamedTypeSymbol namedType && namedType.TypeArguments.Length > 0)
-                {
-                    var elementType = namedType.TypeArguments[0].ToDisplayString();
-                    return $"new List<{elementType}>()";
-                }
-            }
-            else if (typeName.Contains("Dictionary<"))
-            {
-                // For dictionaries, create a new dictionary
-                if (type is INamedTypeSymbol namedType && namedType.TypeArguments.Length > 1)
-                {
-                    var keyType = namedType.TypeArguments[0].ToDisplayString();
-                    var valueType = namedType.TypeArguments[1].ToDisplayString();
-                    return $"new Dictionary<{keyType}, {valueType}>()";
-                }
-            }
-            else if (typeName.Contains("ImmutableList<"))
-            {
-                // For ImmutableList, use Empty
-                if (type is INamedTypeSymbol namedType && namedType.TypeArguments.Length > 0)
-                {
-                    var elementType = namedType.TypeArguments[0].ToDisplayString();
-                    return $"System.Collections.Immutable.ImmutableList<{elementType}>.Empty";
-                }
-            }
-            else if (typeName.Contains("ImmutableArray<"))
-            {
-                // For ImmutableArray, use Empty
-                if (type is INamedTypeSymbol namedType && namedType.TypeArguments.Length > 0)
-                {
-                    var elementType = namedType.TypeArguments[0].ToDisplayString();
-                    return $"System.Collections.Immutable.ImmutableArray<{elementType}>.Empty";
-                }
-            }
-            else if (typeName.Contains("ImmutableDictionary<"))
-            {
-                // For ImmutableDictionary, use Empty
-                if (type is INamedTypeSymbol namedType && namedType.TypeArguments.Length > 1)
-                {
-                    var keyType = namedType.TypeArguments[0].ToDisplayString();
-                    var valueType = namedType.TypeArguments[1].ToDisplayString();
-                    return $"System.Collections.Immutable.ImmutableDictionary<{keyType}, {valueType}>.Empty";
-                }
-            }
-            
-            // For other complex types, create a new instance
-            return $"new {type.ToDisplayString()}()";
-        }
-        else if (type.TypeKind == TypeKind.Enum)
-        {
-            // For enums, use 0 or the first value
-            return $"({type.ToDisplayString()})0";
-        }
-        else
-        {
-            // Handle primitive types
-            switch (type.SpecialType)
-            {
-                case SpecialType.System_Boolean:
-                    return "false";
-                case SpecialType.System_Char:
-                    return "'\\0'";
-                case SpecialType.System_SByte:
-                case SpecialType.System_Byte:
-                case SpecialType.System_Int16:
-                case SpecialType.System_UInt16:
-                case SpecialType.System_Int32:
-                case SpecialType.System_UInt32:
-                case SpecialType.System_Int64:
-                case SpecialType.System_UInt64:
-                case SpecialType.System_Decimal:
-                case SpecialType.System_Single:
-                case SpecialType.System_Double:
-                    return "0";
-                default:
-                    // For nullable types, use null
-                    if (type.NullableAnnotation == NullableAnnotation.Annotated || 
-                        (type.OriginalDefinition != null && type.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T))
-                    {
-                        return "null";
-                    }
-                    
-                    // Special handling for common types
-                    string typeName = type.ToDisplayString();
-                    if (typeName.Contains("DateOnly"))
-                    {
-                        return "new DateOnly(1, 1, 1)";
-                    }
-                    else if (typeName.Contains("Guid"))
-                    {
-                        return "Guid.Empty";
-                    }
-                    
-                    return "default";
-            }
-        }
     }
 
     private static ITypeSymbol? GetElementType(ITypeSymbol propertyType)

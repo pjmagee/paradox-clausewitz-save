@@ -10,23 +10,23 @@ public partial class ConversionProcess
     /// Gets or sets the progress.
     /// </summary>
     [SaveScalar("progress")]
-    public float Progress { get;set; }
+    public float? Progress { get;set; }
 
     /// <summary>
     /// Gets or sets whether the process is in progress.
     /// </summary>
     [SaveScalar("in_progress")]
-    public bool InProgress { get;set; }
+    public bool? InProgress { get;set; }
 
     /// <summary>
     /// Gets or sets whether the process is done.
     /// </summary>
     [SaveScalar("done")]
-    public bool Done { get;set; }
+    public bool? Done { get;set; }
 
     /// <summary>
     /// Gets or sets whether to ignore the process.
     /// </summary>
     [SaveScalar("ignore")]
-    public bool Ignore { get;set; }
+    public bool? Ignore { get;set; }
 }

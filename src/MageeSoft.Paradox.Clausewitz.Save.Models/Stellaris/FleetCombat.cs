@@ -9,17 +9,17 @@ public partial class FleetCombat
     /// <summary>
     /// Gets or sets the fleet ID.
     /// </summary>
-    public long Fleet { get; set; }
+    public long? Fleet { get; set; }
 
     /// <summary>
     /// Gets or sets the combat stats.
     /// </summary>
-    public CombatStats CombatStats { get; set; }
+    public CombatStats? CombatStats { get; set; }
 
     /// <summary>
     /// Gets or sets the fleet stats.
     /// </summary>
-    public FleetStats FleetStats { get; set; }
+    public FleetStats? FleetStats { get; set; }
 }
 
 

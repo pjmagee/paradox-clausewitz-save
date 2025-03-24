@@ -4,5 +4,5 @@ namespace MageeSoft.Paradox.Clausewitz.Save.Models.Stellaris;
 public partial class Country
 {
     [SaveScalar("name")]
-    public string Name { get;set; } = string.Empty;
+    public string? Name { get;set; } = string.Empty;
 } 

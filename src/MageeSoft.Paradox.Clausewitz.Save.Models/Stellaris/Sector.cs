@@ -11,27 +11,27 @@ public partial class Sector
     /// <summary>
     /// Gets or sets the ID.
     /// </summary>
-    public long Id { get;set; }
+    public long? Id { get;set; }
 
     /// <summary>
     /// Gets or sets the name.
     /// </summary>
-    public string Name { get;set; }
+    public string? Name { get;set; }
 
     /// <summary>
     /// Gets or sets the type.
     /// </summary>
-    public string Type { get;set; }
+    public string? Type { get;set; }
 
     /// <summary>
     /// Gets or sets the owner.
     /// </summary>
-    public Owner Owner { get;set; }
+    public Owner? Owner { get;set; }
 
     /// <summary>
     /// Gets or sets the planets.
     /// </summary>
-    public ImmutableArray<Planet> Planets { get;set; }
+    public List<Planet>? Planets { get;set; }
 
     
 } 

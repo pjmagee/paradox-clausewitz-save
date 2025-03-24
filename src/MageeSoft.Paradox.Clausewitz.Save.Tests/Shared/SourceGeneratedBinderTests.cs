@@ -59,7 +59,7 @@ public class SourceGeneratedBinderTests
 
         // Assert
         Assert.IsNotNull(result);
-        Assert.AreEqual(3, result.DictValue.Count);
+        Assert.AreEqual(3, result.DictValue!.Count);
         Assert.AreEqual("one", result.DictValue[1]);
         Assert.AreEqual("two", result.DictValue[2]);
         Assert.AreEqual("three", result.DictValue[3]);
