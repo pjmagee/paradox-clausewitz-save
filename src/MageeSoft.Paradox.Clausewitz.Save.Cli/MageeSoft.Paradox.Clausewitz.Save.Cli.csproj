@@ -24,7 +24,7 @@
     <LangVersion>default</LangVersion>    
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)'=='Release' And $(PackAsTool) == 'true'">    
+  <PropertyGroup Condition="'$(Configuration)'=='Release' And '$(PackAsTool)'=='true'">    
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>paradox-clausewitz-sav</ToolCommandName>
     <PackageTags>stellaris ck3 hoi4 paradox clausewitz engine game save parser</PackageTags>
@@ -34,7 +34,11 @@
     <RepositoryUrl>https://github.com/pjmagee/paradox-clausewitz-sav</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageId>MageeSoft.Paradox.Clausewitz.Save.Cli</PackageId>
-    <PackageOutputPath>./nupkg</PackageOutputPath>    
+    <PackageOutputPath>./nupkg</PackageOutputPath>
+    <DebugType>portable</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+    <PublishAot>false</PublishAot>
+    <PublishTrimmed>false</PublishTrimmed>
   </PropertyGroup>
 
   <!-- Native AOT Configuration (default) -->

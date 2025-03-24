@@ -45,7 +45,8 @@ $outputFileName = "$baseFileName$packageExtension"
 $outputPath = Join-Path -Path $OutputDir -ChildPath $outputFileName
 
 # Create temporary directory for packaging
-$tempDir = Join-Path -Path $env:TEMP -ChildPath ([guid]::NewGuid().ToString())
+$tempRoot = if ($env:TEMP) { $env:TEMP } elseif ($env:TMPDIR) { $env:TMPDIR } else { "/tmp" }
+$tempDir = Join-Path -Path $tempRoot -ChildPath ([guid]::NewGuid().ToString())
 New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
 
 # Copy the binary to the temporary directory with the desired name

@@ -41,12 +41,28 @@ jobs:
       run: dotnet test ./src/MageeSoft.Paradox.Clausewitz.Save.slnx --configuration Release --no-build
       
     - name: Pack
-      run: dotnet pack ./src/MageeSoft.Paradox.Clausewitz.Save.Cli/MageeSoft.Paradox.Clausewitz.Save.Cli.csproj --configuration Release --no-build /p:PackAsTool=true --output ./nupkg
+      run: dotnet pack ./src/MageeSoft.Paradox.Clausewitz.Save.Cli/MageeSoft.Paradox.Clausewitz.Save.Cli.csproj --configuration Release /p:PackAsTool=true --output ./nupkg /p:Version=${{ steps.gitversion.outputs.semVer }}
             
-    - name: Push to GitHub Packages
-      if: ${{ github.event_name == 'created' }}
+    - name: Setup GitHub NuGet source
       run: |
-        dotnet nuget push "./nupkg/MageeSoft.Paradox.Clausewitz.Save.Cli.*.nupkg" \
+        dotnet nuget add source --username ${{ github.repository_owner }} --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
+
+    - name: Push to GitHub Packages
+      if: ${{ github.event_name == 'release' }}
+      run: |
+        dotnet nuget push "./nupkg/*.nupkg" \
+          --source "github" \
           --api-key ${{ secrets.GITHUB_TOKEN }} \
-          --source "https://nuget.pkg.github.com/pjmagee/index.json" \
           --skip-duplicate
+
+    - name: Upload packages as artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: nuget-tool-package
+        path: ./nupkg/*.nupkg
+
+    - name: Upload .NET Tool to Release
+      if: ${{ github.event_name == 'release' }}
+      uses: softprops/action-gh-release@v2
+      with:
+        files: ./nupkg/*.nupkg

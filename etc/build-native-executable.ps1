@@ -33,12 +33,12 @@ Write-Host "Retrieving version information from GitVersion..." -ForegroundColor 
 dotnet gitversion | Out-Host
 
 # Create version arguments if provided
-$VersionArgs = ""
+$VersionArgs = @()
 if ($VersionPrefix) {
-    $VersionArgs += " /p:VersionPrefix=$VersionPrefix"
+    $VersionArgs += "/p:VersionPrefix=$VersionPrefix"
 }
 if ($VersionSuffix) {
-    $VersionArgs += " /p:VersionSuffix=$VersionSuffix"
+    $VersionArgs += "/p:VersionSuffix=$VersionSuffix"
 }
 
 # First restore solution dependencies to ensure all projects are correctly resolved
@@ -48,7 +48,7 @@ dotnet restore $SolutionPath
 Write-Host "Building Native AOT executable for $RuntimeIdentifier..." -ForegroundColor Cyan
 
 # Build the AOT executable
-dotnet publish $CsprojPath -c $Configuration -r $RuntimeIdentifier -o $AotOutputDir $VersionArgs
+dotnet publish $CsprojPath -c $Configuration -r $RuntimeIdentifier -o $AotOutputDir @VersionArgs
 
 if ($LASTEXITCODE -eq 0) {
     $ExeName = if ($RuntimeIdentifier.StartsWith("win")) { 

@@ -9,6 +9,7 @@ permissions:
   packages: write
 
 jobs:
+
   setup-gitversion:
     runs-on: ubuntu-latest
     outputs:
@@ -41,7 +42,7 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        rid: [x64, arm64]
+        arch: [x64, arm64]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -52,40 +53,33 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
-      - name: Debug - Show directory structure
-        run: |
-          Write-Host "Current directory: $(Get-Location)"
-          Write-Host "Repository contents:"
-          Get-ChildItem -Recurse -Depth 2 | Select-Object FullName
-
-      - name: Build native executable for Windows
+      - name: Compile and package for Windows
         shell: pwsh
         run: |
-          # Use absolute paths with the repository root
           $RepoRoot = "${{ github.workspace }}"
-          Write-Host "Repository root: $RepoRoot"
 
-          # Execute scripts from the repo root with explicit paths
-          & "$RepoRoot\etc\build-native-executable.ps1" -SrcDir $RepoRoot\src -RuntimeIdentifier win-${{ matrix.rid }} -VersionPrefix "${{ needs.setup-gitversion.outputs.majorMinorPatch }}" -
+          & "$RepoRoot\etc\build-native-executable.ps1" `
+              -SrcDir "$RepoRoot\src" `
+              -RuntimeIdentifier "win-${{ matrix.arch }}" `
+              -Configuration "Release" `
+              -VersionPrefix "${{ needs.setup-gitversion.outputs.majorMinorPatch }}"
 
-          # Only run packaging if build succeeds
           if ($LASTEXITCODE -eq 0) {
-            & "$RepoRoot\etc\package-native-executable.ps1" -Platform windows `
-                -Architecture ${{ matrix.rid }} `
-                -InputFile "$RepoRoot\bin\aot-win-${{ matrix.rid }}\paradox-clausewitz-sav.exe" `
+            & "$RepoRoot\etc\package-native-executable.ps1" `
+                -Platform windows `
+                -Architecture ${{ matrix.arch }} `
+                -InputFile "$RepoRoot\bin\aot-win-${{ matrix.arch }}\paradox-clausewitz-sav.exe" `
                 -OutputDir "$RepoRoot\artifacts"
           } else {
             Write-Error "Build failed with exit code $LASTEXITCODE"
             exit $LASTEXITCODE
           }
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload to Release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
         with:
-          path: ./artifacts/paradox-clausewitz-sav_${{ needs.setup-gitversion.outputs.majorMinorPatch }}_windows_${{ matrix.rid }}.zip
-          name: paradox-clausewitz-sav_${{ needs.setup-gitversion.outputs.majorMinorPatch }}_windows_${{ matrix.rid }}.zip
+          files: ./artifacts/paradox-clausewitz-sav_${{ needs.setup-gitversion.outputs.majorMinorPatch }}_windows_${{ matrix.arch }}.zip
 
   build-linux:
     needs: setup-gitversion
@@ -96,32 +90,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Fetch all history for GitVersion
+          fetch-depth: 0 # Fetch all history for GitVersion     
 
-      - name: Install PowerShell
-        run: |
-          # Download the Microsoft repository GPG keys
-          wget -q "https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/packages-microsoft-prod.deb"
-
-          # Register the Microsoft repository GPG keys
-          sudo dpkg -i packages-microsoft-prod.deb
-          rm packages-microsoft-prod.deb
-
-          # Update the list of packages
-          sudo apt-get update
-
-          # Install PowerShell
-          sudo apt-get install -y powershell
-
-          # Verify PowerShell is installed
-          pwsh --version
-
-      - name: Debug - Show directory structure
-        shell: pwsh
-        run: |
-          Write-Host "Current directory: $(Get-Location)"
-          Write-Host "Repository contents:"
-          Get-ChildItem -Recurse -Depth 2 | Select-Object FullName
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
 
       - name: Dagger AOT
         uses: dagger/dagger-for-github@8.0.0
@@ -129,28 +103,22 @@ jobs:
           version: "latest"
           call: publish-aot --rid=linux-${{ matrix.arch }} export --path ./bin/aot-linux-${{ matrix.arch }}/paradox-clausewitz-sav --allow-parent-dir-path
 
-      - name: Build & package native executable
-        shell: pwsh
+      - name: Compile and package for Linux
+        shell: bash
         run: |
-          $RepoRoot = "${{ github.workspace }}"
-          Write-Host "Repository root: $RepoRoot"
+          REPO_ROOT="${{ github.workspace }}"
+          
+          pwsh -File "${REPO_ROOT}/etc/package-native-executable.ps1" \
+            -Platform linux \
+            -Architecture ${{ matrix.arch }} \
+            -InputFile "${REPO_ROOT}/bin/aot-linux-${{ matrix.arch }}/paradox-clausewitz-sav" \
+            -OutputDir "${REPO_ROOT}/artifacts"
 
-          chmod +x "$RepoRoot/etc/package-native-executable.ps1"
-          & "$RepoRoot/etc/package-native-executable.ps1" -Platform linux `
-              -Architecture ${{ matrix.arch }} `
-              -InputFile "$RepoRoot/bin/aot-linux-${{ matrix.arch }}/paradox-clausewitz-sav" `
-              -OutputDir "$RepoRoot/artifacts"
-
-      - name: List build outputs
-        run: ls -la ./artifacts/
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload to Release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
         with:
-          path: ./artifacts/paradox-clausewitz-sav_${{ needs.setup-gitversion.outputs.majorMinorPatch }}_linux_${{ matrix.arch }}.tar.gz
-          name: paradox-clausewitz-sav_${{ needs.setup-gitversion.outputs.majorMinorPatch }}_linux_${{ matrix.arch }}.tar.gz
+          files: ./artifacts/paradox-clausewitz-sav_${{ needs.setup-gitversion.outputs.majorMinorPatch }}_linux_${{ matrix.arch }}.tar.gz
 
   build-macos:
     needs: setup-gitversion
@@ -168,45 +136,28 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
-      - name: Install macOS workload
-        run: dotnet workload install macos
-
-      - name: Install PowerShell
+      - name: Compile and package for MacOS
+        shell: bash
         run: |
-          brew install --cask powershell
-          echo "PowerShell version:"
-          pwsh --version
-
-      - name: Debug - Show directory structure
-        shell: pwsh
-        run: |
-          Write-Host "Current directory: $(Get-Location)"
-          Write-Host "Repository contents:"
-          Get-ChildItem -Recurse -Depth 2 | Select-Object FullName
-
-      - name: Build & package native executable
-        shell: pwsh
-        run: |
-          $RepoRoot = "${{ github.workspace }}"
-          Write-Host "Repository root: $RepoRoot"
-
-          chmod +x "$RepoRoot/etc/build-native-executable.ps1"
-          chmod +x "$RepoRoot/etc/package-native-executable.ps1"
-
-          & "$RepoRoot/etc/build-native-executable.ps1" -SrcDir $RepoRoot\src -RuntimeIdentifier osx-${{ matrix.arch }} -VersionPrefix "${{ needs.setup-gitversion.outputs.majorMinorPatch }}"
-
-          if ($LASTEXITCODE -eq 0) {
-            & "$RepoRoot/etc/package-native-executable.ps1" -Platform macos `
-                -Architecture ${{ matrix.arch }} `
-                -InputFile "$RepoRoot/bin/aot-osx-${{ matrix.arch }}/paradox-clausewitz-sav" `
-                -OutputDir "$RepoRoot/artifacts"
-          } else {
-            Write-Error "Build failed with exit code $LASTEXITCODE"
-            exit $LASTEXITCODE
-          }
-
-      - name: List artifacts
-        run: ls -la ./artifacts/
+          REPO_ROOT="${{ github.workspace }}"
+          
+          pwsh -File "${REPO_ROOT}/etc/build-native-executable.ps1" \
+            -SrcDir "${REPO_ROOT}/src" \
+            -RuntimeIdentifier "osx-${{ matrix.arch }}" \
+            -Configuration "Release" \
+            -VersionPrefix "${{ needs.setup-gitversion.outputs.majorMinorPatch }}"
+          
+          BUILD_EXIT_CODE=$?
+          if [ $BUILD_EXIT_CODE -eq 0 ]; then
+            pwsh -File "${REPO_ROOT}/etc/package-native-executable.ps1" \
+              -Platform macos \
+              -Architecture ${{ matrix.arch }} \
+              -InputFile "${REPO_ROOT}/bin/aot-osx-${{ matrix.arch }}/paradox-clausewitz-sav" \
+              -OutputDir "${REPO_ROOT}/artifacts"
+          else
+            echo "Build failed with exit code $BUILD_EXIT_CODE"
+            exit $BUILD_EXIT_CODE
+          fi
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -214,4 +165,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           path: ./artifacts/paradox-clausewitz-sav_${{ needs.setup-gitversion.outputs.majorMinorPatch }}_macos_${{ matrix.arch }}.tar.gz
-          name: paradox-clausewitz-sav_${{ needs.setup-gitversion.outputs.majorMinorPatch }}_macos_${{ matrix.arch }}.tar.gz
+          name: paradox-clausewitz-sav_${{ needs.setup-gitversion.outputs.majorMinorPatch }}_macos_${{ matrix.arch }}
+          compression-level: 0
+
+      - name: Upload to Release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ./artifacts/paradox-clausewitz-sav_${{ needs.setup-gitversion.outputs.majorMinorPatch }}_macos_${{ matrix.arch }}.tar.gz
