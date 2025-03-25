@@ -4,7 +4,7 @@ namespace MageeSoft.Paradox.Clausewitz.Save.Parser;
 /// Represents a scalar value in a save file.
 /// </summary>
 /// <typeparam name="T">The type of the scalar value.</typeparam>
-public class Scalar<T> : SaveElement
+public class Scalar<T> : SaveElement, IEquatable<Scalar<T>>
 {
     /// <summary>
     /// Gets the raw text of the scalar value.
@@ -46,4 +46,21 @@ public class Scalar<T> : SaveElement
             _ => throw new ArgumentException($"Unsupported scalar type: {typeof(T).Name}")
         };
     }
+
+    public bool Equals(Scalar<T>? other)
+    {
+        if (other is null) return false;
+        if (ReferenceEquals(this, other)) return true;
+        return RawText == other.RawText && EqualityComparer<T>.Default.Equals(Value, other.Value);
+    }
+
+    public override bool Equals(object? obj)
+    {
+        if (obj is null) return false;
+        if (ReferenceEquals(this, obj)) return true;
+        if (obj.GetType() != GetType()) return false;
+        return Equals((Scalar<T>)obj);
+    }
+
+    public override int GetHashCode() => HashCode.Combine(RawText, Value);
 }

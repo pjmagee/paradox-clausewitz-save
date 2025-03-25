@@ -7,6 +7,32 @@ public class ParserTests
 {
     public TestContext TestContext { get; set; } = null!;
 
+    public void Parse_ListOfStringKeyValues_ReturnsCorrectKeyValuePairs()
+    {
+        // Arrange
+        string input = """
+ship_names=
+{
+	"REP3_SHIP_Erid-Sur"=1
+	"%SEQ%"=14
+	"REP3_SHIP_Lorod-Gexad"=1
+	"REP3_SHIP_Lorod-Deklor"=1
+	"REP3_SHIP_Erid-Kar"=1
+	"REP3_SHIP_Erid-Buk"=1
+	"REP3_SHIP_Lorod-Defer"=1
+}
+""";
+        var parser = new Save.Parser.Parser(input);
+
+        // Act
+        var root = parser.Parse();
+
+        // Assert 
+        // TODO: this should be an Array of string keyValue pairs?
+        // something like List<KeyValue<Scalar<string>, Scalar<int>> ??
+        
+    }
+    
     [TestMethod]
     public void Parse_SimpleArray_ReturnsArrayValues()
     {

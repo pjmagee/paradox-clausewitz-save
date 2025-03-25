@@ -17,8 +17,8 @@ public partial class GameState
     [SaveIndexedDictionary("pop")]
     public Dictionary<int, Pop>? Pops { get;set; } = new();
 
-    [SaveIndexedDictionary("planets")]
-    public Dictionary<int, Planet>? Planets { get;set; } = new();
+    [SaveObject("planets")]
+    public Planets? Planets { get;set; }
 
     [SaveIndexedDictionary("ships")]
     public Dictionary<int, Ship>? Ships { get; set; }

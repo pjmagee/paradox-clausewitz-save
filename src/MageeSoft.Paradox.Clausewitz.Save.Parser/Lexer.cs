@@ -85,7 +85,7 @@ public class Lexer
             return new Token(TokenType.StringLiteral, sb.ToString());
         }
 
-        if (char.IsLetter(Current) || Current == '_' || (char.IsDigit(Current) && !IsNumeric()))
+        if (char.IsLetter(Current) || Current == '_' || Current == '%' || (char.IsDigit(Current) && !IsNumeric()))
         {
             // This is an identifier
             StringBuilder sb = new StringBuilder();

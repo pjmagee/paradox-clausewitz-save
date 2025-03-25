@@ -11,7 +11,7 @@ public abstract class SaveElement
     {
         var serializer = new Serializer();
         serializer.Serialize(this);
-        return serializer.ToString();
+        return serializer.ToString()!;
 
         if (this is SaveArray array)
         {

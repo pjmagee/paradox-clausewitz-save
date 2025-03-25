@@ -9,6 +9,67 @@ namespace MageeSoft.Paradox.Clausewitz.Save.Tests.Shared;
 public class SourceGeneratedBinderTests
 {
     [TestMethod]
+    public void BindIndexedDictionary_WithIntKeys_Works()
+    {
+        // Arrange - Create input with 0=, 1=, 2= format like in Stellaris saves
+        var input = """
+                    scores={
+                        0=42.5
+                        1=37.8
+                        2=99.1
+                    }
+                    """;
+            
+        var parser = new Parser.Parser(input);
+        var saveObject = parser.Parse();
+        
+        // Act
+        var model = DictionaryModel.Bind(saveObject);
+        
+        // Assert
+        Assert.IsNotNull(model);
+        Assert.IsNotNull(model.Scores);
+        Assert.AreEqual(3, model.Scores.Count);
+        Assert.AreEqual(42.5f, model.Scores[0]);
+        Assert.AreEqual(37.8f, model.Scores[1]);
+        Assert.AreEqual(99.1f, model.Scores[2]);
+    }
+
+    [TestMethod]
+    public void BindIndexedDictionary_WithComplexValues_Works()
+    {
+        // Arrange - Create input with complex object values
+        var input = """
+                    resources={
+                        0={
+                            value=10
+                            name="Test Resource"
+                        }
+                        1={
+                            value=20
+                            name="Another Resource"
+                        }
+                    }
+                    """;
+
+        var parser = new Parser.Parser(input);
+        
+        var saveObject = parser.Parse();
+        
+        // Act
+        var model = DictionaryModel.Bind(saveObject);
+        
+        // Assert
+        Assert.IsNotNull(model);
+        Assert.IsNotNull(model.Resources);
+        Assert.AreEqual(2, model.Resources.Count);
+        Assert.AreEqual(10, model.Resources[0]!.Value);
+        Assert.AreEqual("Test Resource", model.Resources[0]!.Name);
+        Assert.AreEqual(20, model.Resources[1]!.Value);
+        Assert.AreEqual("Another Resource", model.Resources[1]!.Name);
+    }
+    
+    [TestMethod]
     public void SimpleTestModel_Bind_ReturnsCorrectValues()
     {
         // Arrange
@@ -64,6 +125,47 @@ public class SourceGeneratedBinderTests
         Assert.AreEqual("two", result.DictValue[2]);
         Assert.AreEqual("three", result.DictValue[3]);
         
+    }
+    
+    [TestMethod]
+    public void Bind_ListOfKeyValuePairs_ReturnsCorrectValues()
+    {
+        /*
+         *  bind what appears to be a "array of strings" but is actually a dictionary of key-value pairs
+         *  In this example,
+         *  From a Parser perspective, this is an array of KeyValuePair<<Scalar<string>, Scalar<int>>
+         *  From a Model binding perspective, this is a Dictionary<string, int>
+         */
+        
+        string input = """
+                           items={
+                               "item1"=1
+                               "item2"=1
+                               "%SEQ%"=16
+                               "item3"=0
+                               "item4"=1
+                           }
+                       """;
+
+        var parser = new Parser.Parser(input);
+        var saveObject = parser.Parse();
+
+        var model = ModelWithDictionaryOfKeyValues.Bind(saveObject);
+
+        Assert.IsNotNull(model);
+        Assert.AreEqual(5, model.Items!.Count);
+        
+        Assert.IsTrue(model.Items.ContainsKey("item1"));
+        Assert.IsTrue(model.Items.ContainsKey("item2"));
+        Assert.IsTrue(model.Items.ContainsKey("%SEQ%"));
+        Assert.IsTrue(model.Items.ContainsKey("item3"));
+        Assert.IsTrue(model.Items.ContainsKey("item4"));
+        
+        Assert.AreEqual(1, model.Items["item1"]);
+        Assert.AreEqual(1, model.Items["item2"]);
+        Assert.AreEqual(16, model.Items["%SEQ%"]);
+        Assert.AreEqual(0, model.Items["item3"]);
+        Assert.AreEqual(1, model.Items["item4"]);
     }
     
     [TestMethod]

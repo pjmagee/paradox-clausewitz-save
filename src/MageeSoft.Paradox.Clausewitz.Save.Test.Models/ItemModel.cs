@@ -11,3 +11,10 @@ public partial class ItemModel
     [SaveScalar("description")]
     public string? Description { get; set; }
 }
+
+[SaveModel]
+public partial class ModelWithDictionaryOfKeyValues
+{
+    [SaveIndexedDictionary("items")]
+    public Dictionary<string, int>? Items { get; set; }
+}

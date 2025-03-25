@@ -8,6 +8,47 @@ namespace MageeSoft.Paradox.Clausewitz.Save.Tests.Shared;
 public class ReflectionBinderTests
 {
     [TestMethod]
+    public void Bind_ListOfKeyValuePairs_ReturnsCorrectValues()
+    {
+        /*
+         *  bind what appears to be a "array of strings" but is actually a dictionary of key-value pairs
+         *  In this example,
+         *  From a Parser perspective, this is an array of KeyValuePair<<Scalar<string>, Scalar<int>>
+         *  From a Model binding perspective, this is a Dictionary<string, int>
+         */
+        
+        string input = """
+            items={
+                "item1"=1
+                "item2"=1
+                "%SEQ%"=16
+                "item3"=0
+                "item4"=1
+            }
+        """;
+
+        var parser = new Parser.Parser(input);
+        var saveObject = parser.Parse();
+
+        var model = ReflectionBinder.Bind<ModelWithDictionaryOfKeyValues>(saveObject);
+
+        Assert.IsNotNull(model);
+        Assert.AreEqual(5, model.Items!.Count);
+        
+        Assert.IsTrue(model.Items.ContainsKey("item1"));
+        Assert.IsTrue(model.Items.ContainsKey("item2"));
+        Assert.IsTrue(model.Items.ContainsKey("%SEQ%"));
+        Assert.IsTrue(model.Items.ContainsKey("item3"));
+        Assert.IsTrue(model.Items.ContainsKey("item4"));
+        
+        Assert.AreEqual(1, model.Items["item1"]);
+        Assert.AreEqual(1, model.Items["item2"]);
+        Assert.AreEqual(16, model.Items["%SEQ%"]);
+        Assert.AreEqual(0, model.Items["item3"]);
+        Assert.AreEqual(1, model.Items["item4"]);
+    }
+    
+    [TestMethod]
     public void Bind_SimpleProperties_ReturnsCorrectValues()
     {
         string input = """

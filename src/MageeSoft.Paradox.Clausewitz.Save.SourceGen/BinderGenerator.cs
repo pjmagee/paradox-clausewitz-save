@@ -637,66 +637,54 @@ namespace {{namespaceName}}
         string valueTypeName = valueType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
         bool isValueComplexType = !IsSimpleType(valueTypeName);
         bool hasValueSaveModelAttribute = HasBindMethod(valueType);
-        
-        // IMPORTANT: Only numeric keys (int/long) are supported for Stellaris save files
-        // This matches the indexed dictionary pattern in Stellaris (0=, 1=, 2=, etc.) as seen in archaeological_sites.so
-        string whereClause = "";
-        string keyConverter = "";
-        
-        if (keyTypeName == "System.Int32" || keyTypeName == "int")
+        bool isValueNullable = valueType.NullableAnnotation == NullableAnnotation.Annotated || !valueType.IsValueType;
+
+        // Generate key conversion logic
+        string keyConverter;
+        if (keyTypeName == "System.String" || keyTypeName == "string")
         {
-            whereClause = "int.TryParse(kvp.Key, out _)";
-            keyConverter = "int.Parse(kvp.Key)";
+            keyConverter = "kvp.Key";
         }
-        else if (keyTypeName == "System.Int64" || keyTypeName == "long")
+        else if (keyType.TypeKind == TypeKind.Enum)
         {
-            whereClause = "long.TryParse(kvp.Key, out _)";
-            keyConverter = "long.Parse(kvp.Key)";
+            keyConverter = $"({keyTypeName})System.Enum.Parse(typeof({keyTypeName}), kvp.Key)";
         }
-        else
+        else 
         {
-            // Reject any non-numeric key type as not supported in Stellaris save format
-            sb.AppendLine($"                    {propertyName} = {GetDefaultValueForType(propertyType)}, // Only int/long keys are supported for indexed dictionaries in Stellaris save files (0=, 1=, 2=, etc.)");
-            return;
+            keyConverter = $"System.Convert.ChangeType(kvp.Key, typeof({keyTypeName}))";
         }
         
         // Generate value binding code based on type
         string valueConverter;
         if (isValueComplexType && hasValueSaveModelAttribute)
         {
-            valueConverter = $"kvp.Value is SaveObject valueObj ? {valueTypeName}.Bind(valueObj) : null";
+            valueConverter = $"kvp.Value is SaveObject valueObj ? {valueTypeName}.Bind(valueObj) : {GetDefaultValueForType(valueType)}";
         }
-        else if (valueTypeName == "System.String" || valueTypeName == "string")
+        else if (valueType.TypeKind == TypeKind.Enum)
         {
-            valueConverter = "kvp.Value is Scalar<string> s ? s.Value : null";
-        }
-        else if (valueTypeName == "System.Int32" || valueTypeName == "int")
-        {
-            valueConverter = "kvp.Value is Scalar<int> i ? i.Value : 0";
-        }
-        else if (valueTypeName == "System.Int64" || valueTypeName == "long")
-        {
-            valueConverter = "kvp.Value is Scalar<long> l ? l.Value : 0L";
-        }
-        else if (valueTypeName == "System.Single" || valueTypeName == "float")
-        {
-            valueConverter = "kvp.Value is Scalar<float> f ? f.Value : 0f";
-        }
-        else if (valueTypeName == "System.Boolean" || valueTypeName == "bool")
-        {
-            valueConverter = "kvp.Value is Scalar<bool> b ? b.Value : false";
+            valueConverter = $"kvp.Value is Scalar<int> i ? ({valueTypeName})i.Value : {GetDefaultValueForType(valueType)}";
         }
         else
         {
-            valueConverter = $"default({valueTypeName})";
+            // Handle primitive and simple types dynamically
+            string scalarType = GetScalarTypeForElementType(valueTypeName);
+            string defaultValue = GetDefaultValueForType(valueType);
+            
+            if (valueType.IsValueType && !isValueNullable)
+            {
+                valueConverter = $"kvp.Value is Scalar<{scalarType}> s ? s.Value : {defaultValue}";
+            }
+            else
+            {
+                valueConverter = $"kvp.Value switch {{ Scalar<{scalarType}> s => s.Value, SaveElement e when e.ToString() == \"none\" => {defaultValue}, _ => {defaultValue} }}";
+            }
         }
         
         // Start the dictionary creation code
         sb.AppendLine($"                    {propertyName} = obj.TryGetSaveObject(\"{propertyKey}\", out var {varName}Dict) && {varName}Dict != null ?");
         sb.AppendLine($"                        {varName}Dict.Properties");
-        sb.AppendLine($"                            .Where(kvp => {whereClause})");
         sb.AppendLine($"                            .ToDictionary(");
-        sb.AppendLine($"                                kvp => {keyConverter},");
+        sb.AppendLine($"                                kvp => ({keyTypeName}){keyConverter},");
         sb.AppendLine($"                                kvp => {valueConverter}) :");
         sb.AppendLine($"                        new Dictionary<{keyTypeName}, {valueTypeName}>(),");
     }
