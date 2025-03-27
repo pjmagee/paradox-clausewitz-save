@@ -1,16 +1,14 @@
 using MageeSoft.Paradox.Clausewitz.Save.Parser;
 
-namespace MageeSoft.Paradox.Clausewitz.Save.Tests.Stellaris;
+namespace MageeSoft.Paradox.Clausewitz.Save.Tests.Shared;
 
 [TestClass]
 public class SerializerTests
 {
-    private static string NormalizeLineEndings(string text) => 
-        text.Replace("\r\n", "\n").Replace("\r", "\n");
+    private static string NormalizeLineEndings(string text) => text.Replace("\r\n", "\n").Replace("\r", "\n");
 
-    private static string ReadTestFile(string filename) =>
-        File.ReadAllText(Path.Combine("Stellaris", "TestData", filename));
-
+    private static string ReadTestFile(string filename) => File.ReadAllText(Path.Combine("Stellaris", "TestData", filename));
+       
     private void AssertSerializationRoundTrip(string filename)
     {
         try
@@ -52,7 +50,46 @@ public class SerializerTests
             Assert.Fail($"Failed to process {filename}: {ex.Message}\nStack trace: {ex.StackTrace}");
         }
     }
+    
+    [TestMethod]
+    public void Serialise_SimpleObject_ReturnsCorrectString()
+    {
+        // Arrange
+        var saveObject = new SaveObject([
+                new("key", new Scalar<int>("42", 42)),
+            ]
+        );
 
+        // Act
+        string result = saveObject.ToSaveString();
+
+        // Assert
+        Assert.AreEqual(expected: "{ key=42 }", actual: result.RemoveFormatting());
+    }
+
+    [TestMethod]
+    public void Serialise_ComplexObject_ReturnsCorrectString()
+    {
+        // Arrange
+        var saveObject = new SaveObject([
+                new("key1", new Scalar<int>("42", 42)),
+                new("key2", new Scalar<string>("value", "value")),
+                new("key3", new SaveObject([
+                            new("nestedKey1", new Scalar<int>("100", 100)),
+                            new("nestedKey2", new Scalar<string>("nested", "nested"))
+                        ]
+                    )
+                )
+            ]
+        );
+
+        // Act
+        string result = saveObject.ToSaveString();
+
+        // Assert
+        Assert.AreEqual(expected: """{ key1=42 key2="value" key3={ nestedKey1=100 nestedKey2="nested" } }""", actual: result.RemoveFormatting());
+    }
+ 
     [TestMethod]
     public void Serialize_Achievement_RoundTrip()
     {
@@ -181,5 +218,37 @@ special={
         // Act & Assert
         Assert.ThrowsException<ArgumentException>(() => new Parser.Parser(input),
             "Whitespace-only input should throw an ArgumentException");
+    }
+
+    [TestMethod]
+    public void Serialise_CanUpdateResource_ReturnsCorrectString()
+    {
+        var root = Parser.Parser.Parse(File.ReadAllText("Stellaris/TestData/gamestate"));
+
+        if (!root.TryGetSaveObject("country", out var countries)) Assert.Fail();
+
+        if (!countries.TryGetSaveObject("0", out var country)) Assert.Fail();
+
+        country.TryGetSaveObject("modules", out var modules);
+
+        if (!modules.TryGetSaveObject("standard_economy_module", out var economyModule)) Assert.Fail();
+
+        if (!economyModule.TryGetSaveObject("resources", out var resources)) Assert.Fail();
+
+        foreach (var property in resources.Properties)
+        {
+            if (property.Key == "energy")
+            {
+                if (property.Value is Scalar<int> energy)
+                {
+                    energy.Value = 10000000;
+                    energy.RawText = "10000000";
+
+                    break;
+                }
+            }
+        }
+
+        var output = root.ToSaveString();
     }
 } 

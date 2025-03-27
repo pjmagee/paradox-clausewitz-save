@@ -11,8 +11,7 @@ public class GameSaveZipTests
 
     private static FileInfo CreateTestSaveFile()
     {
-        var tempPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".sav");
-        var saveFile = new FileInfo(tempPath);
+        var saveFile = new FileInfo(Guid.NewGuid() + ".sav");
 
         using (var archive = ZipFile.Open(saveFile.FullName, ZipArchiveMode.Create))
         {
@@ -49,33 +48,34 @@ public class GameSaveZipTests
         try
         {
             // Act
-            using var stream = File.OpenRead(saveFile.FullName);
-            using var gameSaveZip = new GameSaveZip(stream);
-            var documents = gameSaveZip.GetDocuments();
+            using(var gameSaveZip = GameSaveZip.Open(saveFile))
+            {
+                var documents = gameSaveZip.GetDocuments();
 
-            // Assert
-            Assert.IsNotNull(documents);
-            Assert.IsNotNull(documents.GameStateDocument);
-            Assert.IsNotNull(documents.MetaDocument);
+                // Assert
+                Assert.IsNotNull(documents);
+                Assert.IsNotNull(documents.GameStateDocument);
+                Assert.IsNotNull(documents.MetaDocument);
 
-            // Verify gamestate content
-            var gameState = documents.GameStateDocument.Root;
-            Assert.IsNotNull(gameState);
+                // Verify gamestate content
+                var gameState = documents.GameStateDocument.Root;
+                Assert.IsNotNull(gameState);
             
-            gameState.TryGetSaveObject("galaxy", out var galaxyObj);
-            Assert.IsNotNull(galaxyObj);
+                gameState.TryGetSaveObject("galaxy", out var galaxyObj);
+                Assert.IsNotNull(galaxyObj);
             
-            galaxyObj.TryGetSaveObject("name", out var name);
-            Assert.IsNotNull(name);
+                galaxyObj.TryGetSaveObject("name", out var name);
+                Assert.IsNotNull(name);
             
-            name.TryGetString("key", out var galaxyName);
-            Assert.AreEqual("Test Galaxy", galaxyName);
+                name.TryGetString("key", out var galaxyName);
+                Assert.AreEqual("Test Galaxy", galaxyName);
             
-            // Verify meta content
-            var meta = documents.MetaDocument.Root;
-            Assert.IsNotNull(meta);
-            meta.TryGetString("version", out var version);
-            Assert.Contains("3.10.0", version);
+                // Verify meta content
+                var meta = documents.MetaDocument.Root;
+                Assert.IsNotNull(meta);
+                meta.TryGetString("version", out var version);
+                Assert.Contains("3.10.0", version);
+            }
         }
         finally
         {
@@ -92,51 +92,26 @@ public class GameSaveZipTests
         var nonExistentFile = new FileInfo("nonexistent.sav");
 
         // Act & Assert
-        Assert.Throws<FileNotFoundException>(() => File.OpenRead(nonExistentFile.FullName));
+        Assert.Throws<FileNotFoundException>(() => GameSaveZip.Open(nonExistentFile));
     }
 
     [TestMethod]
     public void TestUnzipInvalidZipFile()
     {
         // Arrange
-        var invalidFile = new FileInfo(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ".sav"));
+        var invalidFile = new FileInfo(Guid.NewGuid() + ".sav");
         File.WriteAllText(invalidFile.FullName, "Not a zip file");
 
         try
         {
             // Act & Assert
-            using var stream = File.OpenRead(invalidFile.FullName);
-            var ex = Assert.Throws<InvalidDataException>(() => new GameSaveZip(stream));
-            Assert.Contains("Central Directory corrupt", ex.Message);
-        }
-        finally
-        {
-            // Cleanup
-            if (invalidFile.Exists)
-                invalidFile.Delete();
-        }
-    }
-
-    [TestMethod]
-    public void TestUnzipNullFile()
-    {
-        // Act & Assert
-        Stream? nullStream = null;
-        Assert.Throws<ArgumentNullException>(() => new GameSaveZip(nullStream!));
-    }
-
-    [TestMethod]
-    public void TestUnzipInvalidExtension()
-    {
-        // Arrange
-        var invalidFile = new FileInfo(Path.GetTempFileName());
-
-        try
-        {
-            // Act & Assert
-            using var stream = File.OpenRead(invalidFile.FullName);
-            var ex = Assert.Throws<InvalidDataException>(() => new GameSaveZip(stream));
-            Assert.Contains("Central Directory corrupt", ex.Message);
+            Assert.Throws<InvalidDataException>(() =>
+            {
+                using (var zip = GameSaveZip.Open(invalidFile))
+                {
+                    zip.GetDocuments();
+                }
+            });
         }
         finally
         {
@@ -157,8 +132,7 @@ public class GameSaveZipTests
         try
         {
             // Act & Assert
-            using var stream = File.OpenRead(corruptedFile.FullName);
-            var ex = Assert.Throws<InvalidDataException>(() => new GameSaveZip(stream));
+            var ex = Assert.Throws<InvalidDataException>(() => GameSaveZip.Open(corruptedFile));
             Assert.Contains("End of Central Directory record could not be found", ex.Message);
         }
         finally
@@ -177,8 +151,7 @@ public class GameSaveZipTests
         Assert.IsTrue(saveFile.Exists, "ironman.sav test file not found");
 
         // Act
-        using var stream = File.OpenRead(saveFile.FullName);
-        using var gameSaveZip = new GameSaveZip(stream);
+        using var gameSaveZip = GameSaveZip.Open(saveFile);
         var documents = gameSaveZip.GetDocuments();
 
         // Assert

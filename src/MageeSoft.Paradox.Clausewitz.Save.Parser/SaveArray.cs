@@ -4,11 +4,11 @@ namespace MageeSoft.Paradox.Clausewitz.Save.Parser;
 
 public class SaveArray : SaveElement
 {
-    public ImmutableArray<SaveElement> Items { get; }
+    public List<SaveElement> Items { get; }
     
     public override SaveType Type => SaveType.Array;
     
-    public SaveArray(ImmutableArray<SaveElement> items)
+    public SaveArray(List<SaveElement> items)
     {
         Items = items;
     }

@@ -1,3 +1,4 @@
+using System.Text.Json;
 using MageeSoft.Paradox.Clausewitz.Save.Binder.Reflection;
 using MageeSoft.Paradox.Clausewitz.Save.Parser;
 using MageeSoft.Paradox.Clausewitz.Save.Test.Models;
@@ -5,10 +6,146 @@ using MageeSoft.Paradox.Clausewitz.Save.Test.Models;
 namespace MageeSoft.Paradox.Clausewitz.Save.Tests.Shared;
 
 [TestClass]
-public class ReflectionBinderTests
+public class ReflectionBinderTests : BindingTests
 {
     [TestMethod]
-    public void Bind_ListOfKeyValuePairs_ReturnsCorrectValues()
+    public void Dictionary_ReflectionBinding_BindsCorrectly()
+    {
+        // Arrange
+        var saveObject = CreateDictionaryTestObject();
+        
+        // Act
+        var result = ReflectionBinder.Bind<DictionaryModel>(saveObject);
+        
+        // Assert
+        Assert.IsNotNull(result);
+        Assert.IsNotNull(result.Resources);
+        Assert.AreEqual(2, result.Resources.Count);
+        
+        Assert.IsNotNull(result.Resources[1]);
+        Assert.AreEqual("First Item", result.Resources[1]!.Name);
+        Assert.AreEqual(100, result.Resources[1]!.Value);
+        
+        Assert.IsNotNull(result.Resources[2]);
+        Assert.AreEqual("Second Item", result.Resources[2]!.Name);
+        Assert.AreEqual(200, result.Resources[2]!.Value);
+        
+        // Check scores
+        Assert.IsNotNull(result.Scores);
+        Assert.AreEqual(2, result.Scores.Count);
+        Assert.AreEqual(42.5f, result.Scores[1]);
+        Assert.AreEqual(99.9f, result.Scores[2]);
+    }
+    
+    [TestMethod]
+    public void Array_Binding()
+    {
+        // Arrange
+        var saveObject = CreateArrayTestObject();
+        
+        // Act
+        var result = ReflectionBinder.Bind<SimpleTestModel>(saveObject);
+        
+        // Assert
+        Assert.IsNotNull(result);
+        Assert.IsNotNull(result.ArrayValue);
+        Assert.AreEqual(3, result.ArrayValue.Length);
+        CollectionAssert.AreEqual(new[] { 1, 2, 3 }, result.ArrayValue);
+    }
+    
+    [TestMethod]
+    public void RepeatedProperties_ReflectionBinding_CollectsIntoArray()
+    {
+        // Arrange
+        var saveObject = CreateRepeatedPropertiesTestObject();
+        
+        // Act
+        var result = ReflectionBinder.Bind<RepeatedPropertyModel>(saveObject);
+        
+        // Assert
+        Assert.IsNotNull(result);
+        Assert.IsNotNull(result.Sections);
+        Assert.AreEqual(4, result.Sections.Count);
+        
+        Assert.AreEqual("SECTION_1", result.Sections[0]!.Design);
+        Assert.AreEqual("1", result.Sections[0]!.Slot);
+        
+        Assert.AreEqual("SECTION_2", result.Sections[1]!.Design);
+        Assert.AreEqual("2", result.Sections[1]!.Slot);
+        
+        // The 3rd section is 'none', which is included by the ReflectionBinder
+        
+        Assert.AreEqual("SECTION_3", result.Sections[3]!.Design);
+        Assert.AreEqual("3", result.Sections[3]!.Slot);
+    }
+    
+    [TestMethod]
+    public void List_ReflectionBinding_BindsCorrectly()
+    {
+        // Arrange
+        var saveObject = CreateListTestObject();
+        
+        // Act
+        var result = ReflectionBinder.Bind<ListModel>(saveObject);
+        
+        // Assert
+        Assert.IsNotNull(result);
+        Assert.IsNotNull(result.Values);
+        Assert.AreEqual(3, result.Values.Count);
+        CollectionAssert.AreEqual(new[] { 1, 2, 3 }, result.Values.ToArray());
+    }
+    
+    [TestMethod]
+    public void Bind_NestedObject()
+    {
+        // Arrange
+        var saveObject = CreateNestedObjectTestData();
+        
+        // Act
+        var result = ReflectionBinder.Bind<ParentModel>(saveObject);
+        
+        // Assert
+        AssertNestedObjectBoundCorrectly(result!);
+    }
+    
+    [TestMethod]
+    public void Bind_Dictionary()
+    {
+        // Arrange
+        var saveObject = CreateDictionaryTestObject();
+        
+        // Act
+        var result = ReflectionBinder.Bind<TestSaveModel>(saveObject);
+        
+        // Assert
+        Assert.IsNotNull(result);
+        Assert.AreEqual(3, result.DictValue!.Count);
+        Assert.AreEqual("one", result.DictValue[1]);
+        Assert.AreEqual("two", result.DictValue[2]);
+        Assert.AreEqual("three", result.DictValue[3]);
+    }
+     
+    [TestMethod]
+    public void Bind_SimpleValues()
+    {
+        // Arrange
+        var saveObject = CreateSimpleTestObject();
+        
+        // Act
+        var result = ReflectionBinder.Bind<TestModel>(saveObject);
+        
+        // Assert
+        Assert.IsNotNull(result);
+        Assert.AreEqual("Test Empire", result.Name);
+        Assert.AreEqual(5, result.Capital);
+        Assert.AreEqual(new DateOnly(2200, 1, 1), result.StartDate);
+        Assert.IsTrue(result.Ironman);
+        CollectionAssert.AreEqual(new[] { 1, 2, 3 }, result.Achievements);
+        Assert.AreEqual(new Guid("12345678-1234-5678-1234-567812345678"), result.Id);
+    }
+    
+    [TestMethod]
+    public void Bind_ListOfKeyValuePairs()
     {
         /*
          *  bind what appears to be a "array of strings" but is actually a dictionary of key-value pairs
@@ -49,7 +186,7 @@ public class ReflectionBinderTests
     }
     
     [TestMethod]
-    public void Bind_SimpleProperties_ReturnsCorrectValues()
+    public void Bind_SimpleProperties()
     {
         string input = """
             name="Test Empire"
@@ -74,7 +211,7 @@ public class ReflectionBinderTests
     }
 
     [TestMethod]
-    public void Bind_ComplexStructure_ReturnsCorrectValues()
+    public void Bind_ComplexStructure()
     {
         string input = """
             name="Galactic Empire"
@@ -158,7 +295,7 @@ public class ReflectionBinderTests
     }
 
     [TestMethod]
-    public void Bind_IndexedCollection_ReturnsCorrectValues()
+    public void Bind_IndexedCollection()
     {
         var input = """
             exhibits={
@@ -209,7 +346,7 @@ public class ReflectionBinderTests
     }
 
     [TestMethod]
-    public void Bind_DuplicateProperties_ReturnsCorrectStructure()
+    public void Bind_DuplicateProperties()
     {
         var input = """
             section={
@@ -273,7 +410,7 @@ public class ReflectionBinderTests
     }
 
     [TestMethod]
-    public void Bind_RepeatedProperties_ReturnsCorrectCollection()
+    public void Bind_RepeatedProperties()
     {
         var input = """
             section={
@@ -334,7 +471,7 @@ public class ReflectionBinderTests
     }
 
     [TestMethod]
-    public void Bind_List_ReturnsCorrectValues()
+    public void Bind_List()
     {
         var input = """
             values={ 1 2 3 4 5 }
@@ -382,61 +519,5 @@ public class ReflectionBinderTests
         Assert.AreEqual(400, resource2.Minerals);
         Assert.AreEqual("Resource 2", resource2.Name);
         Assert.AreEqual(0.85f, resource2.Efficiency);
-    }
-
-    [TestMethod]
-    public void Bind_Dictionary_ReturnsCorrectValues()
-    {
-        // Arrange
-        var input = """
-            resources={
-                1={
-                    energy=100
-                    minerals=200
-                    name="Resource Alpha"
-                    efficiency=0.75
-                }
-                2={
-                    energy=300
-                    minerals=400
-                    name="Resource Beta"
-                    efficiency=0.85
-                }
-            }
-            scores={
-                1=3.14
-                2=6.28
-                3=9.42
-            }
-            """;
-
-        var parser = new Parser.Parser(input);
-        var saveObject = parser.Parse();
-        var result = ReflectionBinder.Bind<DictionaryModel>(saveObject)!;
-
-        // Check that we got ImmutableDictionary instances
-        Assert.IsInstanceOfType(result.Resources, typeof(Dictionary<int, NestedModel>));
-        Assert.IsInstanceOfType(result.Scores, typeof(Dictionary<int, float>));
-
-        // Check resources
-        Assert.AreEqual(2, result.Resources.Count);
-        
-        var resourceAlpha = result.Resources[1]!;
-        Assert.AreEqual(100, resourceAlpha.Energy);
-        Assert.AreEqual(200, resourceAlpha.Minerals);
-        Assert.AreEqual("Resource Alpha", resourceAlpha.Name);
-        Assert.AreEqual(0.75f, resourceAlpha.Efficiency);
-
-        var resourceBeta = result.Resources[2]!;
-        Assert.AreEqual(300, resourceBeta.Energy);
-        Assert.AreEqual(400, resourceBeta.Minerals);
-        Assert.AreEqual("Resource Beta", resourceBeta.Name);
-        Assert.AreEqual(0.85f, resourceBeta.Efficiency);
-
-        // Check scores
-        Assert.AreEqual(3, result.Scores.Count);
-        Assert.AreEqual(3.14f, result.Scores[1]);
-        Assert.AreEqual(6.28f, result.Scores[2]);
-        Assert.AreEqual(9.42f, result.Scores[3]);
     }
 }

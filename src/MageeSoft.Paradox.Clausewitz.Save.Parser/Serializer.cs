@@ -42,10 +42,10 @@ public class Serializer
 
     private void SerializeElement(SaveElement element, string? key = null)
     {
-        if (!_isFirstElement && key != null)
-        {
-            _builder.AppendLine();
-        }
+        // if (!_isFirstElement && key != null)
+        // {
+        //     _builder.Append('\n');
+        // }
         
         if (key != null)
         {
@@ -101,7 +101,7 @@ public class Serializer
     {
         if (!obj.Properties.Any())
         {
-            _builder.Append("{}");
+            _builder.Append("{ }");
             return;
         }
 
@@ -109,12 +109,14 @@ public class Serializer
         _indentLevel++;
         
         bool isFirst = true;
+        
         foreach (var property in obj.Properties)
         {
             if (!isFirst)
             {
-                _builder.AppendLine();
+                _builder.Append('\n');
             }
+            
             SerializeElement(property.Value, property.Key);
             isFirst = false;
         }

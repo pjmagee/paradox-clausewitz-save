@@ -1,197 +1,12 @@
 using System.Text.Json;
-using MageeSoft.Paradox.Clausewitz.Save.Binder.Reflection;
 using MageeSoft.Paradox.Clausewitz.Save.Parser;
 using MageeSoft.Paradox.Clausewitz.Save.Test.Models;
 
 namespace MageeSoft.Paradox.Clausewitz.Save.Tests.Shared;
 
-public static class Category
-{
-    public const string ReflectionBinding = "ReflectionBinding";
-    public const string SourceGeneratedBinding = "SourceGeneratedBinding";
-}
-
-/// <summary>
-/// Unified tests for binding functionality (both reflection-based and source-generated).
-/// </summary>
-[TestClass]
 public class BindingTests
 {
-    #region Simple Value Tests
-    
-    [TestMethod]
-    [TestCategory(Category.ReflectionBinding)]
-    public void SimpleValues_ReflectionBinding_ReturnsCorrectValues()
-    {
-        // Arrange
-        var saveObject = CreateSimpleTestObject();
-        
-        // Act
-        var result = ReflectionBinder.Bind<TestModel>(saveObject);
-        
-        // Assert
-        Assert.IsNotNull(result);
-        Assert.AreEqual("Test Empire", result.Name);
-        Assert.AreEqual(5, result.Capital);
-        Assert.AreEqual(new DateOnly(2200, 1, 1), result.StartDate);
-        Assert.IsTrue(result.Ironman);
-        CollectionAssert.AreEqual(new[] { 1, 2, 3 }, result.Achievements);
-        Assert.AreEqual(new Guid("12345678-1234-5678-1234-567812345678"), result.Id);
-    }
-
-    [TestMethod]
-    [TestCategory(Category.SourceGeneratedBinding)]
-    public void SimpleValues_SourceGenBinding_ReturnsCorrectValues()
-    {
-        // Arrange
-        var saveObject = CreateSimpleTestObject();
-        
-        // Act
-        var result = TestModelForSourceGen.Bind(saveObject);
-        
-        // Assert
-        Assert.IsNotNull(result);
-        Assert.AreEqual(42, result.IntValue);
-        Assert.AreEqual("hello", result.StringValue);
-        Assert.AreEqual(new DateOnly(2020, 01, 01), result.DateValue);
-        CollectionAssert.AreEqual(new[] { 1, 2, 3 }, result.ArrayValue);
-    }
-    
-    #endregion
-    
-    #region Dictionary Tests
-    
-    [TestMethod]
-    [TestCategory(Category.ReflectionBinding)]
-    public void Dictionary_ReflectionBinding_BindsCorrectly()
-    {
-        // Arrange
-        var saveObject = CreateDictionaryTestObject();
-        
-        // Act
-        var result = ReflectionBinder.Bind<TestSaveModel>(saveObject);
-        
-        // Assert
-        Assert.IsNotNull(result);
-        Assert.AreEqual(3, result.DictValue!.Count);
-        Assert.AreEqual("one", result.DictValue[1]);
-        Assert.AreEqual("two", result.DictValue[2]);
-        Assert.AreEqual("three", result.DictValue[3]);
-    }
-    
-    [TestMethod]
-    [TestCategory(Category.SourceGeneratedBinding)]
-    public void Dictionary_SourceGenBinding_BindsCorrectly()
-    {
-        // Arrange
-        var saveObject = CreateDictionaryTestObject();
-        
-        // Act
-        var result = TestSaveModel.Bind(saveObject);
-        
-        // Assert
-        Assert.IsNotNull(result);
-        Assert.AreEqual(3, result.DictValue!.Count);
-        Assert.AreEqual("one", result.DictValue[1]);
-        Assert.AreEqual("two", result.DictValue[2]);
-        Assert.AreEqual("three", result.DictValue[3]);
-    }
-    
-    [TestMethod]
-    [TestCategory(Category.SourceGeneratedBinding)]
-    [TestCategory(Category.ReflectionBinding)]
-    public void Dictionary_BothBindingApproaches_ProduceIdenticalResults()
-    {
-        // Arrange
-        var saveObject = CreateDictionaryTestObject();
-        
-        // Act
-        var reflectionResult = ReflectionBinder.Bind<TestSaveModel>(saveObject);
-        var sourceGenResult = TestSaveModel.Bind(saveObject);
-        
-        // Assert
-        Assert.IsNotNull(reflectionResult);
-        Assert.IsNotNull(sourceGenResult);
-        Assert.AreEqual(reflectionResult.DictValue!.Count, sourceGenResult.DictValue!.Count);
-        
-        foreach (var key in reflectionResult.DictValue.Keys)
-        {
-            Assert.IsTrue(sourceGenResult.DictValue.ContainsKey(key));
-            Assert.AreEqual(reflectionResult.DictValue[key], sourceGenResult.DictValue[key]);
-        }
-    }
-    
-    #endregion
-    
-    #region Nested Object Tests
-    
-    [TestMethod]
-    [TestCategory(Category.ReflectionBinding)]
-    public void NestedObject_ReflectionBinding_CascadesCorrectly()
-    {
-        // Arrange
-        var saveObject = CreateNestedObjectTestData();
-        
-        // Act
-        var result = ReflectionBinder.Bind<ParentModel>(saveObject);
-        
-        // Assert
-        AssertNestedObjectBoundCorrectly(result!);
-    }
-    
-    [TestMethod]
-    [TestCategory(Category.SourceGeneratedBinding)]
-    public void NestedObject_SourceGenBinding_CascadesCorrectly()
-    {
-        // Arrange
-        var saveObject = CreateNestedObjectTestData();
-        
-        // Act
-        var result = ParentModel.Bind(saveObject);
-        
-        // Assert
-        AssertNestedObjectBoundCorrectly(result);
-    }
-    
-    [TestMethod]
-    [TestCategory(Category.SourceGeneratedBinding)]
-    [TestCategory(Category.ReflectionBinding)]
-    public void NestedObject_BothBindingApproaches_ProduceIdenticalResults()
-    {
-        // Arrange
-        var saveObject = CreateNestedObjectTestData();
-        
-        // Act
-        var reflectionResult = ReflectionBinder.Bind<ParentModel>(saveObject);
-        var sourceGenResult = ParentModel.Bind(saveObject);
-        
-        // Assert
-        Assert.IsNotNull(reflectionResult);
-        Assert.IsNotNull(sourceGenResult);
-        
-        // Compare properties directly
-        Assert.AreEqual(reflectionResult.Name, sourceGenResult.Name);
-        Assert.AreEqual(reflectionResult.NestedObject!.Name, sourceGenResult.NestedObject!.Name);
-        Assert.AreEqual(reflectionResult.NestedObject.Value, sourceGenResult.NestedObject.Value);
-        Assert.AreEqual(reflectionResult.ItemArray!.Length, sourceGenResult.ItemArray!.Length);
-        
-        for (int i = 0; i < reflectionResult.ItemArray.Length; i++)
-        {
-            Assert.AreEqual(reflectionResult.ItemArray[i].Id, sourceGenResult.ItemArray[i].Id);
-            Assert.AreEqual(reflectionResult.ItemArray[i].Description, sourceGenResult.ItemArray[i].Description);
-        }
-        
-        // Serialize and compare JSON representations
-        string reflectionJson = JsonSerializer.Serialize(reflectionResult);
-        string sourceGenJson = JsonSerializer.Serialize(sourceGenResult);
-        Assert.AreEqual(reflectionJson, sourceGenJson, "JSON representation should be identical");
-    }
-    
-    #endregion
-    
-    #region Helper Methods
-    
-    private static SaveObject CreateSimpleTestObject()
+    protected static SaveObject CreateSimpleTestObject()
     {
         return new SaveObject(
             [
@@ -217,7 +32,7 @@ public class BindingTests
         );
     }
     
-    private static SaveObject CreateDictionaryTestObject()
+    protected static SaveObject CreateDictionaryTestObject()
     {
         return new SaveObject(
             [
@@ -232,7 +47,7 @@ public class BindingTests
         );
     }
     
-    private static SaveObject CreateNestedObjectTestData()
+    protected static SaveObject CreateNestedObjectTestData()
     {
         var nestedObj = new SaveObject(
             [
@@ -260,8 +75,61 @@ public class BindingTests
             ]
         );
     }
+   
+    protected static SaveObject CreateArrayTestObject()
+    {
+        return new SaveObject(
+            [
+                new("array_value", new SaveArray([
+                    new Scalar<int>("0", 1),
+                    new Scalar<int>("1", 2),
+                    new Scalar<int>("2", 3)
+                ]))
+            ]
+        );
+    }
     
-    private static void AssertNestedObjectBoundCorrectly(ParentModel result)
+    protected static SaveObject CreateListTestObject()
+    {
+        return new SaveObject(
+            [
+                new("values", new SaveArray([
+                    new Scalar<int>("0", 1),
+                    new Scalar<int>("1", 2),
+                    new Scalar<int>("2", 3)
+                ])),
+                new("strings", new SaveArray([
+                    new Scalar<string>("0", "one"),
+                    new Scalar<string>("1", "two"),
+                    new Scalar<string>("2", "three")
+                ]))
+            ]
+        );
+    }
+    
+    protected static SaveObject CreateRepeatedPropertiesTestObject()
+    {
+        return new SaveObject(
+            [
+                new("section", new SaveObject([
+                    new("design", new Scalar<string>("design", "SECTION_1")),
+                    new("slot", new Scalar<string>("slot", "1"))
+                ])),
+                new("section", new SaveObject([
+                    new("design", new Scalar<string>("design", "SECTION_2")),
+                    new("slot", new Scalar<string>("slot", "2"))
+                ])),
+                // Include a null section that should be skipped
+                new("section", new Scalar<string>("section", "none")),
+                new("section", new SaveObject([
+                    new("design", new Scalar<string>("design", "SECTION_3")),
+                    new("slot", new Scalar<string>("slot", "3"))
+                ]))
+            ]
+        );
+    }
+    
+    protected static void AssertNestedObjectBoundCorrectly(ParentModel result)
     {
         Assert.IsNotNull(result);
         Assert.AreEqual("parent", result.Name);
@@ -279,6 +147,4 @@ public class BindingTests
         Assert.AreEqual(2, result.ItemArray[1].Id);
         Assert.AreEqual("second", result.ItemArray[1].Description);
     }
-    
-    #endregion
-} 
+}

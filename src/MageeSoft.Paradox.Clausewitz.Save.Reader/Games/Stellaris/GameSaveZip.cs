@@ -12,10 +12,24 @@ public class GameSaveZip : IDisposable
 
     readonly ZipArchive _archive;
 
-    public GameSaveZip(Stream stream)
+    private GameSaveZip(Stream stream)
     {
         ArgumentNullException.ThrowIfNull(stream, nameof(stream));
-        _archive = new ZipArchive(stream, ZipArchiveMode.Read);
+        _archive = new ZipArchive(stream, ZipArchiveMode.Read, leaveOpen: false);
+    }
+    
+    public static GameSaveZip Open(string filePath)
+    {
+        ArgumentNullException.ThrowIfNull(filePath, nameof(filePath));
+        var stream = File.OpenRead(filePath);
+        return new GameSaveZip(stream);
+    }
+    
+    public static GameSaveZip Open(FileInfo fileInfo)
+    {
+        ArgumentNullException.ThrowIfNull(fileInfo, nameof(fileInfo));
+        var stream = fileInfo.Open(FileMode.Open, FileAccess.Read, FileShare.Delete);
+        return new GameSaveZip(stream);
     }
 
     public GameSaveDocuments GetDocuments()
@@ -39,9 +53,16 @@ public class GameSaveZip : IDisposable
             }
         }
     }
-
+    
     public void Dispose()
     {
-        _archive.Dispose();
+        try
+        {
+            _archive.Dispose();    
+        }
+        catch (ObjectDisposedException)
+        {
+            // Ignore if already disposed
+        }
     }
 } 

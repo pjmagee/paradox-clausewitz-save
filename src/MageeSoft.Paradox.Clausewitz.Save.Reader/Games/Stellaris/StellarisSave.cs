@@ -10,6 +10,11 @@ public class StellarisSave
     public Meta Meta { get; private set; } = null!;
     public GameState GameState { get; private set; } = null!;
 
+    private StellarisSave()
+    {
+        
+    }
+
     public static StellarisSave FromSave(FileInfo fileInfo)
     {
         ArgumentNullException.ThrowIfNull(fileInfo, nameof(fileInfo));
@@ -38,36 +43,33 @@ public class StellarisSave
         
         try 
         {
-            using( var stream = File.OpenRead(saveFile))
+            using( var zip = GameSaveZip.Open(saveFile))
             {
-                using( var zip = new GameSaveZip(stream))
+                var documents = zip.GetDocuments();
+
+                Meta? meta = null;
+                GameState? gameState = null;
+                    
+                try
                 {
-                    var documents = zip.GetDocuments();
-
-                    Meta? meta = null;
-                    GameState? gameState = null;
-                    
-                    try
-                    {
-                        meta = Meta.Bind(documents.MetaDocument.Root);
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new InvalidDataException("Invalid meta file format", ex);
-                    }
-                    
-                    try
-                    {
-                        gameState = GameState.Bind(documents.GameStateDocument.Root);
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new InvalidDataException("Invalid game state file format", ex);
-                    }
-
-                    return new StellarisSave { Meta = meta, GameState = gameState };
+                    meta = Meta.Bind(documents.MetaDocument.Root);
                 }
-            }            
+                catch (Exception ex)
+                {
+                    throw new InvalidDataException("Invalid meta file format", ex);
+                }
+                    
+                try
+                {
+                    gameState = GameState.Bind(documents.GameStateDocument.Root);
+                }
+                catch (Exception ex)
+                {
+                    throw new InvalidDataException("Invalid game state file format", ex);
+                }
+
+                return new StellarisSave { Meta = meta, GameState = gameState };
+            }        
         }
         catch (Exception ex)
         {

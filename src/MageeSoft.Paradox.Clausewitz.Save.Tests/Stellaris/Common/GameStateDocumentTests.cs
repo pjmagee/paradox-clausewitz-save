@@ -9,14 +9,14 @@ public class GameStateDocumentTests
     public TestContext TestContext { get; set; } = null!;
 
     [TestMethod]
-    public void TestGameStateParse()
+    public void Parse_Loads_GameState()
     {
         var document = GameStateDocument.Parse(new FileInfo(Path.Combine("Stellaris", "TestData", "gamestate")));
         Assert.IsNotNull(document);
         Assert.IsNotNull(document.Root);
 
         // Verify root structure
-        var root = document.Root as SaveObject;
+        var root = document.Root;
         Assert.IsNotNull(root);
         Assert.IsTrue(root.Properties.Any(), "Root should have properties");
 
@@ -28,7 +28,7 @@ public class GameStateDocumentTests
     }
     
     [TestMethod]
-    public void TestMetaParse()
+    public void Parse_Loads_Meta()
     {
         var document = GameStateDocument.Parse(new FileInfo(Path.Combine("Stellaris", "TestData", "meta")));
         Assert.IsNotNull(document);

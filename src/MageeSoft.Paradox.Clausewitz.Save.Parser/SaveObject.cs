@@ -7,10 +7,10 @@ namespace MageeSoft.Paradox.Clausewitz.Save.Parser;
 /// </summary>
 public class SaveObject : SaveElement, IEquatable<SaveObject>
 {
-    public ImmutableArray<KeyValuePair<string, SaveElement>> Properties { get; }
+    public List<KeyValuePair<string, SaveElement>> Properties { get; }
     public override SaveType Type => SaveType.Object;
 
-    public SaveObject(ImmutableArray<KeyValuePair<string, SaveElement>> properties)
+    public SaveObject(List<KeyValuePair<string, SaveElement>> properties)
     {
         Properties = properties;
     }
@@ -20,11 +20,11 @@ public class SaveObject : SaveElement, IEquatable<SaveObject>
         if (other is null) return false;
         if (ReferenceEquals(this, other)) return true;
 
-        if (Properties.Length != other.Properties.Length)
+        if (Properties.Count != other.Properties.Count)
             return false;
 
         // Compare properties in order since they're immutable arrays
-        for (int i = 0; i < Properties.Length; i++)
+        for (int i = 0; i < Properties.Count; i++)
         {
             var thisKvp = Properties[i];
             var otherKvp = other.Properties[i];

@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.Text.RegularExpressions;
 
 namespace MageeSoft.Paradox.Clausewitz.Save.Parser;
 
@@ -20,16 +21,6 @@ public static class Extensions
         
         value = null!;
         return false;
-    }
-
-    /// <summary>
-    /// Gets the elements of a SaveArray.
-    /// </summary>
-    /// <param name="array">The SaveArray.</param>
-    /// <returns>An immutable array of SaveElements.</returns>
-    public static ImmutableArray<SaveElement> Elements(this SaveArray array)
-    {
-        return array.Items;
     }
     
     public static bool TryGetString(this SaveObject obj, string key, out string value)
@@ -190,6 +181,15 @@ public static class Extensions
     {
         var serializer = new Serializer();
         return serializer.Serialize(element);
+    }
+    
+    public static string RemoveFormatting(this string str)
+    {
+        // remove "extra spaces" and new lines (\r, \n, \r\n)
+        str = Regex.Replace(str, @"\r\n|\r|\n", " ");
+        str = Regex.Replace(str, @"\s+", " ");
+        str = str.Trim();
+        return str;
     }
 
     /// <summary>

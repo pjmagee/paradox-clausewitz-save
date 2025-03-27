@@ -12,35 +12,5 @@ public abstract class SaveElement
         var serializer = new Serializer();
         serializer.Serialize(this);
         return serializer.ToString()!;
-
-        if (this is SaveArray array)
-        {
-            return $"Array: {string.Join(", ", array.Items.Select(i => i.ToString()))}";
-        }
-
-        if (this is SaveObject obj)
-        {
-            return $"Object: {string.Join(", ", obj.Properties.Select(p => p.ToString()))}";
-        }
-        
-        switch(this)
-        {
-            case Scalar<string> scalar:
-                return $"Scalar<{scalar.Type}>: {scalar.Value}";
-            case Scalar<int> scalar:
-                return $"Scalar<{scalar.Type}>: {scalar.Value}";
-            case Scalar<float> scalar:
-                return $"Scalar<{scalar.Type}>: {scalar.Value}";
-            case Scalar<bool> scalar:
-                return $"Scalar<{scalar.Type}>: {scalar.Value}";
-            case Scalar<long> scalar:
-                return $"Scalar<{scalar.Type}>: {scalar.Value}";
-            case Scalar<DateOnly> scalar:
-                return $"Scalar<{scalar.Type}>: {scalar.Value.ToString("yyyy.MM.dd", System.Globalization.CultureInfo.InvariantCulture)}";
-            case Scalar<Guid> scalar:
-                return $"Scalar<{scalar.Type}>: {scalar.Value}";    
-        }
-
-        return $"{GetType().Name}";
     }
 }

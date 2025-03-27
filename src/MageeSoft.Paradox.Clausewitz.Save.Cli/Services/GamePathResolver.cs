@@ -1,11 +1,10 @@
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
-using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 
 namespace MageeSoft.Paradox.Clausewitz.Save.Cli.Services;
 
-public class GamePathResolver(ILogger<GamePathResolver> logger)
+public class GamePathResolver
 {
     public IEnumerable<string> GetPotentialSavePaths(string gameName)
     {

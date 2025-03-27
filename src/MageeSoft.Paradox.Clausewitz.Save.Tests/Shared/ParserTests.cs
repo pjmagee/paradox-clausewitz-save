@@ -7,6 +7,7 @@ public class ParserTests
 {
     public TestContext TestContext { get; set; } = null!;
 
+    [TestMethod]
     public void Parse_ListOfStringKeyValues_ReturnsCorrectKeyValuePairs()
     {
         // Arrange
@@ -16,21 +17,37 @@ ship_names=
 	"REP3_SHIP_Erid-Sur"=1
 	"%SEQ%"=14
 	"REP3_SHIP_Lorod-Gexad"=1
-	"REP3_SHIP_Lorod-Deklor"=1
-	"REP3_SHIP_Erid-Kar"=1
-	"REP3_SHIP_Erid-Buk"=1
-	"REP3_SHIP_Lorod-Defer"=1
 }
 """;
-        var parser = new Save.Parser.Parser(input);
-
         // Act
-        var root = parser.Parse();
-
-        // Assert 
-        // TODO: this should be an Array of string keyValue pairs?
-        // something like List<KeyValue<Scalar<string>, Scalar<int>> ??
+        var root = Parser.Parser.Parse(input);
         
+        Assert.IsInstanceOfType(root, typeof(SaveObject));
+        var rootObj = (SaveObject)root;
+        Assert.AreEqual(1, rootObj.Properties.Count, "Root should have exactly one property");
+        
+        var shipNamesProp = rootObj.Properties[0];
+        Assert.AreEqual("ship_names", shipNamesProp.Key, "Property key should be 'ship_names'");
+        Assert.IsInstanceOfType(shipNamesProp.Value, typeof(SaveObject));
+        
+        var shipNames = (SaveObject)shipNamesProp.Value;
+        Assert.AreEqual(3, shipNames.Properties.Count, "Ship names should have 3 properties");
+        Assert.IsInstanceOfType(shipNames.Properties[0].Value, typeof(Scalar<int>));
+        
+        var firstShipName = shipNames.Properties[0];
+        Assert.AreEqual("REP3_SHIP_Erid-Sur", firstShipName.Key, "First ship name key should be 'REP3_SHIP_Erid-Sur'");
+        Assert.AreEqual(1, ((Scalar<int>)firstShipName.Value).Value, "First ship name value should be 1");
+        Assert.IsInstanceOfType(shipNames.Properties[1].Value, typeof(Scalar<int>));
+        
+        var secondShipName = shipNames.Properties[1];
+        Assert.AreEqual("%SEQ%", secondShipName.Key, "Second ship name key should be '%SEQ%'");
+        Assert.AreEqual(14, ((Scalar<int>)secondShipName.Value).Value, "Second ship name value should be 14");
+        Assert.IsInstanceOfType(shipNames.Properties[2].Value, typeof(Scalar<int>));
+        
+        var thirdShipName = shipNames.Properties[2];
+        Assert.AreEqual("REP3_SHIP_Lorod-Gexad", thirdShipName.Key, "Third ship name key should be 'REP3_SHIP_Lorod-Gexad'");
+        Assert.AreEqual(1, ((Scalar<int>)thirdShipName.Value).Value, "Third ship name value should be 1");
+        Assert.IsInstanceOfType(shipNames.Properties[2].Value, typeof(Scalar<int>));
     }
     
     [TestMethod]
@@ -39,22 +56,21 @@ ship_names=
         // Arrange
         int[] expectedValues = { 22, 27, 30, 37, 40 };
         string input = "test={" + string.Join(" ", expectedValues) + "}";
-        var parser = new Save.Parser.Parser(input);
-
+        
         // Act
-        var root = parser.Parse();
+        var root = Parser.Parser.Parse(input);
 
         // Assert
         Assert.IsInstanceOfType(root, typeof(SaveObject));        
         
-        Assert.AreEqual(1, root.Properties.Length, "Root should have exactly one property");
+        Assert.AreEqual(1, root.Properties.Count, "Root should have exactly one property");
         var testProp = root.Properties[0];
         Assert.AreEqual("test", testProp.Key, "Property key should be 'test'");
         
         Assert.IsInstanceOfType(testProp.Value, typeof(SaveArray));
         var array = (SaveArray)testProp.Value;
         
-        Assert.AreEqual(expectedValues.Length, array.Items.Length, "Array should have same number of items");
+        Assert.AreEqual(expectedValues.Length, array.Items.Count, "Array should have same number of items");
        
         for (int i = 0; i < expectedValues.Length; i++)
         {
@@ -77,15 +93,14 @@ ship_names=
                 minerals=200
             }
         }";
-        var parser = new Save.Parser.Parser(input);
-
+        
         // Act
-        var root = parser.Parse();
+        var root = Parser.Parser.Parse(input);
 
         // Assert
         Assert.IsInstanceOfType(root, typeof(SaveObject));
                 
-        Assert.AreEqual(1, root.Properties.Length, "Root should have exactly one property");
+        Assert.AreEqual(1, root.Properties.Count, "Root should have exactly one property");
         var countryProp = root.Properties[0];
         Assert.AreEqual("country", countryProp.Key, "Property key should be 'country'");
         
@@ -93,7 +108,7 @@ ship_names=
         var country = (SaveObject)countryProp.Value;
         
         // Check country properties
-        Assert.AreEqual(3, country.Properties.Length, "Country should have 3 properties");
+        Assert.AreEqual(3, country.Properties.Count, "Country should have 3 properties");
         
         // Check name
         var nameProp = country.Properties.First(p => p.Key == "name");
@@ -131,15 +146,13 @@ ship_names=
             multiplayer=no
         }";
 
-        var parser = new Save.Parser.Parser(input);
-
         // Act
-        var root = parser.Parse();
+        var root = Parser.Parser.Parse(input);
 
         // Assert
         Assert.IsInstanceOfType(root, typeof(SaveObject));        
         
-        Assert.AreEqual(1, root.Properties.Length, "Root should have exactly one property");
+        Assert.AreEqual(1, root.Properties.Count, "Root should have exactly one property");
         var settingsProp = root.Properties[0];
         Assert.AreEqual("settings", settingsProp.Key, "Property key should be 'settings'");
         
@@ -166,15 +179,14 @@ ship_names=
             start_date=""2200.01.01""
             current_date=""2250.05.12""
         }";
-        var parser = new Save.Parser.Parser(input);
 
         // Act
-        var root = parser.Parse();
+        var root = Parser.Parser.Parse(input);
 
         // Assert
         Assert.IsInstanceOfType(root, typeof(SaveObject));        
         
-        Assert.AreEqual(1, root.Properties.Length, "Root should have exactly one property");
+        Assert.AreEqual(1, root.Properties.Count, "Root should have exactly one property");
         var gameProp = root.Properties[0];
         Assert.AreEqual("game", gameProp.Key, "Property key should be 'game'");
         
@@ -202,23 +214,22 @@ ship_names=
             9223372036854775807
             3.14
         }";
-        var parser = new Save.Parser.Parser(input);
-
+        
         // Act
-        var root = parser.Parse();
+        var root = Parser.Parser.Parse(input);
 
         // Assert
         Assert.IsInstanceOfType(root, typeof(SaveObject));
         var rootObj = (SaveObject)root;
         
-        Assert.AreEqual(1, rootObj.Properties.Length, "Root should have exactly one property");
+        Assert.AreEqual(1, rootObj.Properties.Count, "Root should have exactly one property");
         var arrayProp = rootObj.Properties[0];
         Assert.AreEqual("mixed_array", arrayProp.Key, "Property key should be 'mixed_array'");
         
         Assert.IsInstanceOfType(arrayProp.Value, typeof(SaveArray));
         var mixedArray = (SaveArray)arrayProp.Value;
         
-        Assert.AreEqual(3, mixedArray.Items.Length, "Array should have exactly three values");
+        Assert.AreEqual(3, mixedArray.Items.Count, "Array should have exactly three values");
         
         // Check integer value
         Assert.IsInstanceOfType(mixedArray.Items[0], typeof(Scalar<int>));
@@ -233,7 +244,6 @@ ship_names=
         Assert.AreEqual(3.14f, ((Scalar<float>)mixedArray.Items[2]).Value, 0.0001f);
     }
 
-
     [TestMethod]
     public void Parse_NumericValues_ReturnsCorrectScalarTypes()
     {
@@ -244,16 +254,14 @@ ship_names=
             float=3.14
             large_integer=9223372036854775807
         }";
-        var parser = new Save.Parser.Parser(input);
-
+        
         // Act
-        var result = parser.Parse();
+        var root = Parser.Parser.Parse(input);
 
         // Assert
-        Assert.IsInstanceOfType(result, typeof(SaveObject));
-        var root = (SaveObject)result;
+        Assert.IsInstanceOfType(root, typeof(SaveObject));
         
-        Assert.AreEqual(1, root.Properties.Length, "Root should have exactly one property");
+        Assert.AreEqual(1, root.Properties.Count, "Root should have exactly one property");
         var valuesProp = root.Properties[0];
         Assert.AreEqual("values", valuesProp.Key, "Property key should be 'values'");
         
@@ -281,23 +289,21 @@ ship_names=
     {
         // Arrange
         string input = "empty={}";
-        var parser = new Save.Parser.Parser(input);
-
+        
         // Act
-        var result = parser.Parse();
+        var root = Parser.Parser.Parse(input);
 
         // Assert
-        Assert.IsInstanceOfType(result, typeof(SaveObject));
-        var root = (SaveObject)result;
+        Assert.IsInstanceOfType(root, typeof(SaveObject));
         
-        Assert.AreEqual(1, root.Properties.Length, "Root should have exactly one property");
+        Assert.AreEqual(1, root.Properties.Count, "Root should have exactly one property");
         var emptyProp = root.Properties[0];
         Assert.AreEqual("empty", emptyProp.Key, "Property key should be 'empty'");
         
         Assert.IsInstanceOfType(emptyProp.Value, typeof(SaveObject));
         var empty = (SaveObject)emptyProp.Value;
         
-        Assert.AreEqual(0, empty.Properties.Length, "Empty object should have 0 properties");
+        Assert.AreEqual(0, empty.Properties.Count, "Empty object should have 0 properties");
     }
     
     [TestMethod]
@@ -309,15 +315,14 @@ ship_names=
             id=""00000000-0000-0000-0000-000000000000""
             random_id=""12345678-1234-5678-1234-567812345678""
         }";
-        var parser = new Save.Parser.Parser(input);
-
+        
         // Act
-        var root = parser.Parse();
+        var root = Parser.Parser.Parse(input);
 
         // Assert
         Assert.IsInstanceOfType(root, typeof(SaveObject));        
         
-        Assert.AreEqual(1, root.Properties.Length, "Root should have exactly one property");
+        Assert.AreEqual(1, root.Properties.Count, "Root should have exactly one property");
         var guidsProp = root.Properties[0];
         Assert.AreEqual("guids", guidsProp.Key, "Property key should be 'guids'");
         
@@ -347,15 +352,14 @@ ship_names=
                 { name=""Item 2"" value=20 }
             }
         }";
-        var parser = new Save.Parser.Parser(input);
-
+        
         // Act
-        var root = parser.Parse();
+        var root = Parser.Parser.Parse(input);
 
         // Assert
         Assert.IsInstanceOfType(root, typeof(SaveObject));        
         
-        Assert.AreEqual(1, root.Properties.Length, "Root should have exactly one property");
+        Assert.AreEqual(1, root.Properties.Count, "Root should have exactly one property");
         var nestedArraysProp = root.Properties[0];
         Assert.AreEqual("nested_arrays", nestedArraysProp.Key, "Property key should be 'nested_arrays'");
         
@@ -367,7 +371,7 @@ ship_names=
         Assert.IsInstanceOfType(simpleArrayProp.Value, typeof(SaveArray));
         var simpleArray = (SaveArray)simpleArrayProp.Value;
         
-        Assert.AreEqual(3, simpleArray.Items.Length, "Simple array should have 3 items");
+        Assert.AreEqual(3, simpleArray.Items.Count, "Simple array should have 3 items");
         for (int i = 0; i < 3; i++)
         {
             Assert.IsInstanceOfType(simpleArray.Items[i], typeof(Scalar<int>));
@@ -379,7 +383,7 @@ ship_names=
         Assert.IsInstanceOfType(complexArrayProp.Value, typeof(SaveArray));
         var complexArray = (SaveArray)complexArrayProp.Value;
         
-        Assert.AreEqual(2, complexArray.Items.Length, "Complex array should have 2 items");
+        Assert.AreEqual(2, complexArray.Items.Count, "Complex array should have 2 items");
         
         // Check first item
         Assert.IsInstanceOfType(complexArray.Items[0], typeof(SaveObject));
@@ -429,17 +433,16 @@ ship_names=
                 }
             }
         }";
-        var parser = new Save.Parser.Parser(input);
-
+        
         // Act
-        var root = parser.Parse();
+        var root = Parser.Parser.Parse(input);
 
         // Assert
         Assert.IsInstanceOfType(root, typeof(SaveObject));
         
         
         // Check galaxy
-        Assert.AreEqual(1, root.Properties.Length, "Root should have exactly one property");
+        Assert.AreEqual(1, root.Properties.Count, "Root should have exactly one property");
         var galaxyProp = root.Properties[0];
         Assert.AreEqual("galaxy", galaxyProp.Key, "Property key should be 'galaxy'");
         Assert.IsInstanceOfType(galaxyProp.Value, typeof(SaveObject));
@@ -521,15 +524,14 @@ ship_names=
         resources={ energy=100 minerals=200 }
         flags={ is_xenophile=yes is_pacifist=no }
         ";
-        var parser = new Save.Parser.Parser(input);
-
+        
         // Act
-        var root = parser.Parse();
+        var root = Parser.Parser.Parse(input);
 
         // Assert
         Assert.IsInstanceOfType(root, typeof(SaveObject));
                 
-        Assert.AreEqual(4, root.Properties.Length, "Root should have 4 properties");
+        Assert.AreEqual(4, root.Properties.Count, "Root should have 4 properties");
         
         // Check name
         var nameProp = root.Properties.First(p => p.Key == "name");
@@ -583,16 +585,14 @@ ship_names=
                 size=8
             }
         }";
-        var parser = new Save.Parser.Parser(input);
-
+        
         // Act
-        var result = parser.Parse();
+        var root = Parser.Parser.Parse(input);
 
         // Assert
-        Assert.IsInstanceOfType(result, typeof(SaveObject));
-        var root = (SaveObject)result;
+        Assert.IsInstanceOfType(root, typeof(SaveObject));
         
-        Assert.AreEqual(1, root.Properties.Length, "Root should have exactly one property");
+        Assert.AreEqual(1, root.Properties.Count, "Root should have exactly one property");
         var planetsProp = root.Properties[0];
         Assert.AreEqual("planets", planetsProp.Key, "Property key should be 'planets'");
         
@@ -600,7 +600,7 @@ ship_names=
         var planets = (SaveObject)planetsProp.Value;
         
         // Should have 2 planets with numeric keys
-        Assert.AreEqual(2, planets.Properties.Length, "Planets should have 2 properties");
+        Assert.AreEqual(2, planets.Properties.Count, "Planets should have 2 properties");
         
         // Check planet 1
         var planet1Prop = planets.Properties.First(p => p.Key == "1");
@@ -659,23 +659,21 @@ ship_names=
         }
         """;
         
-        var parser = new Save.Parser.Parser(input);
-        
         // Act
-        var root = parser.Parse();
+        var root = Parser.Parser.Parse(input);
 
         // Assert        
         Assert.IsInstanceOfType(root, typeof(SaveObject));
         
         
-        Assert.AreEqual(1, root.Properties.Length, "Root should have 1 properties");
+        Assert.AreEqual(1, root.Properties.Count, "Root should have 1 properties");
         var repeatingKeyObject = root.Properties[0];
         Assert.AreEqual("object_with_repeating_keys", repeatingKeyObject.Key, "Property key should be 'object_with_repeating_keys'");
         
         Assert.IsInstanceOfType(repeatingKeyObject.Value, typeof(SaveObject));
         var repeatingKeyObjectValue = (SaveObject)repeatingKeyObject.Value;
         
-        Assert.AreEqual(3, repeatingKeyObjectValue.Properties.Length, "Repeating key object should have 3 properties");
+        Assert.AreEqual(3, repeatingKeyObjectValue.Properties.Count, "Repeating key object should have 3 properties");
     }
 
     [TestMethod]
@@ -694,16 +692,13 @@ ship_names=
             }
         }";
 
-        var parser = new Save.Parser.Parser(input);
-
         // Act
-        var result = parser.Parse();
+        var root = Parser.Parser.Parse(input);
 
         // Assert
-        Assert.IsInstanceOfType(result, typeof(SaveObject));
-        var root = (SaveObject)result;
+        Assert.IsInstanceOfType(root, typeof(SaveObject));
         
-        Assert.AreEqual(1, root.Properties.Length);
+        Assert.AreEqual(1, root.Properties.Count);
         var termsProp = root.Properties[0];
         Assert.AreEqual("terms", termsProp.Key);
         
@@ -715,7 +710,7 @@ ship_names=
         Assert.IsInstanceOfType(discreteTermsProp.Value, typeof(SaveArray));
         var discreteTerms = (SaveArray)discreteTermsProp.Value;
         
-        Assert.AreEqual(2, discreteTerms.Items.Length);
+        Assert.AreEqual(2, discreteTerms.Items.Count);
         
         // Check first discrete term
         var firstTermObj = (SaveObject)discreteTerms.Items[0];
@@ -742,7 +737,7 @@ ship_names=
         Assert.IsInstanceOfType(resourceTermsProp.Value, typeof(SaveArray));
         var resourceTerms = (SaveArray)resourceTermsProp.Value;
         
-        Assert.AreEqual(2, resourceTerms.Items.Length);
+        Assert.AreEqual(2, resourceTerms.Items.Count);
         
         // Check first resource term
         var firstResourceObj = (SaveObject)resourceTerms.Items[0];
@@ -764,4 +759,43 @@ ship_names=
         Assert.IsInstanceOfType(secondResourceValue.Value, typeof(Scalar<float>));
         Assert.AreEqual(25.5f, ((Scalar<float>)secondResourceValue.Value).Value);
     }
-} 
+    
+    [TestMethod]
+    public void Parse_EmptyObjectArray_ReturnsEmptyArray()
+    {
+        // Arrange
+        string input = """
+                       culling_value=
+                       {
+                       	{
+                       	}
+                       	{
+                       	}
+                       	{
+                       	}
+                       }
+                       """;
+        
+        // Act
+        var root = Parser.Parser.Parse(input);
+
+        // Assert
+        Assert.IsInstanceOfType(root, typeof(SaveObject));
+        
+        Assert.AreEqual(1, root.Properties.Count);
+        var cullingValueProp = root.Properties[0];
+        
+        Assert.AreEqual("culling_value", cullingValueProp.Key);
+        Assert.IsInstanceOfType(cullingValueProp.Value, typeof(SaveArray));
+        var cullingValueArray = (SaveArray)cullingValueProp.Value;
+        Assert.AreEqual(3, cullingValueArray.Items.Count);
+        
+        // Check each item in the array
+        foreach (var item in cullingValueArray.Items)
+        {
+            Assert.IsInstanceOfType(item, typeof(SaveObject));
+            var itemObj = (SaveObject)item;
+            Assert.AreEqual(0, itemObj.Properties.Count, "Each item should be an empty object");
+        }
+    }
+}

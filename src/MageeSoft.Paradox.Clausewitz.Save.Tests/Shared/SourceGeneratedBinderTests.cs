@@ -6,10 +6,143 @@ namespace MageeSoft.Paradox.Clausewitz.Save.Tests.Shared;
 /// Tests the source-generated binding functionality.
 /// </summary>
 [TestClass]
-public class SourceGeneratedBinderTests
+public class SourceGeneratedBinderTests : BindingTests
 {
     [TestMethod]
-    public void BindIndexedDictionary_WithIntKeys_Works()
+    public void List_SourceGenBinding_BindsCorrectly()
+    {
+        // Arrange
+        var saveObject = CreateListTestObject();
+        
+        // Act
+        var result = ListModel.Bind(saveObject);
+        
+        // Assert
+        Assert.IsNotNull(result);
+        Assert.IsNotNull(result.Values);
+        Assert.AreEqual(3, result.Values.Count);
+        CollectionAssert.AreEqual(new[] { 1, 2, 3 }, result.Values.ToArray());
+    }
+    
+        
+    [TestMethod]
+    public void Array_SourceGenBinding_BindsCorrectly()
+    {
+        // Arrange
+        var saveObject = CreateArrayTestObject();
+        
+        // Act
+        var result = TestModelForSourceGen.Bind(saveObject);
+        
+        // Assert
+        Assert.IsNotNull(result);
+        Assert.IsNotNull(result.ArrayValue);
+        Assert.AreEqual(3, result.ArrayValue.Length);
+        CollectionAssert.AreEqual(new[] { 1, 2, 3 }, result.ArrayValue);
+    }
+    
+    [TestMethod]
+    public void Dictionary_SourceGenBinding_BindsCorrectly()
+    {
+        // Arrange
+        var saveObject = CreateDictionaryTestObject();
+        
+        // Act
+        var result = DictionaryModel.Bind(saveObject);
+        
+        // Assert
+        Assert.IsNotNull(result);
+        Assert.IsNotNull(result.Resources);
+        Assert.AreEqual(2, result.Resources.Count);
+        
+        Assert.IsNotNull(result.Resources[1]);
+        Assert.AreEqual("First Item", result.Resources[1]!.Name);
+        Assert.AreEqual(100, result.Resources[1]!.Value);
+        
+        Assert.IsNotNull(result.Resources[2]);
+        Assert.AreEqual("Second Item", result.Resources[2]!.Name);
+        Assert.AreEqual(200, result.Resources[2]!.Value);
+        
+        // Check scores
+        Assert.IsNotNull(result.Scores);
+        Assert.AreEqual(2, result.Scores.Count);
+        Assert.AreEqual(42.5f, result.Scores[1]);
+        Assert.AreEqual(99.9f, result.Scores[2]);
+    }
+    
+    [TestMethod]
+    public void RepeatedProperties_SourceGenBinding_CollectsIntoArray()
+    {
+        // Arrange
+        var saveObject = CreateRepeatedPropertiesTestObject();
+        
+        // Act
+        var result = RepeatedPropertyModel.Bind(saveObject);
+        
+        // Assert
+        Assert.IsNotNull(result);
+        Assert.IsNotNull(result.Sections);
+        Assert.AreEqual(3, result.Sections.Count);
+        
+        Assert.AreEqual("SECTION_1", result.Sections[0]!.Design);
+        Assert.AreEqual("1", result.Sections[0]!.Slot);
+        
+        Assert.AreEqual("SECTION_2", result.Sections[1]!.Design);
+        Assert.AreEqual("2", result.Sections[1]!.Slot);
+        
+        Assert.AreEqual("SECTION_3", result.Sections[2]!.Design);
+        Assert.AreEqual("3", result.Sections[2]!.Slot);
+    }
+    
+    [TestMethod]
+    public void Bind_SimpleValues_ReturnsCorrectValues()
+    {
+        // Arrange
+        var saveObject = CreateSimpleTestObject();
+        
+        // Act
+        var result = TestModelForSourceGen.Bind(saveObject);
+        
+        // Assert
+        Assert.IsNotNull(result);
+        Assert.AreEqual(42, result.IntValue);
+        Assert.AreEqual("hello", result.StringValue);
+        Assert.AreEqual(new DateOnly(2020, 01, 01), result.DateValue);
+        CollectionAssert.AreEqual(new[] { 1, 2, 3 }, result.ArrayValue);
+    }
+    
+    [TestMethod]
+    public void Bind_Dictionary_Correctly()
+    {
+        // Arrange
+        var saveObject = CreateDictionaryTestObject();
+        
+        // Act
+        var result = TestSaveModel.Bind(saveObject);
+        
+        // Assert
+        Assert.IsNotNull(result);
+        Assert.AreEqual(3, result.DictValue!.Count);
+        Assert.AreEqual("one", result.DictValue[1]);
+        Assert.AreEqual("two", result.DictValue[2]);
+        Assert.AreEqual("three", result.DictValue[3]);
+    }
+    
+    [TestMethod]
+    public void Bind_NestedObject_CascadesCorrectly()
+    {
+        // Arrange
+        var saveObject = CreateNestedObjectTestData();
+        
+        // Act
+        var result = ParentModel.Bind(saveObject);
+        
+        // Assert
+        AssertNestedObjectBoundCorrectly(result);
+    }
+    
+    [TestMethod]
+    public void Bind_IndexedDictionary_WithIntKeys_Works()
     {
         // Arrange - Create input with 0=, 1=, 2= format like in Stellaris saves
         var input = """
@@ -36,7 +169,7 @@ public class SourceGeneratedBinderTests
     }
 
     [TestMethod]
-    public void BindIndexedDictionary_WithComplexValues_Works()
+    public void Bind_IndexedDictionary_WithComplexValues()
     {
         // Arrange - Create input with complex object values
         var input = """
@@ -70,7 +203,7 @@ public class SourceGeneratedBinderTests
     }
     
     [TestMethod]
-    public void SimpleTestModel_Bind_ReturnsCorrectValues()
+    public void Bind_SimpleTestModel_With_Scalars()
     {
         // Arrange
         var obj = new SaveObject(
@@ -99,7 +232,7 @@ public class SourceGeneratedBinderTests
     }
     
     [TestMethod]
-    public void TestSaveModel_WithDictionary_BindsCorrectly()
+    public void Bind_TestSaveModel_WithDictionary()
     {
         // Arrange
         var obj = new SaveObject(
@@ -169,7 +302,7 @@ public class SourceGeneratedBinderTests
     }
     
     [TestMethod]
-    public void ComplexNestedModel_Bind_CascadesCorrectly()
+    public void Bind_ComplexNestedModel_CascadesCorrectly()
     {
         // Arrange - create a hierarchy of objects
         var nestedObj = new SaveObject(

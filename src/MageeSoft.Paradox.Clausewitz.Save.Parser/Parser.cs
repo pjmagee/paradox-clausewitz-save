@@ -32,7 +32,7 @@ public class Parser
     // Top-level parse: a series of key=value pairs.
     public SaveObject Parse()
     {
-        ImmutableArray<KeyValuePair<string, SaveElement>>.Builder builder = ImmutableArray.CreateBuilder<KeyValuePair<string, SaveElement>>();
+        List<KeyValuePair<string, SaveElement>> items = new();
 
         while (_currentToken.Type != TokenType.EndOfFile)
         {
@@ -63,7 +63,7 @@ public class Parser
                 }
 
                 SaveElement value = ParseValue();
-                builder.Add(new KeyValuePair<string, SaveElement>(key, value));
+                items.Add(new KeyValuePair<string, SaveElement>(key, value));
             }
             else
             {
@@ -71,7 +71,7 @@ public class Parser
             }
         }
 
-        return new SaveObject(builder.ToImmutable());
+        return new SaveObject(items);
     }
     // Parses a value (block or primitive) and infers its type.
     private SaveElement ParseValue()
@@ -269,17 +269,17 @@ public class Parser
                 properties.Add(new KeyValuePair<string, SaveElement>(autoKey, values[i]));
             }
             
-            return new SaveObject(properties.ToImmutableArray());
+            return new SaveObject(properties);
         }
         else if (properties.Count > 0)
         {
             // Only properties - return as object
-            return new SaveObject(properties.ToImmutableArray());
+            return new SaveObject(properties);
         }
         else
         {
             // Only values - return as array
-            return new SaveArray(values.ToImmutableArray());
+            return new SaveArray(values);
         }
     }
 }

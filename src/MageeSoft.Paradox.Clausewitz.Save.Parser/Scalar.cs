@@ -9,12 +9,12 @@ public class Scalar<T> : SaveElement, IEquatable<Scalar<T>>
     /// <summary>
     /// Gets the raw text of the scalar value.
     /// </summary>
-    public string RawText { get; }
+    public string RawText { get; set; }
 
     /// <summary>
     /// Gets the value of the scalar.
     /// </summary>
-    public T Value { get; }
+    public T Value { get; set; }
 
     /// <summary>
     /// Gets the type of the scalar value.
