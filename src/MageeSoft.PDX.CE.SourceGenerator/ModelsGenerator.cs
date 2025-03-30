@@ -8,7 +8,7 @@ namespace MageeSoft.PDX.CE.SourceGenerator;
 /// <summary>
 /// Helper class for generating models from PDX save files
 /// </summary>
-public static class StellarisModelsGenerator
+public static class ModelsGenerator
 {
     private const string Namespace = "MageeSoft.PDX.CE.Models";
 
@@ -339,13 +339,91 @@ public static class StellarisModelsGenerator
 
         builder.AppendLine($"{indent}            // Bind {propertyName} ({AddNullableAnnotation(propertyType)}) from key \"{originalKey}\"");
 
-        if (property.IsDictionary) // Handle Dictionary<int, T>
+        // --- Check for PDX Dictionary Pattern ({ { key {val} } ... }) ---
+        if (property.IsPdxDictionaryPattern)
+        {
+            // Expected format: Dictionary<KeyType, ValueType>
+            var pdxDictMatch = Regex.Match(propertyType, @"Dictionary<(?<keyType>\\w+),\\s*(?<valueType>.+)>" );
+            if (pdxDictMatch.Success)
+            {
+                string keyType = pdxDictMatch.Groups["keyType"].Value;
+                string valueType = pdxDictMatch.Groups["valueType"].Value; // This includes namespace/nested path
+                bool isComplexValueType = !IsSimpleType(valueType);
+
+                builder.AppendLine($"{indent}            if (obj.TryGetSaveArray(\"{originalKey}\", out var {varName}Array) && {varName}Array != null)");
+                builder.AppendLine($"{indent}            {{");
+                builder.AppendLine($"{indent}                var dict = new {propertyType}();");
+                builder.AppendLine($"{indent}                foreach (var item in {varName}Array.Items)");
+                builder.AppendLine($"{indent}                {{");
+                builder.AppendLine($"{indent}                    // Each item should be a SaveObject with one key-value pair");
+                builder.AppendLine($"{indent}                    if (item is SaveObject entryObj && entryObj.Properties.Count == 1)");
+                builder.AppendLine($"{indent}                    {{");
+                builder.AppendLine($"{indent}                        var kvp = entryObj.Properties.First();");
+                builder.AppendLine($"{indent}                        var keyString = kvp.Key;");
+                builder.AppendLine($"{indent}                        var valueElement = kvp.Value;");
+                builder.AppendLine();
+                builder.AppendLine($"{indent}                        // Parse the key");
+
+                // Key Parsing Logic
+                string parsedKeyVar = "parsedKey";
+                string parseCondition = "";
+                if (keyType == "int") {
+                    parseCondition = $"int.TryParse(keyString, NumberStyles.Integer, CultureInfo.InvariantCulture, out var {parsedKeyVar})";
+                }
+                else if (keyType == "long") {
+                    parseCondition = $"long.TryParse(keyString, NumberStyles.Integer, CultureInfo.InvariantCulture, out var {parsedKeyVar})";
+                }
+                else if (keyType == "string") { // Assume string if not int or long
+                    parseCondition = "true"; // Key is already a string
+                    parsedKeyVar = "keyString"; // Use the string key directly
+                }
+                else {
+                     builder.AppendLine($"{indent}                        // WARN: Unsupported key type \"{keyType}\" for PDX Dictionary pattern.");
+                     parseCondition = "false";
+                }
+
+                builder.AppendLine($"{indent}                        if ({parseCondition})");
+                builder.AppendLine($"{indent}                        {{");
+
+                // Value Binding Logic
+                string valueIndent = indent + "                            ";
+                if (isComplexValueType)
+                {
+                     builder.AppendLine($"{valueIndent}// Bind complex value type: {valueType}");
+                     builder.AppendLine($"{valueIndent}if (valueElement is SaveObject valueObj)");
+                     builder.AppendLine($"{valueIndent}{{");
+                     // Use the fully qualified valueType for the Bind call
+                     builder.AppendLine($"{valueIndent}    var boundValue = {valueType}.Bind(valueObj);");
+                     builder.AppendLine($"{valueIndent}    if (boundValue != null)");
+                     builder.AppendLine($"{valueIndent}        dict.Add({parsedKeyVar}, boundValue);");
+                     builder.AppendLine($"{valueIndent}}}");
+                }
+                else // Simple value type
+                {
+                     string scalarType = GetScalarTypeForElementType(valueType); // Get underlying scalar type (int, string, etc.)
+                     builder.AppendLine($"{valueIndent}// Bind simple value type: {valueType}");
+                     builder.AppendLine($"{valueIndent}if (valueElement is Scalar<{scalarType}> scalarValue)");
+                     builder.AppendLine($"{valueIndent}    dict.Add({parsedKeyVar}, scalarValue.Value);");
+                }
+
+                builder.AppendLine($"{indent}                        }} // End key parse check");
+                builder.AppendLine($"{indent}                    }} // End check for SaveObject with 1 property");
+                builder.AppendLine($"{indent}                }} // End foreach item in array");
+                builder.AppendLine($"{indent}                model.{propertyName} = dict;");
+                builder.AppendLine($"{indent}            }} // End TryGetSaveArray");
+            } else {
+                 builder.AppendLine($"{indent}            // WARN: Could not parse PDX Dictionary key/value types from '{propertyType}' for key \"{originalKey}\"");
+            }
+        }
+        // --- Check for standard Dictionary<int/string, T> mapped from SaveObject ---
+        // Note: isDictionary is true for both IsPdxDictionaryPattern and this case, so PDX pattern must be checked first.
+        else if (property.IsDictionary)
         {
             // Handle Dictionary<int, T>
             var intDictMatch = Regex.Match(propertyType, @"Dictionary<int,\s*(.+)>");
-            if (intDictMatch.Success) 
+            if (intDictMatch.Success)
             {
-                var convertedValueType = intDictMatch.Groups[1].Value;
+                var convertedValueType = intDictMatch.Groups[1].Value; // Full value type
                 bool isComplexValueType = !IsSimpleType(convertedValueType);
                 bool isNestedCollection = convertedValueType.StartsWith("List<") || convertedValueType.StartsWith("Dictionary<");
 
@@ -356,14 +434,13 @@ public static class StellarisModelsGenerator
                 builder.AppendLine($"{indent}                {{");
                 builder.AppendLine($"{indent}                    if (int.TryParse(kvp.Key, NumberStyles.Integer, CultureInfo.InvariantCulture, out var intKey))");
                 builder.AppendLine($"{indent}                    {{");
-                
+
                 if (isNestedCollection) {
-                    // Handle nested collections specially - we can't call Bind() on them
-                    builder.AppendLine($"{indent}                        // For nested collections, we need to handle specially");
-                    builder.AppendLine($"{indent}                        // TODO: Implement proper nested collection binding");
+                    builder.AppendLine($"{indent}                        // TODO: Implement proper nested collection binding for Dictionary<int, Collection<...>>");
                     builder.AppendLine($"{indent}                        // Currently skipping this since we can't call Bind() on collection types");
                 }
                 else if (isComplexValueType) {
+                     // Use full value type for Bind
                     builder.AppendLine($"{indent}                        var boundValue = {convertedValueType}.Bind(kvp.Value as SaveObject);");
                     builder.AppendLine($"{indent}                        if (boundValue != null)");
                     builder.AppendLine($"{indent}                            dict.Add(intKey, boundValue);");
@@ -372,7 +449,7 @@ public static class StellarisModelsGenerator
                     builder.AppendLine($"{indent}                        if (kvp.Value is Scalar<{scalarType}> scalar)");
                     builder.AppendLine($"{indent}                            dict.Add(intKey, scalar.Value);");
                 }
-                
+
                 builder.AppendLine($"{indent}                    }}"); // end if TryParse
                 builder.AppendLine($"{indent}                }}"); // end foreach
                 builder.AppendLine($"{indent}                model.{propertyName} = dict;");
@@ -384,23 +461,22 @@ public static class StellarisModelsGenerator
                 var stringDictMatch = Regex.Match(propertyType, @"Dictionary<string,\s*(.+)>");
                 if (stringDictMatch.Success)
                 {
-                    var convertedValueType = stringDictMatch.Groups[1].Value;
+                    var convertedValueType = stringDictMatch.Groups[1].Value; // Full value type
                     bool isComplexValueType = !IsSimpleType(convertedValueType);
                     bool isNestedCollection = convertedValueType.StartsWith("List<") || convertedValueType.StartsWith("Dictionary<");
 
-                    builder.AppendLine($"{indent}            if (obj.TryGetSaveObject(\"{originalKey}\", out var {varName}Dict) && {varName}Dict != null)");
+                    builder.AppendLine($"{indent}            // Binding a SaveObject as a Dictionary<string, {convertedValueType}>");
+                    builder.AppendLine($"{indent}            if (obj.TryGetSaveObject(\"{originalKey}\", out var {varName}Obj) && {varName}Obj != null)");
                     builder.AppendLine($"{indent}            {{");
                     builder.AppendLine($"{indent}                var dict = new {propertyType}();");
-                    builder.AppendLine($"{indent}                foreach (var kvp in {varName}Dict.Properties)");
+                    builder.AppendLine($"{indent}                foreach (var kvp in {varName}Obj.Properties)");
                     builder.AppendLine($"{indent}                {{");
-                    // No need to parse the key - use it directly as string
-                    
+
                     if (isNestedCollection) {
-                        builder.AppendLine($"{indent}                    // For nested collections, we need to handle specially");
-                        builder.AppendLine($"{indent}                    // TODO: Implement proper nested collection binding");
-                        builder.AppendLine($"{indent}                    // Currently skipping this since we can't call Bind() on collection types");
+                        builder.AppendLine($"{indent}                    // TODO: Implement proper nested collection binding for Dictionary<string, Collection<...>>");
                     }
                     else if (isComplexValueType) {
+                        // Use full value type for Bind
                         builder.AppendLine($"{indent}                    var boundValue = {convertedValueType}.Bind(kvp.Value as SaveObject);");
                         builder.AppendLine($"{indent}                    if (boundValue != null)");
                         builder.AppendLine($"{indent}                        dict.Add(kvp.Key, boundValue);");
@@ -409,7 +485,7 @@ public static class StellarisModelsGenerator
                         builder.AppendLine($"{indent}                    if (kvp.Value is Scalar<{scalarType}> scalar)");
                         builder.AppendLine($"{indent}                        dict.Add(kvp.Key, scalar.Value);");
                     }
-                    
+
                     builder.AppendLine($"{indent}                }}"); // end foreach
                     builder.AppendLine($"{indent}                model.{propertyName} = dict;");
                     builder.AppendLine($"{indent}            }}");
@@ -419,150 +495,29 @@ public static class StellarisModelsGenerator
                 }
             }
         }
-        else if (!property.IsDictionary && propertyType.StartsWith("Dictionary<"))
-        {
-            // Handle the case where we've detected a SaveObject that is actually a dictionary
-            // But didn't mark it with IsDictionary=true
-            
-            var stringDictMatch = Regex.Match(propertyType, @"Dictionary<string,\s*(.+)>");
-            if (stringDictMatch.Success)
-            {
-                var convertedValueType = stringDictMatch.Groups[1].Value;
-                bool isComplexValueType = !IsSimpleType(convertedValueType);
-                bool isNestedCollection = convertedValueType.StartsWith("List<") || convertedValueType.StartsWith("Dictionary<");
-
-                builder.AppendLine($"{indent}            // Binding a SaveObject as a Dictionary<string, {convertedValueType}>");
-                builder.AppendLine($"{indent}            if (obj.TryGetSaveObject(\"{originalKey}\", out var {varName}Obj) && {varName}Obj != null)");
-                builder.AppendLine($"{indent}            {{");
-                builder.AppendLine($"{indent}                var dict = new {propertyType}();");
-                builder.AppendLine($"{indent}                foreach (var kvp in {varName}Obj.Properties)");
-                builder.AppendLine($"{indent}                {{");
-                
-                if (isNestedCollection) {
-                    builder.AppendLine($"{indent}                    // For nested collections, we need to handle specially");
-                    builder.AppendLine($"{indent}                    // TODO: Implement proper nested collection binding");
-                }
-                else if (isComplexValueType) {
-                    builder.AppendLine($"{indent}                    var boundValue = {convertedValueType}.Bind(kvp.Value as SaveObject);");
-                    builder.AppendLine($"{indent}                    if (boundValue != null)");
-                    builder.AppendLine($"{indent}                        dict.Add(kvp.Key, boundValue);");
-                } else {
-                    string scalarType = GetScalarTypeForElementType(convertedValueType);
-                    builder.AppendLine($"{indent}                    if (kvp.Value is Scalar<{scalarType}> scalar)");
-                    builder.AppendLine($"{indent}                        dict.Add(kvp.Key, scalar.Value);");
-                }
-                
-                builder.AppendLine($"{indent}                }}"); // end foreach
-                builder.AppendLine($"{indent}                model.{propertyName} = dict;");
-                builder.AppendLine($"{indent}            }}");
-            }
-            else {
-                // Handle other cases - fall through to existing code
-                if (property.IsCollection) // Handle List<T>
-                {
-                    var match = Regex.Match(propertyType, @"List<(.+)>");
-                    if (match.Success) {
-                        var convertedItemType = match.Groups[1].Value;
-                        bool isComplexItemType = !IsSimpleType(convertedItemType);
-                        bool isNestedCollection = convertedItemType.StartsWith("List<") || convertedItemType.StartsWith("Dictionary<");
-
-                        builder.AppendLine($"{indent}            if (obj.TryGetSaveArray(\"{originalKey}\", out var {varName}Array) && {varName}Array != null)");
-                        builder.AppendLine($"{indent}            {{");
-                        builder.AppendLine($"{indent}                var list = new {propertyType}();");
-                        
-                        if (isNestedCollection) {
-                            // Special handling for nested collections like List<List<int>>
-                            builder.AppendLine($"{indent}                // TODO: This is a nested collection ({propertyType})");
-                            builder.AppendLine($"{indent}                // We can't call Bind() on collection types like List<T> or Dictionary<K,V>");
-                            builder.AppendLine($"{indent}                // For now, skipping this nested collection binding");
-                        }
-                        else {
-                            builder.AppendLine($"{indent}                foreach (var item in {varName}Array.Items)");
-                            builder.AppendLine($"{indent}                {{");
-                            
-                            if (isComplexItemType) {
-                                builder.AppendLine($"{indent}                    var boundItem = {convertedItemType}.Bind(item as SaveObject);");
-                                builder.AppendLine($"{indent}                    if (boundItem != null)");
-                                builder.AppendLine($"{indent}                        list.Add(boundItem);");
-                            } else {
-                                string scalarType = GetScalarTypeForElementType(convertedItemType);
-                                builder.AppendLine($"{indent}                    if (item is Scalar<{scalarType}> scalar)");
-                                builder.AppendLine($"{indent}                        list.Add(scalar.Value);");
-                            }
-                            
-                            builder.AppendLine($"{indent}                }}"); // end foreach
-                        }
-                        
-                        builder.AppendLine($"{indent}                model.{propertyName} = list;");
-                        builder.AppendLine($"{indent}            }}");
-                    } else {
-                        builder.AppendLine($"{indent}            // WARN: Could not parse list item type from '{propertyType}' for key \"{originalKey}\"");
-                    }
-                }
-                else if (!IsSimpleType(propertyType)) // Complex nested object (T)
-                {
-                    builder.AppendLine($"{indent}            if (obj.TryGetSaveObject(\"{originalKey}\", out var {varName}Obj))");
-                    // Ensure the Bind call uses the correct, potentially nested, type name
-                     string bindTargetType = propertyType; // Already PascalCased by ConvertPropertyTypeSyntax called earlier
-                    builder.AppendLine($"{indent}                model.{propertyName} = {bindTargetType}.Bind({varName}Obj);");
-                }
-                else // Simple scalar property (T?)
-                {
-                    string nullableCast = $"({AddNullableAnnotation(propertyType)})";
-
-                    switch (propertyType)
-                    {
-                         case "string":
-                             builder.AppendLine($"{indent}            model.{propertyName} = obj.TryGetString(\"{originalKey}\", out var {varName}) && {varName} != \"none\" ? {varName} : null;");
-                             break;
-                         case "int":
-                             builder.AppendLine($"{indent}            model.{propertyName} = obj.TryGetInt(\"{originalKey}\", out var {varName}) ? {varName} : {nullableCast}null;");
-                             break;
-                         case "long":
-                             builder.AppendLine($"{indent}            model.{propertyName} = obj.TryGetLong(\"{originalKey}\", out var {varName}) ? {varName} : {nullableCast}null;");
-                             break;
-                         case "float":
-                             builder.AppendLine($"{indent}            model.{propertyName} = obj.TryGetFloat(\"{originalKey}\", out var {varName}) ? {varName} : {nullableCast}null;");
-                             break;
-                         case "bool":
-                              builder.AppendLine($"{indent}            model.{propertyName} = obj.TryGetBool(\"{originalKey}\", out var {varName}) ? {varName} : {nullableCast}null;");
-                             break;
-                         case "DateTime":
-                              builder.AppendLine($"{indent}            model.{propertyName} = obj.TryGetDateTime(\"{originalKey}\", out var {varName}) ? {varName} : {nullableCast}null;");
-                             break;
-                         case "Guid":
-                              builder.AppendLine($"{indent}            model.{propertyName} = obj.TryGetGuid(\"{originalKey}\", out var {varName}) ? {varName} : {nullableCast}null;");
-                             break;
-                         default:
-                              builder.AppendLine($"{indent}            // WARN: Cannot bind unknown simple type '{propertyType}' for key \"{originalKey}\"");
-                              break;
-                    }
-                }
-            }
-        }
+        // --- Check for Standard List<T> ---
         else if (property.IsCollection) // Handle List<T>
         {
             var match = Regex.Match(propertyType, @"List<(.+)>");
             if (match.Success) {
-                var convertedItemType = match.Groups[1].Value;
+                var convertedItemType = match.Groups[1].Value; // Full item type
                 bool isComplexItemType = !IsSimpleType(convertedItemType);
                 bool isNestedCollection = convertedItemType.StartsWith("List<") || convertedItemType.StartsWith("Dictionary<");
 
                 builder.AppendLine($"{indent}            if (obj.TryGetSaveArray(\"{originalKey}\", out var {varName}Array) && {varName}Array != null)");
                 builder.AppendLine($"{indent}            {{");
                 builder.AppendLine($"{indent}                var list = new {propertyType}();");
-                
+
                 if (isNestedCollection) {
-                    // Special handling for nested collections like List<List<int>>
                     builder.AppendLine($"{indent}                // TODO: This is a nested collection ({propertyType})");
-                    builder.AppendLine($"{indent}                // We can't call Bind() on collection types like List<T> or Dictionary<K,V>");
-                    builder.AppendLine($"{indent}                // For now, skipping this nested collection binding");
+                    builder.AppendLine($"{indent}                // Currently skipping nested collection binding.");
                 }
                 else {
                     builder.AppendLine($"{indent}                foreach (var item in {varName}Array.Items)");
                     builder.AppendLine($"{indent}                {{");
-                    
+
                     if (isComplexItemType) {
+                         // Use full item type for Bind
                         builder.AppendLine($"{indent}                    var boundItem = {convertedItemType}.Bind(item as SaveObject);");
                         builder.AppendLine($"{indent}                    if (boundItem != null)");
                         builder.AppendLine($"{indent}                        list.Add(boundItem);");
@@ -571,27 +526,27 @@ public static class StellarisModelsGenerator
                         builder.AppendLine($"{indent}                    if (item is Scalar<{scalarType}> scalar)");
                         builder.AppendLine($"{indent}                        list.Add(scalar.Value);");
                     }
-                    
+
                     builder.AppendLine($"{indent}                }}"); // end foreach
                 }
-                
+
                 builder.AppendLine($"{indent}                model.{propertyName} = list;");
                 builder.AppendLine($"{indent}            }}");
             } else {
                 builder.AppendLine($"{indent}            // WARN: Could not parse list item type from '{propertyType}' for key \"{originalKey}\"");
             }
         }
+        // --- Check for Complex Nested Object ---
         else if (!IsSimpleType(propertyType)) // Complex nested object (T)
         {
             builder.AppendLine($"{indent}            if (obj.TryGetSaveObject(\"{originalKey}\", out var {varName}Obj))");
-            // Ensure the Bind call uses the correct, potentially nested, type name
-             string bindTargetType = propertyType; // Already PascalCased by ConvertPropertyTypeSyntax called earlier
-            builder.AppendLine($"{indent}                model.{propertyName} = {bindTargetType}.Bind({varName}Obj);");
+             // Use the full propertyType (which is already the full name) for Bind
+            builder.AppendLine($"{indent}                model.{propertyName} = {propertyType}.Bind({varName}Obj);");
         }
+        // --- Handle Simple Scalar Properties ---
         else // Simple scalar property (T?)
         {
             string nullableCast = $"({AddNullableAnnotation(propertyType)})";
-
             switch (propertyType)
             {
                  case "string":
@@ -642,7 +597,7 @@ public static class StellarisModelsGenerator
     } // Corrected closing brace for method
 
     // Keep the SimpleTypes definition - use OrdinalIgnoreCase for comparisons
-    private static readonly HashSet<string> SimpleTypes = new(StringComparer.OrdinalIgnoreCase)
+    private readonly static HashSet<string> SimpleTypes = new(StringComparer.OrdinalIgnoreCase)
     {
         "string", "int", "long", "float", "double", "bool", "DateTime", "Guid",
         "System.String", "System.Int32", "System.Int64", "System.Single",

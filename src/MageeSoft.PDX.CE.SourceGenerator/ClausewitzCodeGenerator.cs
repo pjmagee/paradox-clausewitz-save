@@ -4,7 +4,7 @@ using System.Diagnostics;
 namespace MageeSoft.PDX.CE.SourceGenerator;
 
 [Generator]
-public class StellarisCodeGenerator : IIncrementalGenerator
+public class ClausewitzCodeGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
@@ -52,7 +52,7 @@ public class StellarisCodeGenerator : IIncrementalGenerator
                 null
             ));
             
-            StellarisModelsGenerator.GenerateModels(ctx, file, analyses);
+            ModelsGenerator.GenerateModels(ctx, file, analyses);
             
             Debug.WriteLine($"SOURCE GENERATOR: Code generation complete for {file.Path}");
         });
@@ -61,22 +61,6 @@ public class StellarisCodeGenerator : IIncrementalGenerator
     private static IEnumerable<SaveObjectAnalysis> AnalyzeFile(AdditionalText text, CancellationToken cancellationToken)
     {
         Debug.WriteLine($"SOURCE GENERATOR: AnalyzeFile called for {text.Path}");
-        
-        // Check if this is meta.pdx or gamestate.pdx and log more explicitly
-        string fileName = Path.GetFileName(text.Path).ToLowerInvariant();
-
-        if (fileName.Equals("meta"))
-        {
-            Debug.WriteLine($"SOURCE GENERATOR: Processing META file: {text.Path}");
-        }
-        else if (fileName.Equals("gamestate"))
-        {
-            Debug.WriteLine($"SOURCE GENERATOR: Processing GAMESTATE file: {text.Path}");
-        }
-        else
-        {
-            Debug.WriteLine($"SOURCE GENERATOR: Processing UNKNOWN file type: {text.Path}");
-        }
         
         // Check the file content
         try
@@ -99,7 +83,7 @@ public class StellarisCodeGenerator : IIncrementalGenerator
             Debug.WriteLine($"SOURCE GENERATOR: ERROR checking file: {ex.Message} for {text.Path}");
         }
         
-        var enhancedAnalyzer = new EnhancedSaveObjectAnalyzer();
+        var enhancedAnalyzer = new SaveObjectAnalyzer();
         var result = enhancedAnalyzer.AnalyzeAdditionalFile(text, cancellationToken).ToList();
         
         Debug.WriteLine($"SOURCE GENERATOR: AnalyzeFile returned {result.Count} analyses for {text.Path}");

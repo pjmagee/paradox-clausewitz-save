@@ -1,24 +1,19 @@
+using System.Globalization;
 using System.Text;
-using System.Linq; // Added for LINQ usage
-using System.Collections.Generic; // Added for Dictionary
 using Microsoft.CodeAnalysis;
-using System.Globalization; // For ToPascalCase if moved here
-using System.Collections.Concurrent; // Using ConcurrentDictionary for thread safety if needed later
 
 namespace MageeSoft.PDX.CE.SourceGenerator;
 
 /// <summary>
 /// Enhanced analyzer that provides additional functionality for analyzing PDX save files
 /// </summary>
-internal class EnhancedSaveObjectAnalyzer // : SaveObjectAnalyzer
+internal class SaveObjectAnalyzer
 {
-    // Dictionary to store structural signatures and their corresponding ClassDefinition
-    // Key: Signature string, Value: ClassDefinition
-    // This will now store ONLY TOP-LEVEL classes. Nested classes are stored within their parent.
     private Dictionary<string, ClassDefinition> _definedClassesBySignature = new();
+    
     // Dictionary to keep track of generated TOP-LEVEL class names to avoid collisions
     private HashSet<string> _generatedTopLevelClassNames = new(); // Renamed for clarity
-    private static readonly TextInfo TextInfo = CultureInfo.InvariantCulture.TextInfo; // Needed for ToPascalCase
+    private readonly static TextInfo TextInfo = CultureInfo.InvariantCulture.TextInfo; // Needed for ToPascalCase
 
     public IEnumerable<SaveObjectAnalysis> AnalyzeAdditionalFile(AdditionalText text, CancellationToken cancellationToken)
     {
@@ -41,51 +36,17 @@ internal class EnhancedSaveObjectAnalyzer // : SaveObjectAnalyzer
             return Enumerable.Empty<SaveObjectAnalysis>();
         }
 
-        try // Add try-catch around parsing and analysis
+        try
         {
-            // *** Let potential FileNotFoundException propagate from here ***
-            var root = Parser.Parse(fileContent);
-            
-            // Transform any nested dictionaries in the parsed object
-            if (root is SaveObject rootObj)
-            {
-                root = (SaveObject)TransformNestedDictionaries(rootObj);
-            }
+            SaveObject? root = Parser.Parse(fileContent);
+            root = (SaveObject) TransformNestedDictionaries(root);
 
-            // --- DIAGNOSTIC ADDED ---
             currentAnalysis.AddDiagnostic("PDXSA001", "Root Element Type", $"Parsed root element type for {currentAnalysis.RootName}: {root?.GetType().Name ?? "null"}", DiagnosticSeverity.Info);
-
-            // Determine a root class name (e.g., GameState, Meta)
-            string rootClassNameBase;
+            
             string filePath = Path.GetFileNameWithoutExtension(text.Path).ToLowerInvariant();
+            string rootClassNameBase = ToPascalCase(filePath);
             
-            // Log the detected file path
             System.Diagnostics.Debug.WriteLine($"ANALYZER: File path (lowercase): {filePath}");
-            
-            // More explicit logic for determining root class name
-            if (filePath.Contains("meta"))
-            {
-                rootClassNameBase = "Meta";
-                System.Diagnostics.Debug.WriteLine($"ANALYZER: Detected as Meta file");
-            }
-            else if (filePath.Contains("gamestate"))
-            {
-                rootClassNameBase = "GameState";
-                System.Diagnostics.Debug.WriteLine($"ANALYZER: Detected as GameState file");
-            }
-            else
-            {
-                // Default fallback - use the sanitized file name
-                rootClassNameBase = ToPascalCase(filePath);
-                System.Diagnostics.Debug.WriteLine($"ANALYZER: Using default name: {rootClassNameBase}");
-                
-                // Ensure it's a valid class name
-                if (string.IsNullOrEmpty(rootClassNameBase) || !char.IsLetter(rootClassNameBase[0]))
-                {
-                    rootClassNameBase = "PdxModel";
-                    System.Diagnostics.Debug.WriteLine($"ANALYZER: Invalid name, using fallback: {rootClassNameBase}");
-                }
-            }
             
             // Add explicit diagnostic about the detected root class name
             currentAnalysis.AddDiagnostic("PDXSA101", "Root Class Name", $"Using root class name: {rootClassNameBase} for file: {text.Path}", DiagnosticSeverity.Info);
@@ -149,8 +110,8 @@ internal class EnhancedSaveObjectAnalyzer // : SaveObjectAnalyzer
             // RESTORED: Assign the dictionary containing top-level definitions (keyed by signature or root name)
             // Nested definitions are accessed via the top-level definitions' NestedClasses property.
             currentAnalysis.ClassDefinitions = _definedClassesBySignature
-                                                    .Where(kvp => kvp.Value != null && !kvp.Value.IsSimpleType)
-                                                    .ToDictionary(kvp => kvp.Key, kvp => kvp.Value); // Use original key (signature or root name)
+                .Where(kvp => kvp.Value != null && !kvp.Value.IsSimpleType)
+                .ToDictionary(kvp => kvp.Key, kvp => kvp.Value); // Use original key (signature or root name)
 
             // Log the final filtered class definitions
             System.Diagnostics.Debug.WriteLine($"ANALYZER: Final top-level class definitions count: {currentAnalysis.ClassDefinitions.Count}");
@@ -227,7 +188,7 @@ internal class EnhancedSaveObjectAnalyzer // : SaveObjectAnalyzer
             className = "_" + className;
         }
         className = new string(className.Select(c => char.IsLetterOrDigit(c) || c == '_' ? c : '_').ToArray());
-         // Handle completely invalid names after sanitization
+        // Handle completely invalid names after sanitization
         if (string.IsNullOrEmpty(className) || (className.Length > 0 && !char.IsLetter(className[0]) && className[0] != '_'))
         {
             className = "_InvalidName" + Guid.NewGuid().ToString("N").Substring(0, 4); // Ensure valid start
@@ -353,12 +314,12 @@ internal class EnhancedSaveObjectAnalyzer // : SaveObjectAnalyzer
                 uniqueSimpleName = GenerateUniqueClassName(preferredClassName, parentDefinition);
                 // Calculate FullName based on parent
                 calculatedFullName = parentDefinition != null
-                                        ? parentDefinition.FullName + uniqueSimpleName // Append simple name to parent's full name
-                                        : uniqueSimpleName; // Top-level, non-root node
+                    ? parentDefinition.FullName + uniqueSimpleName // Append simple name to parent's full name
+                    : uniqueSimpleName; // Top-level, non-root node
 
                 // Add simple name to the correct scope tracking
-                 HashSet<string> nameScope = parentDefinition?._nestedClassNames ?? _generatedTopLevelClassNames;
-                 nameScope.Add(uniqueSimpleName);
+                HashSet<string> nameScope = parentDefinition?._nestedClassNames ?? _generatedTopLevelClassNames;
+                nameScope.Add(uniqueSimpleName);
             }
 
             var classDef = new ClassDefinition(uniqueSimpleName); // Create with SIMPLE name
@@ -378,12 +339,12 @@ internal class EnhancedSaveObjectAnalyzer // : SaveObjectAnalyzer
                 if (_definedClassesBySignature.ContainsKey(signature)) {
                     return _definedClassesBySignature[signature]; // Reuse existing top-level def by signature
                 }
-                 if (!classDef.IsSimpleType && !IsSimpleTypeName(classDef.Name))
-                 {
-                     _definedClassesBySignature.Add(signature, classDef);
-                 }
+                if (!classDef.IsSimpleType && !IsSimpleTypeName(classDef.Name))
+                {
+                    _definedClassesBySignature.Add(signature, classDef);
+                }
             }
-             // For isRootNode=true, it's added by NAME (which is also FullName) in the calling method.
+            // For isRootNode=true, it's added by NAME (which is also FullName) in the calling method.
 
             // Group properties by their original key to detect duplicates
             var propertiesGroupedByKey = saveObject.Properties.GroupBy(kvp => kvp.Key);
@@ -397,47 +358,40 @@ internal class EnhancedSaveObjectAnalyzer // : SaveObjectAnalyzer
 
                 if (group.Count() > 1) // DUPLICATE KEYS FOUND -> Treat as List<T>
                 {
-                    // Determine item type T by analyzing the first element's value
-                    // Construct preferred name for the ITEM type using the property name
-                    string itemPreferredName = csPropertyName + "Item"; // CHANGED: Base simple name on property name + "Item"
+                    string itemPreferredName = csPropertyName + "Item";
                     // Pass the CURRENT classDef as the parent for the item's type analysis
                     var itemTypeResult = GetPropertyType(firstValueElement, itemPreferredName, classDef);
+                    string listPropertyTypeSyntax = $"List<{itemTypeResult.PropertyTypeSyntax}>";
 
-                    // Add a SINGLE PropertyDefinition for the List
-                    // Use the FullName from the item type result for the List type syntax
-                    string listPropertyTypeSyntax = $"List<{itemTypeResult.PropertyTypeSyntax}>"; // Should use FullName implicitly via GetPropertyType
-                    string attributeType = "SaveListFromDuplicates"; // New attribute marker
-
-                    if (!classDef.Properties.Any(p => p.OriginalName == originalName)) // Check if list property already added
+                    if (!classDef.Properties.Any(p => p.OriginalName == originalName))
                     {
                         classDef.Properties.Add(new PropertyDefinition(
                             name: csPropertyName,
                             propertyType: listPropertyTypeSyntax,
-                            attributeType: attributeType,
                             originalName: originalName,
-                            isCollection: true, // Mark as collection
+                            isCollection: true,
                             isDictionary: false,
-                            representsDuplicateKeys: true // Add explicit flag
+                            representsDuplicateKeys: true,
+                            isPdxDictionaryPattern: false // Explicitly false for duplicate key lists
                         ));
                     }
                 }
                 else // SINGLE KEY -> Treat as regular property (scalar, object, array, dict)
                 {
-                    // Construct preferred SIMPLE name for the nested element itself based on property name
-                    string nestedPreferredName = csPropertyName; // CHANGED: Use the property name directly as base simple name
+                    string nestedPreferredName = csPropertyName;
                     // Pass the CURRENT classDef as the parent for the nested type analysis
-                    (string propertyTypeSyntax, string attributeType, bool isCollection, bool isDictionary, ClassDefinition? valueTypeDef) = GetPropertyType(firstValueElement, nestedPreferredName, classDef);
+                    (string propertyTypeSyntax, bool isCollection, bool isDictionary, bool isPdxPattern, ClassDefinition? valueTypeDef) = GetPropertyType(firstValueElement, nestedPreferredName, classDef);
 
                     if (!classDef.Properties.Any(p => p.OriginalName == originalName))
                     {
                         classDef.Properties.Add(new PropertyDefinition(
                             name: csPropertyName,
                             propertyType: propertyTypeSyntax,
-                            attributeType: attributeType,
                             originalName: originalName,
                             isCollection: isCollection,
                             isDictionary: isDictionary,
-                            representsDuplicateKeys: false // Explicitly false
+                            representsDuplicateKeys: false,
+                            isPdxDictionaryPattern: isPdxPattern // Use the flag returned from GetPropertyType
                         ));
                     }
                 }
@@ -448,12 +402,12 @@ internal class EnhancedSaveObjectAnalyzer // : SaveObjectAnalyzer
         {
             if (saveArray.Items.Any())
             {
-                 // preferredClassName here is the base SIMPLE name intended for the item type (e.g., "ArmyItem")
-                 // This is determined by the caller (GetPropertyType)
-                 string itemBaseName = preferredClassName; // Use the name provided by caller directly
-                 // Pass parent context along for array item analysis
-                 // AnalyzeNode will generate the unique simple name and full name for the item type
-                 return AnalyzeNode(saveArray.Items.First(), itemBaseName, parentDefinition);
+                // preferredClassName here is the base SIMPLE name intended for the item type (e.g., "ArmyItem")
+                // This is determined by the caller (GetPropertyType)
+                string itemBaseName = preferredClassName; // Use the name provided by caller directly
+                // Pass parent context along for array item analysis
+                // AnalyzeNode will generate the unique simple name and full name for the item type
+                return AnalyzeNode(saveArray.Items.First(), itemBaseName, parentDefinition);
             }
             else
             {
@@ -505,14 +459,59 @@ internal class EnhancedSaveObjectAnalyzer // : SaveObjectAnalyzer
         return simpleDef;
     }
 
+    // NEW: Helper to detect the specific PDX Dictionary pattern: List<{ { key: { value_obj } } }>
+    // Returns true if the pattern is detected, along with the determined key type and the first value element for analysis.
+    private bool IsPdxDictionaryPattern(SaveArray array, out string? detectedKeyType, out SaveElement? firstValueElement)
+    {
+        detectedKeyType = null;
+        firstValueElement = null;
+
+        if (array == null || !array.Items.Any())
+            return false;
+
+        // Check if all items are SaveObjects with exactly one property
+        if (!array.Items.All(item => item is SaveObject so && so.Properties.Count == 1))
+            return false;
+
+        // Analyze the first item to determine potential key and value types
+        var firstItem = array.Items.First() as SaveObject;
+        if (firstItem == null) return false; // Should not happen due to previous check
+
+        var firstKvp = firstItem.Properties.First();
+        var key = firstKvp.Key;
+        var value = firstKvp.Value;
+
+        // Value must be a SaveObject for this pattern
+        if (!(value is SaveObject))
+            return false;
+
+        firstValueElement = value; // This is the element whose type we need to analyze
+
+        // Determine key type (int, long, or string/identifier)
+        if (int.TryParse(key, NumberStyles.Integer, CultureInfo.InvariantCulture, out _))
+            detectedKeyType = "int";
+        else if (long.TryParse(key, NumberStyles.Integer, CultureInfo.InvariantCulture, out _))
+            detectedKeyType = "long";
+        else if (!string.IsNullOrEmpty(key)) // Assume string/identifier otherwise
+            detectedKeyType = "string";
+        else
+            return false; // Invalid key
+
+        // Optional: Could add a check here to verify subsequent items have compatible key types,
+        // but for now, we assume homogeneity based on the first item.
+
+        return true;
+    }
 
     // Modify GetPropertyType to accept and pass along the parent context
     // preferredNestedClassName is the suggested *simple* base name for the nested type definition
-    private (string PropertyTypeSyntax, string AttributeType, bool IsCollection, bool IsDictionary, ClassDefinition? ValueTypeDef) GetPropertyType(SaveElement value, string preferredNestedClassName, ClassDefinition parentDefinitionForNestedTypes)
+    // RETURN TYPE UPDATED: Removed AttributeType
+    private (string PropertyTypeSyntax, /*string AttributeType,*/ bool IsCollection, bool IsDictionary, bool IsPdxDictionaryPatternFlag, ClassDefinition? ValueTypeDef) GetPropertyType(SaveElement value, string preferredNestedClassName, ClassDefinition parentDefinitionForNestedTypes)
     {
         bool isCollection = false;
         bool isDictionary = false;
-        string attributeType = "SaveScalar";
+        bool isPdxDictionaryPatternFlag = false; // Initialize new flag
+        // string attributeType = "SaveScalar"; // Removed AttributeType
         string baseTypeSyntax = "object";
         ClassDefinition? valueTypeDef = null;
 
@@ -526,7 +525,7 @@ internal class EnhancedSaveObjectAnalyzer // : SaveObjectAnalyzer
             
             if (isIndexedDictionary)
             {
-                attributeType = "SaveIndexedDictionary";
+                // attributeType = "SaveIndexedDictionary"; // Removed
                 isDictionary = true;
                 if (obj.Properties.Any())
                 {
@@ -541,14 +540,14 @@ internal class EnhancedSaveObjectAnalyzer // : SaveObjectAnalyzer
                 else
                 {
                     baseTypeSyntax = "Dictionary<int, object>";
-                     valueTypeDef = GetOrCreateClassDefinitionForSimpleType("object", "object");
+                    valueTypeDef = GetOrCreateClassDefinitionForSimpleType("object", "object");
                 }
             }
             else if (isStringDictionary)
             {
                 // Handle dictionary with string keys (recognized as data dictionary)
-                attributeType = "SaveObject"; // Use SaveObject attribute as there's no SaveStringDictionary
-                isDictionary = true;
+                // attributeType = "SaveObject"; // Removed
+                isDictionary = true; // Mark as dictionary conceptually
                 
                 if (obj.Properties.Any())
                 {
@@ -556,7 +555,7 @@ internal class EnhancedSaveObjectAnalyzer // : SaveObjectAnalyzer
                     string itemBaseName = preferredNestedClassName + "Item";
                     // Pass parent context for dictionary value type analysis
                     var valueTypeResult = GetPropertyType(obj.Properties.First().Value, itemBaseName, parentDefinitionForNestedTypes);
-                     // Use the FULL NAME of the value type in the dictionary signature
+                    // Use the FULL NAME of the value type in the dictionary signature
                     baseTypeSyntax = $"Dictionary<string, {valueTypeResult.PropertyTypeSyntax}>"; // Should use FullName implicitly
                     valueTypeDef = valueTypeResult.ValueTypeDef;
                 }
@@ -568,52 +567,73 @@ internal class EnhancedSaveObjectAnalyzer // : SaveObjectAnalyzer
             }
             else
             {
-                attributeType = "SaveObject";
-                // Pass the parent context when analyzing the nested object node
-                // AnalyzeNode calculates the simple and full name. preferredNestedClassName is just the suggestion.
+                // attributeType = "SaveObject"; // Removed
                 valueTypeDef = AnalyzeNode(obj, preferredNestedClassName, parentDefinitionForNestedTypes);
-                // Use the calculated FULL NAME for the property type
-                baseTypeSyntax = valueTypeDef.FullName; // Use FullName
+                baseTypeSyntax = valueTypeDef.FullName;
             }
         }
         else if (value is SaveArray array)
         {
-            attributeType = "SaveArray";
-            isCollection = true;
-            if (array.Items.Any())
+            // --- Check for PDX Dictionary Pattern ---
+            if (IsPdxDictionaryPattern(array, out string? detectedKeyType, out SaveElement? firstValueElement) && detectedKeyType != null && firstValueElement != null)
             {
-                 // Suggest simple name for array element type
-                 string itemBaseName = preferredNestedClassName + "Item";
-                 // Pass parent context for array element type analysis
-                 var elementTypeResult = GetPropertyType(array.Items.First(), itemBaseName, parentDefinitionForNestedTypes);
-                 // Use the FULL NAME of the element type in the List signature
-                 baseTypeSyntax = $"List<{elementTypeResult.PropertyTypeSyntax}>"; // Should use FullName implicitly
-                 valueTypeDef = elementTypeResult.ValueTypeDef;
+                // attributeType = "SavePdxDictionary"; // Removed
+                isDictionary = true;
+                isCollection = false; // It's logically a dictionary
+                isPdxDictionaryPatternFlag = true; // *** SET THE NEW FLAG ***
+
+                // Analyze the type of the value element
+                string itemBaseName = preferredNestedClassName + "Item"; // Suggest name for value type
+                valueTypeDef = AnalyzeNode(firstValueElement, itemBaseName, parentDefinitionForNestedTypes);
+
+                if (valueTypeDef != null)
+                {
+                    baseTypeSyntax = $"Dictionary<{detectedKeyType}, {valueTypeDef.FullName}>";
+                }
+                else // Fallback if value type analysis fails
+                {
+                    baseTypeSyntax = $"Dictionary<{detectedKeyType}, object>";
+                    valueTypeDef = GetOrCreateClassDefinitionForSimpleType("object", "object");
+                }
             }
-              else
+            // --- End Pattern Check ---
+            else // Regular SaveArray (List<T>)
             {
-                baseTypeSyntax = "List<object>";
-                 valueTypeDef = GetOrCreateClassDefinitionForSimpleType("object", "object");
+                // attributeType = "SaveArray"; // Removed
+                isCollection = true;
+                if (array.Items.Any())
+                {
+                    string itemBaseName = preferredNestedClassName + "Item";
+                    var elementTypeResult = GetPropertyType(array.Items.First(), itemBaseName, parentDefinitionForNestedTypes);
+                    baseTypeSyntax = $"List<{elementTypeResult.PropertyTypeSyntax}>";
+                    valueTypeDef = elementTypeResult.ValueTypeDef;
+                }
+                else
+                {
+                    baseTypeSyntax = "List<object>";
+                    valueTypeDef = GetOrCreateClassDefinitionForSimpleType("object", "object");
+                }
             }
         }
-          else if (value != null)
+        else if (value != null)
         {
-             baseTypeSyntax = GetSimpleTypeName(value);
-             attributeType = "SaveScalar";
-             valueTypeDef = GetOrCreateClassDefinitionForSimpleType(baseTypeSyntax, baseTypeSyntax);
+            baseTypeSyntax = GetSimpleTypeName(value);
+            // attributeType = "SaveScalar"; // Removed
+            valueTypeDef = GetOrCreateClassDefinitionForSimpleType(baseTypeSyntax, baseTypeSyntax);
         }
         else
         {
-             baseTypeSyntax = "object";
-             attributeType = "SaveScalar";
-             valueTypeDef = GetOrCreateClassDefinitionForSimpleType("object", "object");
+            baseTypeSyntax = "object";
+            // attributeType = "SaveScalar"; // Removed
+            valueTypeDef = GetOrCreateClassDefinitionForSimpleType("object", "object");
         }
-         return (baseTypeSyntax, attributeType, isCollection, isDictionary, valueTypeDef);
+        // RETURN VALUE UPDATED: Removed AttributeType, Added IsPdxDictionaryPatternFlag
+        return (baseTypeSyntax, /*attributeType,*/ isCollection, isDictionary, isPdxDictionaryPatternFlag, valueTypeDef);
     }
 
 
     // Keep ToPascalCase helper (or move to a utility class)
-     private static string ToPascalCase(string name)
+    private static string ToPascalCase(string name)
     {
         if (string.IsNullOrEmpty(name)) return name;
 
@@ -639,7 +659,7 @@ internal class EnhancedSaveObjectAnalyzer // : SaveObjectAnalyzer
         var sb = new StringBuilder(name.Length);
         if (!char.IsLetter(name[0]) && name[0] != '_' && name[0] != '@') // Ensure start is valid
         {
-             sb.Append('_');
+            sb.Append('_');
         }
         foreach (char c in name)
         {
@@ -649,7 +669,7 @@ internal class EnhancedSaveObjectAnalyzer // : SaveObjectAnalyzer
             }
             else if (sb.Length > 0 || char.IsLetter(c)) // Allow letters after initial invalid char replaced
             {
-                 sb.Append('_'); // Replace other invalid chars
+                sb.Append('_'); // Replace other invalid chars
             }
         }
         name = sb.ToString();
@@ -780,7 +800,7 @@ internal class EnhancedSaveObjectAnalyzer // : SaveObjectAnalyzer
         // Further check: are most keys numeric or extremely long?
         int numericKeys = 0;
 
-       foreach (KeyValuePair<string, SaveElement> prop in obj.Properties)
+        foreach (KeyValuePair<string, SaveElement> prop in obj.Properties)
         {
             if (int.TryParse(prop.Key, out _) || long.TryParse(prop.Key, out _))
                 numericKeys++;
@@ -810,90 +830,5 @@ internal class EnhancedSaveObjectAnalyzer // : SaveObjectAnalyzer
         };
         
         return simpleTypeNames.Contains(typeName);
-    }
-}
-
-// --- Supporting classes remain the same ---
-// Minor update to PropertyDefinition constructor for clarity
-public class SaveObjectAnalysis
-{
-    public string RootName { get; }
-    // Make setter private or internal if only analyzer should set it
-    public Dictionary<string, ClassDefinition> ClassDefinitions { get; internal set; } = new();
-    public Exception? Error { get; private set; }
-    public List<DiagnosticInfo> Diagnostics { get; } = new(); // Store diagnostics
-
-    public SaveObjectAnalysis(string rootName)
-    {
-        RootName = rootName;
-    }
-
-    public void SetError(Exception ex)
-    {
-        Error = ex;
-    }
-
-    // Method to add diagnostic info
-    public void AddDiagnostic(string id, string title, string message, DiagnosticSeverity severity)
-    {
-        Diagnostics.Add(new DiagnosticInfo(id, title, message, severity));
-    }
-}
-
-public class ClassDefinition
-{
-    public string Name { get; } // Name is now determined by analyzer uniquely
-    public string FullName { get; internal set; } = string.Empty; // Added: Full concatenated name
-    public List<PropertyDefinition> Properties { get; } = new();
-    // List to hold definitions of classes nested directly within this one
-    public List<ClassDefinition> NestedClasses { get; } = new();
-    // Set to track names of nested classes/members within this class's scope
-    internal HashSet<string> _nestedClassNames = new(); // Internal for analyzer access
-    public bool IsSimpleType { get; internal set; } = false; // Added flag for simple types
-
-    public ClassDefinition(string name)
-    {
-        Name = name;
-    }
-
-    // Optional: Override Equals/GetHashCode based on signature if comparing definitions
-}
-
-public class PropertyDefinition
-{
-    public string Name { get; } // PascalCase C# name
-    public string PropertyType { get; } // C# type syntax
-    public string AttributeType { get; } // e.g., SaveScalar, SaveObject, SaveArray, SaveIndexedDictionary
-    public string OriginalName { get; } // Original PDX key name
-    public bool IsCollection { get; }
-    public bool IsDictionary { get; } // Added flag for dictionaries
-    public bool RepresentsDuplicateKeys { get; } // New flag
-
-    public PropertyDefinition(string name, string propertyType, string attributeType, string originalName, bool isCollection, bool isDictionary, bool representsDuplicateKeys)
-    {
-        Name = name; // This should be the simple PascalCase name (e.g., "Army"), not the hierarchical one
-        PropertyType = propertyType;
-        AttributeType = attributeType;
-        OriginalName = originalName;
-        IsCollection = isCollection;
-        IsDictionary = isDictionary;
-        RepresentsDuplicateKeys = representsDuplicateKeys; // Assign new flag
-    }
-}
-
-// Simple struct to hold diagnostic info before reporting
-public readonly struct DiagnosticInfo
-{
-    public string Id { get; }
-    public string Title { get; }
-    public string Message { get; }
-    public DiagnosticSeverity Severity { get; }
-
-    public DiagnosticInfo(string id, string title, string message, DiagnosticSeverity severity)
-    {
-        Id = id;
-        Title = title;
-        Message = message;
-        Severity = severity;
     }
 }

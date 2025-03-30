@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-
 namespace MageeSoft.PDX.CE;
 
 /// <summary>
@@ -79,6 +76,5 @@ public class Scalar<T> : SaveElement, IEquatable<Scalar<T>>
     public override int GetHashCode()
     {
         return RawText.GetHashCode() ^ Value.GetHashCode();
-        // return HashCode.Combine(RawText, Value);
     }
 }

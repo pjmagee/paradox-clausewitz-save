@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace MageeSoft.PDX.CE;
 
 public class SaveArray(List<SaveElement> items) : SaveElement

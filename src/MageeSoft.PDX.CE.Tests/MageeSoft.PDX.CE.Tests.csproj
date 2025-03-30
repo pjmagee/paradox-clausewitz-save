@@ -11,10 +11,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MageeSoft.PDX.CE.Test.Models\MageeSoft.PDX.CE.Test.Models.csproj" />
-    <ProjectReference Include="..\MageeSoft.PDX.CE.Binder.Reflection\MageeSoft.PDX.CE.Binder.Reflection.csproj" />
-    <ProjectReference Include="..\MageeSoft.PDX.CE.Models\MageeSoft.PDX.CE.Models.csproj" />
     <ProjectReference Include="..\MageeSoft.PDX.CE\MageeSoft.PDX.CE.csproj" />
+    <ProjectReference Include="..\MageeSoft.PDX.CE.Models\MageeSoft.PDX.CE.Models.csproj" />
     <ProjectReference Include="..\MageeSoft.PDX.CE.Reader\MageeSoft.PDX.CE.Reader.csproj" />
     <ProjectReference Include="..\MageeSoft.PDX.CE.Save\MageeSoft.PDX.CE.Save.csproj" />
   </ItemGroup>

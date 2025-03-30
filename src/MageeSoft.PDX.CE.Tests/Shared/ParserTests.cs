@@ -193,13 +193,13 @@ ship_names=
         
         // Check start_date
         var startDateProp = game.Properties.First(p => p.Key == "start_date");
-        Assert.IsInstanceOfType(startDateProp.Value, typeof(Scalar<DateOnly>));
-        Assert.AreEqual(new DateOnly(2200, 1, 1), ((Scalar<DateOnly>)startDateProp.Value).Value);
+        Assert.IsInstanceOfType(startDateProp.Value, typeof(Scalar<DateTime>));
+        Assert.AreEqual(new DateTime(2200, 1, 1), ((Scalar<DateTime>)startDateProp.Value).Value);
         
         // Check current_date
         var currentDateProp = game.Properties.First(p => p.Key == "current_date");
-        Assert.IsInstanceOfType(currentDateProp.Value, typeof(Scalar<DateOnly>));
-        Assert.AreEqual(new DateOnly(2250, 5, 12), ((Scalar<DateOnly>)currentDateProp.Value).Value);
+        Assert.IsInstanceOfType(currentDateProp.Value, typeof(Scalar<DateTime>));
+        Assert.AreEqual(new DateTime(2250, 5, 12), ((Scalar<DateTime>)currentDateProp.Value).Value);
     }
 
     [TestMethod]

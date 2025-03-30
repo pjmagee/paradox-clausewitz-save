@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace MageeSoft.PDX.CE;
@@ -131,6 +128,10 @@ public static class Extensions
             value = dateScalar.Value;
             return true;
         }
+
+        return false;
+        
+        // TODO: not sure about this
 
         if (element is Scalar<string> stringScalar)
         {
