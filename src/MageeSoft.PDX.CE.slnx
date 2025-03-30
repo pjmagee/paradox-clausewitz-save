@@ -1,0 +1,14 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="MageeSoft.PDX.CE/MageeSoft.PDX.CE.csproj" />
+  <Project Path="MageeSoft.PDX.CE.SourceGenerator/MageeSoft.PDX.CE.SourceGenerator.csproj" />
+  <Project Path="MageeSoft.PDX.CE.Models/MageeSoft.PDX.CE.Models.csproj" />
+  <Project Path="MageeSoft.PDX.CE.Reader/MageeSoft.PDX.CE.Reader.csproj" />
+  <Project Path="MageeSoft.PDX.CE.Save/MageeSoft.PDX.CE.Save.csproj" />
+  <Project Path="MageeSoft.PDX.CE.Cli/MageeSoft.PDX.CE.Cli.csproj" />
+  <Project Path="MageeSoft.PDX.CE.Tests/MageeSoft.PDX.CE.Tests.csproj" />
+</Solution>

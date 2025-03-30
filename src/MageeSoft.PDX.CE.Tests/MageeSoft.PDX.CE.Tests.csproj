@@ -1,0 +1,39 @@
+﻿<Project Sdk="MSTest.Sdk/3.8.2">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+    <CompilerGeneratedFilesOutputPath>$(BaseIntermediateOutputPath)\GeneratedFiles</CompilerGeneratedFilesOutputPath>
+    <LangVersion>default</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MageeSoft.PDX.CE.Test.Models\MageeSoft.PDX.CE.Test.Models.csproj" />
+    <ProjectReference Include="..\MageeSoft.PDX.CE.Binder.Reflection\MageeSoft.PDX.CE.Binder.Reflection.csproj" />
+    <ProjectReference Include="..\MageeSoft.PDX.CE.Models\MageeSoft.PDX.CE.Models.csproj" />
+    <ProjectReference Include="..\MageeSoft.PDX.CE\MageeSoft.PDX.CE.csproj" />
+    <ProjectReference Include="..\MageeSoft.PDX.CE.Reader\MageeSoft.PDX.CE.Reader.csproj" />
+    <ProjectReference Include="..\MageeSoft.PDX.CE.Save\MageeSoft.PDX.CE.Save.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Stellaris\TestData\*">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.msbuild" Version="6.0.4">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Update="Microsoft.Testing.Extensions.CodeCoverage" Version="17.14.2" />
+    <PackageReference Update="Microsoft.Testing.Extensions.TrxReport" Version="1.6.3" />
+    <PackageReference Update="MSTest.TestFramework" Version="3.8.3" />
+    <PackageReference Update="MSTest.TestAdapter" Version="3.8.3" />
+  </ItemGroup>
+
+</Project>

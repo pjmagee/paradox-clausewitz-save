@@ -1,0 +1,34 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+    <PackageId>MageeSoft.Paradox.Clausewitz.Save.Reader</PackageId>
+    <Authors>Patrick Magee</Authors>
+    <Company>MageeSoft</Company>
+    <Description>
+      A lower-level API for reading save files, providing easy access to game state information.
+      Inspired by System.Text.Json.
+      For higher-level access such as binding to POCOs, see MageeSoft.Paradox.Clausewitz.Save.Cli
+    </Description>
+    <PackageTags>stellaris ck3 victoria3 hoi4 eu4 paradox clausewitz engine game save parser reader</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/pjmagee/stellaris-sav-parser</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/pjmagee/stellaris-sav-parser</PackageProjectUrl>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <LangVersion>default</LangVersion>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MageeSoft.PDX.CE\MageeSoft.PDX.CE.csproj" />    
+  </ItemGroup>
+
+</Project>
