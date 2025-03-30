@@ -197,8 +197,7 @@ special={
         var input = "";
 
         // Act & Assert
-        Assert.ThrowsException<ArgumentException>(() => Parser.Parse(input),
-            "Empty input should throw an ArgumentException");
+        Assert.ThrowsException<ArgumentException>(() => Parser.Parse(input), "Empty input should throw an ArgumentException");
     }
 
     [TestMethod]
@@ -242,5 +241,6 @@ special={
         }
 
         var output = root.ToSaveString();
+        Assert.IsTrue(output.Contains("energy=10000000"), "Serialized output should contain updated energy value");
     }
 } 

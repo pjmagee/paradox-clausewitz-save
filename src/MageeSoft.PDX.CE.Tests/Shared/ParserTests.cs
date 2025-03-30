@@ -6,7 +6,7 @@ public class ParserTests
     public TestContext TestContext { get; set; } = null!;
 
     [TestMethod]
-    public void Parse_ListOfStringKeyValues_ReturnsCorrectKeyValuePairs()
+    public void Parse_List_StringKeysScalarValues()
     {
         // Arrange
         string input = """
@@ -49,7 +49,7 @@ ship_names=
     }
     
     [TestMethod]
-    public void Parse_SimpleArray_ReturnsArrayValues()
+    public void Parse_List_Integers()
     {
         // Arrange
         int[] expectedValues = { 22, 27, 30, 37, 40 };
@@ -79,7 +79,7 @@ ship_names=
     }
 
     [TestMethod]
-    public void Parse_NestedObjects_ReturnsNestedStructure()
+    public void Parse_Objects_And_Nested_Objects()
     {
         // Arrange
         string input = @"
@@ -135,7 +135,7 @@ ship_names=
     }
 
     [TestMethod]
-    public void Parse_BooleanValues_ReturnsBooleanScalars()
+    public void Parse_YesNo_Booleans()
     {
         // Arrange
         string input = @"
@@ -169,7 +169,7 @@ ship_names=
     }
 
     [TestMethod]
-    public void Parse_DateValues_ReturnsDateScalars()
+    public void Parse_Dates()
     {
         // Arrange
         string input = @"
@@ -203,7 +203,7 @@ ship_names=
     }
 
     [TestMethod]
-    public void Parse_MixedTypeArray_ReturnsCorrectScalarTypes()
+    public void Parse_List_Ints_And_Floats()
     {
         // Arrange
         string input = @"
@@ -243,7 +243,7 @@ ship_names=
     }
 
     [TestMethod]
-    public void Parse_NumericValues_ReturnsCorrectScalarTypes()
+    public void Parse_Different_Numeric_Scalars()
     {
         // Arrange
         string input = @"
@@ -283,7 +283,7 @@ ship_names=
     }
 
     [TestMethod]
-    public void Parse_EmptyBlock_ReturnsEmptyObject()
+    public void Parse_Empty_Object()
     {
         // Arrange
         string input = "empty={}";
@@ -305,7 +305,7 @@ ship_names=
     }
     
     [TestMethod]
-    public void Parse_GuidValues_ReturnsGuidScalars()
+    public void Parse_Scalar_Guid()
     {
         // Arrange
         string input = @"
@@ -339,7 +339,7 @@ ship_names=
     }
     
     [TestMethod]
-    public void Parse_NestedArrays_ReturnsCorrectStructure()
+    public void Parse_Object_Array()
     {
         // Arrange
         string input = @"
@@ -409,7 +409,7 @@ ship_names=
     }
     
     [TestMethod]
-    public void Parse_DeepNestedStructure_ReturnsCorrectHierarchy()
+    public void Parse_Deep_Nested_Objects()
     {
         // Arrange
         string input = @"
@@ -513,7 +513,7 @@ ship_names=
     }
     
     [TestMethod]
-    public void Parse_MultipleTopLevelProperties_ReturnsAllProperties()
+    public void Parse_Many_TopLevel_Properties()
     {
         // Arrange
         string input = @"
@@ -569,7 +569,7 @@ ship_names=
     }
 
     [TestMethod]
-    public void Parse_MixedArrayAndProperties_ReturnsCorrectStructure()
+    public void Parse_Array_Of_Indexed_Items()
     {
         // Arrange
         string input = @"
@@ -628,7 +628,7 @@ ship_names=
     }
 
     [TestMethod]
-    public void Parse_RepeatingKey_Objects_ReturnsAllValues()
+    public void Parse_Repeating_Key_Objects()
     {
         var input = """
         object_with_repeating_keys={
@@ -759,18 +759,15 @@ ship_names=
     }
     
     [TestMethod]
-    public void Parse_EmptyObjectArray_ReturnsEmptyArray()
+    public void Parse_Empty_Object_Array()
     {
         // Arrange
         string input = """
                        culling_value=
                        {
-                       	{
-                       	}
-                       	{
-                       	}
-                       	{
-                       	}
+                       	{ }
+                       	{ }
+                        { }
                        }
                        """;
         
@@ -795,5 +792,102 @@ ship_names=
             var itemObj = (SaveObject)item;
             Assert.AreEqual(0, itemObj.Properties.Count, "Each item should be an empty object");
         }
+    }
+
+
+    [TestMethod]
+    public void Parse_Object_List_With_Ids()
+    {
+        // Arrange
+        //  67108916  is the id of the first intel
+        //  218103860  is the id of the second intel
+
+        string input = """
+        {
+            intel_manager=
+            {
+                intel=
+                {
+                    {
+                        67108916 
+                        {
+                            intel=10
+                            stale_intel=
+                            {
+                            }
+                        }
+                    }
+    
+                    {
+                        218103860 
+                        {
+                            intel=10
+                            stale_intel=
+                            {
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        """;
+
+        // Act
+        var root = Parser.Parse(input);
+
+        // Assert
+        Assert.IsInstanceOfType(root, typeof(SaveObject));
+        
+        Assert.AreEqual(1, root.Properties.Count);
+        var intelManagerProp = root.Properties[0];
+        Assert.AreEqual("intel_manager", intelManagerProp.Key);
+        
+        Assert.IsInstanceOfType(intelManagerProp.Value, typeof(SaveObject));
+        var intelManager = (SaveObject)intelManagerProp.Value;
+        
+        Assert.AreEqual(1, intelManager.Properties.Count);
+        var intelProp = intelManager.Properties[0];
+        Assert.AreEqual("intel", intelProp.Key);
+        
+        Assert.IsInstanceOfType(intelProp.Value, typeof(SaveArray));
+        var intelArray = (SaveArray)intelProp.Value;
+        
+        Assert.AreEqual(2, intelArray.Items.Count);
+
+        // Check first item
+        Assert.IsInstanceOfType(intelArray.Items[0], typeof(SaveArray)); // Each item in the 'intel' array is itself an array [ID, DataObject]
+        var firstItemArray = (SaveArray)intelArray.Items[0];
+        Assert.AreEqual(2, firstItemArray.Items.Count); // Should contain ID and DataObject
+
+        Assert.IsInstanceOfType(firstItemArray.Items[0], typeof(Scalar<int>));
+        Assert.AreEqual(67108916, ((Scalar<int>)firstItemArray.Items[0]).Value);
+
+        Assert.IsInstanceOfType(firstItemArray.Items[1], typeof(SaveObject));
+        var firstDataObject = (SaveObject)firstItemArray.Items[1];
+        Assert.AreEqual(2, firstDataObject.Properties.Count); // intel and stale_intel
+        var firstIntelValueProp = firstDataObject.Properties.First(p => p.Key == "intel");
+        Assert.IsInstanceOfType(firstIntelValueProp.Value, typeof(Scalar<int>));
+        Assert.AreEqual(10, ((Scalar<int>)firstIntelValueProp.Value).Value);
+        var firstStaleIntelProp = firstDataObject.Properties.First(p => p.Key == "stale_intel");
+        Assert.IsInstanceOfType(firstStaleIntelProp.Value, typeof(SaveObject));
+        Assert.AreEqual(0, ((SaveObject)firstStaleIntelProp.Value).Properties.Count);
+
+        // Check second item
+        Assert.IsInstanceOfType(intelArray.Items[1], typeof(SaveArray)); // Second item is also an array [ID, DataObject]
+        var secondItemArray = (SaveArray)intelArray.Items[1];
+        Assert.AreEqual(2, secondItemArray.Items.Count); // Should contain ID and DataObject
+
+        Assert.IsInstanceOfType(secondItemArray.Items[0], typeof(Scalar<int>));
+        Assert.AreEqual(218103860, ((Scalar<int>)secondItemArray.Items[0]).Value);
+
+        Assert.IsInstanceOfType(secondItemArray.Items[1], typeof(SaveObject));
+        var secondDataObject = (SaveObject)secondItemArray.Items[1];
+        Assert.AreEqual(2, secondDataObject.Properties.Count); // intel and stale_intel
+        var secondIntelValueProp = secondDataObject.Properties.First(p => p.Key == "intel");
+        Assert.IsInstanceOfType(secondIntelValueProp.Value, typeof(Scalar<int>));
+        Assert.AreEqual(10, ((Scalar<int>)secondIntelValueProp.Value).Value);
+        var secondStaleIntelProp = secondDataObject.Properties.First(p => p.Key == "stale_intel");
+        Assert.IsInstanceOfType(secondStaleIntelProp.Value, typeof(SaveObject));
+        Assert.AreEqual(0, ((SaveObject)secondStaleIntelProp.Value).Properties.Count);
     }
 }

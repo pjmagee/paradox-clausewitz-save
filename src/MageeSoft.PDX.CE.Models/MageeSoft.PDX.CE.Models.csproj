@@ -14,8 +14,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <AdditionalFiles Include="meta.pdx" />
-        <AdditionalFiles Include="gamestate.pdx" />
+        <AdditionalFiles Include="meta.csf" />
+        <AdditionalFiles Include="gamestate.csf" />
     </ItemGroup>
 
     <ItemGroup>           
@@ -27,6 +27,5 @@
                           OutputItemType="Analyzer" 
                           ReferenceOutputAssembly="false" />
     </ItemGroup>
-
 
 </Project>

@@ -12,7 +12,15 @@ public static class ModelsGenerator
 {
     private const string Namespace = "MageeSoft.PDX.CE.Models";
 
-     public static void GenerateModels(SourceProductionContext context, AdditionalText file, IEnumerable<SaveObjectAnalysis> analyses)
+    // Simple types frequently referenced - we use OrdinalIgnoreCase for comparisons
+    private readonly static HashSet<string> SimpleTypes = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "string", "int", "long", "float", "double", "bool", "DateTime", "Guid",
+        "System.String", "System.Int32", "System.Int64", "System.Single",
+        "System.Double", "System.Boolean", "System.DateTime", "System.Guid"
+    };
+
+    public static void GenerateModels(SourceProductionContext context, AdditionalText file, IEnumerable<SaveObjectAnalysis> analyses)
     {
         try
         {
@@ -21,7 +29,7 @@ public static class ModelsGenerator
                 new DiagnosticDescriptor("PDXSG100", "Processing File", $"Processing file: {file.Path}", "StellarisModelsGenerator", DiagnosticSeverity.Info, true),
                 Location.None));
 
-            var analysisList = analyses?.ToList() ?? new List<SaveObjectAnalysis>(); // Handle potential null
+            var analysisList = analyses?.ToList() ?? new List<SaveObjectAnalysis>();
 
             // Report number of analyses found
             context.ReportDiagnostic(Diagnostic.Create(
@@ -43,14 +51,13 @@ public static class ModelsGenerator
                 }
 
                 // Report explicit errors caught by the analyzer
-                 if (analysis.Error != null && !analysis.Diagnostics.Any(d => d.Id == "PDXSA003")) // Avoid duplicate reporting if already logged as diagnostic
+                 if (analysis.Error != null && !analysis.Diagnostics.Any(d => d.Id == "PDXSA003"))
                  {
                       context.ReportDiagnostic(Diagnostic.Create(
                          new DiagnosticDescriptor("PDXSG005", "Analyzer Phase Error", $"Analyzer failed for {analysis.RootName}: {analysis.Error.GetType().Name} - {analysis.Error.Message}", "StellarisModelsGenerator", DiagnosticSeverity.Error, true),
                          Location.None));
                  }
             }
-
 
             if (!analysisList.Any())
             {
@@ -60,15 +67,13 @@ public static class ModelsGenerator
                 return;
             }
 
-            foreach (var analysis in analysisList.Where(a => a.Error == null)) // Only process successful analyses
+            foreach (var analysis in analysisList.Where(a => a.Error == null))
             {
-                 // Determine a specific namespace segment for this analysis root
-                 // Use the RootName which should be unique per file (e.g., "GameState", "Meta")
-                 string rootNamespaceSegment = analysis.RootName; // Assuming RootName is PascalCased and valid for namespace
-                 // No longer nesting under Generated, just use the root namespace directly
+                 // Determine namespace for this analysis root
+                 string rootNamespaceSegment = analysis.RootName;
                  string fullNamespace = Namespace;
 
-                 // Enhanced check for no definitions
+                 // Check for no definitions
                 if (analysis.ClassDefinitions == null || analysis.ClassDefinitions.Count == 0)
                 {
                      context.ReportDiagnostic(Diagnostic.Create(
@@ -81,11 +86,10 @@ public static class ModelsGenerator
                      new DiagnosticDescriptor("PDXSG007", "Generating Root Info", $"Analysis for {analysis.RootName} found {analysis.ClassDefinitions.Count} top-level class definitions. Starting generation in namespace {fullNamespace}...", "StellarisModelsGenerator", DiagnosticSeverity.Info, true),
                      Location.None));
 
-
-                 // Iterate through ONLY the TOP-LEVEL classes defined for this analysis root
+                 // Iterate through the TOP-LEVEL classes defined for this analysis root
                 foreach (var topLevelClassDef in analysis.ClassDefinitions.Values)
                 {
-                     // Add check for null/empty class name before proceeding
+                     // Check for null/empty class name before proceeding
                      if (string.IsNullOrEmpty(topLevelClassDef?.Name))
                      {
                          context.ReportDiagnostic(Diagnostic.Create(
@@ -114,8 +118,6 @@ public static class ModelsGenerator
                      fileContentBuilder.AppendLine("using System.Linq;");
                      fileContentBuilder.AppendLine("using System.Globalization;");
                      fileContentBuilder.AppendLine("using MageeSoft.PDX.CE;");
-                     // Optional: Add using for the base generated namespace if needed?
-                     // fileContentBuilder.AppendLine($"using {Namespace};");
                      fileContentBuilder.AppendLine();
 
                      // Add the specific namespace block
@@ -130,7 +132,6 @@ public static class ModelsGenerator
                      fileContentBuilder.AppendLine(); // Trailing newline
 
                      // Add the source file for this top-level class (containing all its nested classes)
-                     // Use only the class name for the hint name, not prefixed with rootNamespaceSegment
                      context.AddSource($"{topLevelClassDef.Name}.g.cs", SourceText.From(fileContentBuilder.ToString(), Encoding.UTF8));
 
                     context.ReportDiagnostic(Diagnostic.Create(
@@ -139,7 +140,7 @@ public static class ModelsGenerator
                 }
             }
         }
-        catch (Exception ex) // Catch unexpected exceptions during the generation phase itself
+        catch (Exception ex)
         {
             context.ReportDiagnostic(Diagnostic.Create(
                 new DiagnosticDescriptor("PDXSG001", "Generator Exception", $"Generator failed unexpectedly: {ex.GetType().Name} - {ex.Message} {ex.StackTrace}", "StellarisModelsGenerator", DiagnosticSeverity.Error, true),
@@ -151,9 +152,6 @@ public static class ModelsGenerator
     /// Recursively generates the C# source code for a class definition, including its properties,
     /// binder method, and any nested classes. Appends to the provided StringBuilder.
     /// </summary>
-    /// <param name="classDef">The class definition to generate.</param>
-    /// <param name="sb">The StringBuilder to append the source code to.</param>
-    /// <param name="indentLevel">The current indentation level (number of 4-space indents).</param>
     private static void GenerateClassSourceRecursive(ClassDefinition classDef, StringBuilder sb, int indentLevel)
     {
         if (string.IsNullOrEmpty(classDef?.Name)) return;
@@ -174,32 +172,31 @@ public static class ModelsGenerator
         foreach (var property in classDef.Properties)
         {
             var propertyName = property.Name.TrimStart('@');
-            // Get the type syntax suitable for declaration (uses simple name for nested types)
-            // REVERTED: Use the PropertyType (FullName) directly for declaration now
-            // var declarationTypeSyntax = DeterminePropertyTypeSyntaxForDeclaration(property, classDef);
-            var nullableDeclarationType = AddNullableAnnotation(property.PropertyType); // Use FullName from PropertyType
+            
+            // Get the type syntax suitable for declaration
+            var nullableDeclarationType = AddNullableAnnotation(property.PropertyType);
 
-            // REMOVED Attribute Generation
-            /*
-            string attribute;
-            if (property.IsDictionary)
-            {
-                 attribute = $[{property.AttributeType}("{property.OriginalName}")];
-            }
-            sb.AppendLine($"{propertyIndent}{attribute}");
-            */
-
-            // Use the property.Name (simple) and the FullName-based type for the property definition
+            // Generate property
             sb.AppendLine($"{propertyIndent}public {nullableDeclarationType} {propertyName} {{ get; set; }}");
             sb.AppendLine(); // Blank line after property
         }
 
          // Generate Binder Method
-         // Indent the binder method relative to the class
          string binderIndent = propertyIndent; // Same indent as properties
          sb.AppendLine(); // Blank line before binder
          sb.AppendLine($"{binderIndent}/// <summary>");
-         sb.AppendLine($"{binderIndent}/// Binds a SaveObject to a new {className} instance.");
+         
+         if (classDef.Properties.Count == 0)
+         {
+             sb.AppendLine($"{binderIndent}/// Binds a SaveObject to a new {className} instance.");
+             sb.AppendLine($"{binderIndent}/// This object has no properties to bind.");
+             sb.AppendLine($"{binderIndent}/// It represents an empty object in the save file: {{ }}");
+         }
+         else
+         {
+             sb.AppendLine($"{binderIndent}/// Binds a SaveObject to a new {className} instance.");
+         }
+         
          sb.AppendLine($"{binderIndent}/// </summary>");
          sb.AppendLine($"{binderIndent}/// <param name=\"obj\">The SaveObject to bind. Can be null.</param>");
          sb.AppendLine($"{binderIndent}/// <returns>A new {className} instance or null if input is null.</returns>");
@@ -210,14 +207,14 @@ public static class ModelsGenerator
          sb.AppendLine($"{binderIndent}    var model = new {className}();");
          sb.AppendLine();
 
-         // Generate binding logic for each property (use the helper)
+         // Generate binding logic for each property
          foreach (var property in classDef.Properties)
          {
               var propertyName = property.Name.TrimStart('@');
-              // Use the FULL type name (PropertyType from definition) for binding logic
+              // Use the FULL type name for binding logic
               var fullPropertyType = property.PropertyType;
               // Pass the full type name (after trimming '?') to binding logic
-              GeneratePropertyBindingLogic(property, propertyName, ConvertPropertyTypeSyntax(fullPropertyType), sb, indentLevel + 1); // Pass StringBuilder and indent + 1 for binder logic
+              GeneratePropertyBindingLogic(property, propertyName, ConvertPropertyTypeSyntax(fullPropertyType), sb, indentLevel);
          }
 
          sb.AppendLine();
@@ -234,7 +231,7 @@ public static class ModelsGenerator
         sb.AppendLine($"{indent}}} // End of class {className}");
     }
 
-    // Helper to add nullable annotation '?' where appropriate (updated)
+    // Helper to add nullable annotation '?' where appropriate
     private static string AddNullableAnnotation(string? typeName)
     {
         if (typeName == null) return "object?"; // Handle null case
@@ -243,7 +240,7 @@ public static class ModelsGenerator
         if (typeName.EndsWith("?")) // Already nullable
             return typeName;
 
-        // Reference types (string, object, classes, List<>, Dictionary<>) always get '?' in nullable context
+        // Reference types always get '?' in nullable context
          if (typeName == "string" || typeName == "object" || typeName.Contains("<") || (!IsValueType(typeName) && typeName != "dynamic"))
              return typeName + "?";
 
@@ -260,77 +257,23 @@ public static class ModelsGenerator
          if (string.IsNullOrEmpty(typeName)) return false;
 
          // Basic check for known value types + struct heuristic (starts with uppercase)
-         var valueTypes = new HashSet<string>(StringComparer.OrdinalIgnoreCase) {
-             "int", "long", "float", "double", "bool", "DateTime", "Guid",
-             "decimal", "byte", "sbyte", "short", "ushort", "uint", "ulong", "char",
-             "System.Int32", "System.Int64", "System.Single", "System.Double", "System.Boolean",
-             "System.DateTime", "System.Guid", "System.Decimal" /* etc */ };
+         var valueTypes = SimpleTypes;
          // Simple struct check: Starts with Upper, not generic, not string/object
          return valueTypes.Contains(typeName) ||
                (!typeName.Contains("<") && typeName != "string" && typeName != "object" && typeName.Length > 0 && char.IsUpper(typeName[0]));
      }
 
-
-    // Helper to convert property type strings for use in Bind methods (PascalCases nested types)
-    // Needs to handle potentially nullable types coming from analyzer now.
-    // SIMPLIFIED: Analyzer now provides the correct FullName directly in PropertyType.
+    // Helper to convert property type strings for use in Bind methods
     private static string ConvertPropertyTypeSyntax(string originalType)
     {
         // Trim nullable annotation '?' if present
         return originalType.TrimEnd('?');
-        
-        /* REMOVED OLD LOGIC
-        if (IsSimpleType(originalType)) return originalType; // Simple types don't need PascalCase
-
-        if (originalType.StartsWith("List<"))
-        {
-            // Extract item type, remove '?', PascalCase it, put back into List<>
-            var itemType = originalType.Substring(5, originalType.Length - 6).TrimEnd(';');
-            var pascalItemType = ConvertPropertyTypeSyntax(itemType); // Recursive call to handle nested complex types
-            return $"List<{pascalItemType}>";
-        }
-        else if (originalType.StartsWith("Dictionary<"))
-        {
-            // Extract key/value types, remove '?', PascalCase value type, put back into Dictionary<>
-             var parts = originalType.Substring(11, originalType.Length - 12).Split(new[] { ',' }, 2);
-             if (parts.Length == 2) {
-                  var keyType = parts[0].Trim(); // Keys are usually simple (int/string)
-                  var valueType = parts[1].Trim().TrimEnd(';');
-                  var pascalValueType = ConvertPropertyTypeSyntax(valueType); // Recursive call
-                  return $"Dictionary<{keyType}, {pascalValueType}>";
-             } else {
-                  // Fallback: Try PascalCase on the whole original string if format is unexpected
-                  return ToPascalCaseGenerator(originalType.TrimEnd(';')); // Use a basic PascalCase if analyzer failed
-             }
-        }
-         // If not List/Dictionary or simple, assume it's a class name.
-         // Use the name directly as Analyzer should have PascalCased it.
-         // If we *must* convert here, use a simple local converter.
-         return ToPascalCaseGenerator(originalType); // Use a basic converter just in case
-        */
     }
 
-     // Basic PascalCase needed locally if ConvertPropertyTypeSyntax needs a fallback
-     private static string ToPascalCaseGenerator(string input)
-     {
-         if (string.IsNullOrEmpty(input) || (!input.Contains('_') && !input.Contains('-') && char.IsUpper(input[0])))
-             return input; // Assume already PascalCase or simple type
+    // Helper to check if a type name is a reserved name 
+    private static bool IsReservedTypeName(string name) => SimpleTypes.Contains(name);
 
-         input = input.Replace("-", "_");
-         var parts = input.Split('_');
-         var builder = new StringBuilder();
-         foreach (var part in parts.Where(p => p.Length > 0))
-         {
-             builder.Append(char.ToUpperInvariant(part[0]));
-             if (part.Length > 1) // Avoid error on single char parts
-                builder.Append(part.Substring(1).ToLowerInvariant());
-         }
-         var result = builder.ToString();
-         return string.IsNullOrEmpty(result) ? "_" : result;
-     }
-
-
-    // GeneratePropertyBindingLogic (Syntax corrections applied)
+    // Generate property binding logic based on property type
     private static void GeneratePropertyBindingLogic(PropertyDefinition property, string propertyName, string propertyType, StringBuilder builder, int indentLevel)
     {
         string indent = new string(' ', indentLevel * 4);
@@ -343,80 +286,125 @@ public static class ModelsGenerator
         if (property.IsPdxDictionaryPattern)
         {
             // Expected format: Dictionary<KeyType, ValueType>
-            var pdxDictMatch = Regex.Match(propertyType, @"Dictionary<(?<keyType>\\w+),\\s*(?<valueType>.+)>" );
+            var pdxDictMatch = Regex.Match(propertyType, @"Dictionary<(?<keyType>\w+),\s*(?<valueType>.+)>");
             if (pdxDictMatch.Success)
             {
                 string keyType = pdxDictMatch.Groups["keyType"].Value;
                 string valueType = pdxDictMatch.Groups["valueType"].Value; // This includes namespace/nested path
                 bool isComplexValueType = !IsSimpleType(valueType);
+                
+                // Add this line to declare parsedKeyVar for use later
+                string parsedKeyVar = "parsedKey"; // Default variable name for parsed key
 
                 builder.AppendLine($"{indent}            if (obj.TryGetSaveArray(\"{originalKey}\", out var {varName}Array) && {varName}Array != null)");
                 builder.AppendLine($"{indent}            {{");
                 builder.AppendLine($"{indent}                var dict = new {propertyType}();");
+                builder.AppendLine($"{indent}                // Each item is a SaveArray with [ScalarID, ObjectValue] pair");
                 builder.AppendLine($"{indent}                foreach (var item in {varName}Array.Items)");
                 builder.AppendLine($"{indent}                {{");
-                builder.AppendLine($"{indent}                    // Each item should be a SaveObject with one key-value pair");
-                builder.AppendLine($"{indent}                    if (item is SaveObject entryObj && entryObj.Properties.Count == 1)");
+                builder.AppendLine($"{indent}                    // Each item should be a SaveArray with a Scalar key and SaveObject value");
+                builder.AppendLine($"{indent}                    if (item is SaveArray innerArray && innerArray.Items.Count == 2 &&");
+                builder.AppendLine($"{indent}                        innerArray.Items[1] is SaveObject valueObj)");
                 builder.AppendLine($"{indent}                    {{");
-                builder.AppendLine($"{indent}                        var kvp = entryObj.Properties.First();");
-                builder.AppendLine($"{indent}                        var keyString = kvp.Key;");
-                builder.AppendLine($"{indent}                        var valueElement = kvp.Value;");
-                builder.AppendLine();
-                builder.AppendLine($"{indent}                        // Parse the key");
 
-                // Key Parsing Logic
-                string parsedKeyVar = "parsedKey";
-                string parseCondition = "";
-                if (keyType == "int") {
-                    parseCondition = $"int.TryParse(keyString, NumberStyles.Integer, CultureInfo.InvariantCulture, out var {parsedKeyVar})";
+                // Key Parsing Logic - handle both the ORIGINAL pattern and the NESTED ARRAY pattern
+                string keyExtractionCode;
+                
+                if (keyType == "int")
+                {
+                    keyExtractionCode = $@"{indent}                        // Get the key (first item in the inner array)
+{indent}                        var keyItem = innerArray.Items[0];
+{indent}                        if (keyItem is Scalar<int> intKeyScalar)
+{indent}                        {{
+{indent}                            var {parsedKeyVar} = intKeyScalar.Value;"; // Open brace will be closed after value binding
                 }
-                else if (keyType == "long") {
-                    parseCondition = $"long.TryParse(keyString, NumberStyles.Integer, CultureInfo.InvariantCulture, out var {parsedKeyVar})";
+                else if (keyType == "long") 
+                {
+                    keyExtractionCode = $@"{indent}                        // Get the key (first item in the inner array)
+{indent}                        var keyItem = innerArray.Items[0];
+{indent}                        if (keyItem is Scalar<long> longKeyScalar)
+{indent}                        {{
+{indent}                            var {parsedKeyVar} = longKeyScalar.Value;"; // Open brace will be closed after value binding
                 }
-                else if (keyType == "string") { // Assume string if not int or long
-                    parseCondition = "true"; // Key is already a string
-                    parsedKeyVar = "keyString"; // Use the string key directly
-                }
-                else {
-                     builder.AppendLine($"{indent}                        // WARN: Unsupported key type \"{keyType}\" for PDX Dictionary pattern.");
-                     parseCondition = "false";
+                else // string or other types
+                {
+                    keyExtractionCode = $@"{indent}                        // Unsupported key type ""{keyType}"" for this pattern
+{indent}                        if (false) {{ // This condition prevents the inner block from executing"; // Open brace will be closed after value binding
+                    builder.AppendLine($"{indent}                        // WARN: Unsupported key type \"{keyType}\" for PDX Dictionary pattern where keys are expected to be int/long.");
                 }
 
-                builder.AppendLine($"{indent}                        if ({parseCondition})");
-                builder.AppendLine($"{indent}                        {{");
-
-                // Value Binding Logic
-                string valueIndent = indent + "                            ";
+                builder.AppendLine(keyExtractionCode);
+                
+                // Value Binding Logic - get the second item (index 1) from the inner array
+                string valueBindingIndent = indent + "                            ";
                 if (isComplexValueType)
                 {
-                     builder.AppendLine($"{valueIndent}// Bind complex value type: {valueType}");
-                     builder.AppendLine($"{valueIndent}if (valueElement is SaveObject valueObj)");
-                     builder.AppendLine($"{valueIndent}{{");
-                     // Use the fully qualified valueType for the Bind call
-                     builder.AppendLine($"{valueIndent}    var boundValue = {valueType}.Bind(valueObj);");
-                     builder.AppendLine($"{valueIndent}    if (boundValue != null)");
-                     builder.AppendLine($"{valueIndent}        dict.Add({parsedKeyVar}, boundValue);");
-                     builder.AppendLine($"{valueIndent}}}");
+                     // For complex type, we bind the SaveObject at index 1 directly
+                     builder.AppendLine($"{valueBindingIndent}// Bind complex value type: {valueType}");
+                     // Value object is already extracted in the if condition above as 'valueObj'
+                     builder.AppendLine($"{valueBindingIndent}var boundValue = {valueType}.Bind(valueObj);");
+                     builder.AppendLine($"{valueBindingIndent}if (boundValue != null)");
+                     builder.AppendLine($"{valueBindingIndent}    dict.Add({parsedKeyVar}, boundValue);");
                 }
                 else // Simple value type
                 {
                      string scalarType = GetScalarTypeForElementType(valueType); // Get underlying scalar type (int, string, etc.)
-                     builder.AppendLine($"{valueIndent}// Bind simple value type: {valueType}");
-                     builder.AppendLine($"{valueIndent}if (valueElement is Scalar<{scalarType}> scalarValue)");
-                     builder.AppendLine($"{valueIndent}    dict.Add({parsedKeyVar}, scalarValue.Value);");
+                     
+                     // For numeric properties (int, long, float), always try all numeric types with appropriate conversion
+                     if (scalarType == "int" || scalarType == "long" || scalarType == "float")
+                     {
+                         // Use a generic approach for all numeric properties that can handle mixed types
+                         builder.AppendLine($"{valueBindingIndent}// Dynamic numeric binding: tries float first, then int with conversion");
+                         
+                         // For any numeric dictionary value type, try to handle mixed numeric types gracefully
+                         if (scalarType == "float")
+                         {
+                             // When targeting float, prefer float but convert from int if needed
+                             builder.AppendLine($"{valueBindingIndent}if (valueObj.TryGetFloat(\"{originalKey}\", out var floatVal))");
+                             builder.AppendLine($"{valueBindingIndent}    dict.Add({parsedKeyVar}, floatVal);");
+                             builder.AppendLine($"{valueBindingIndent}else if (valueObj.TryGetInt(\"{originalKey}\", out var intVal))");
+                             builder.AppendLine($"{valueBindingIndent}    dict.Add({parsedKeyVar}, (float)intVal);");
+                         }
+                         else if (scalarType == "int")
+                         {
+                             // When targeting int, try int first but also try float with conversion (possible data loss)
+                             builder.AppendLine($"{valueBindingIndent}if (valueObj.TryGetInt(\"{originalKey}\", out var intVal))");
+                             builder.AppendLine($"{valueBindingIndent}    dict.Add({parsedKeyVar}, intVal);");
+                             builder.AppendLine($"{valueBindingIndent}else if (valueObj.TryGetFloat(\"{originalKey}\", out var floatVal))");
+                             builder.AppendLine($"{valueBindingIndent}    dict.Add({parsedKeyVar}, (int)floatVal); // Note: potential data loss from float truncation");
+                         }
+                         else if (scalarType == "long")
+                         {
+                             // When targeting long, try all numeric conversions
+                             builder.AppendLine($"{valueBindingIndent}if (valueObj.TryGetLong(\"{originalKey}\", out var longVal))");
+                             builder.AppendLine($"{valueBindingIndent}    dict.Add({parsedKeyVar}, longVal);");
+                             builder.AppendLine($"{valueBindingIndent}else if (valueObj.TryGetInt(\"{originalKey}\", out var intVal))");
+                             builder.AppendLine($"{valueBindingIndent}    dict.Add({parsedKeyVar}, (long)intVal);");
+                             builder.AppendLine($"{valueBindingIndent}else if (valueObj.TryGetFloat(\"{originalKey}\", out var floatVal))");
+                             builder.AppendLine($"{valueBindingIndent}    dict.Add({parsedKeyVar}, (long)floatVal); // Note: potential data loss from float truncation");
+                         }
+                     }
+                     else
+                     {
+                         // Standard scalar binding for non-numeric properties
+                         builder.AppendLine($"{valueBindingIndent}// Standard non-numeric binding for type: {valueType}");
+                         builder.AppendLine($"{valueBindingIndent}if (valueObj.TryGetValue(\"{originalKey}\", out var simpleValue) && simpleValue is Scalar<{scalarType}> scalarValue)");
+                         builder.AppendLine($"{valueBindingIndent}    dict.Add({parsedKeyVar}, scalarValue.Value);");
+                     }
                 }
 
-                builder.AppendLine($"{indent}                        }} // End key parse check");
-                builder.AppendLine($"{indent}                    }} // End check for SaveObject with 1 property");
-                builder.AppendLine($"{indent}                }} // End foreach item in array");
+                // Close the key extraction if-block
+                builder.AppendLine($"{indent}                        }}"); // End if for key extraction
+                
+                builder.AppendLine($"{indent}                    }}"); // End check for SaveArray pattern
+                builder.AppendLine($"{indent}                }}"); // End foreach item in array
                 builder.AppendLine($"{indent}                model.{propertyName} = dict;");
-                builder.AppendLine($"{indent}            }} // End TryGetSaveArray");
+                builder.AppendLine($"{indent}            }}"); // End TryGetSaveArray
             } else {
                  builder.AppendLine($"{indent}            // WARN: Could not parse PDX Dictionary key/value types from '{propertyType}' for key \"{originalKey}\"");
             }
         }
         // --- Check for standard Dictionary<int/string, T> mapped from SaveObject ---
-        // Note: isDictionary is true for both IsPdxDictionaryPattern and this case, so PDX pattern must be checked first.
         else if (property.IsDictionary)
         {
             // Handle Dictionary<int, T>
@@ -436,8 +424,7 @@ public static class ModelsGenerator
                 builder.AppendLine($"{indent}                    {{");
 
                 if (isNestedCollection) {
-                    builder.AppendLine($"{indent}                        // TODO: Implement proper nested collection binding for Dictionary<int, Collection<...>>");
-                    builder.AppendLine($"{indent}                        // Currently skipping this since we can't call Bind() on collection types");
+                    builder.AppendLine($"{indent}                        // Skip nested collection binding");
                 }
                 else if (isComplexValueType) {
                      // Use full value type for Bind
@@ -473,7 +460,7 @@ public static class ModelsGenerator
                     builder.AppendLine($"{indent}                {{");
 
                     if (isNestedCollection) {
-                        builder.AppendLine($"{indent}                    // TODO: Implement proper nested collection binding for Dictionary<string, Collection<...>>");
+                        builder.AppendLine($"{indent}                    // Skip nested collection binding");
                     }
                     else if (isComplexValueType) {
                         // Use full value type for Bind
@@ -509,8 +496,7 @@ public static class ModelsGenerator
                 builder.AppendLine($"{indent}                var list = new {propertyType}();");
 
                 if (isNestedCollection) {
-                    builder.AppendLine($"{indent}                // TODO: This is a nested collection ({propertyType})");
-                    builder.AppendLine($"{indent}                // Currently skipping nested collection binding.");
+                    builder.AppendLine($"{indent}                // Skip nested collection binding");
                 }
                 else {
                     builder.AppendLine($"{indent}                foreach (var item in {varName}Array.Items)");
@@ -540,7 +526,6 @@ public static class ModelsGenerator
         else if (!IsSimpleType(propertyType)) // Complex nested object (T)
         {
             builder.AppendLine($"{indent}            if (obj.TryGetSaveObject(\"{originalKey}\", out var {varName}Obj))");
-             // Use the full propertyType (which is already the full name) for Bind
             builder.AppendLine($"{indent}                model.{propertyName} = {propertyType}.Bind({varName}Obj);");
         }
         // --- Handle Simple Scalar Properties ---
@@ -593,48 +578,12 @@ public static class ModelsGenerator
             "DateTime" => "System.DateTime", // Need namespace if not globally using
             "Guid" => "System.Guid", // Need namespace if not globally using
             _ => elementType // Assume it's a type name that works directly (like a custom struct)
-        }; // Corrected semicolon for switch expression
-    } // Corrected closing brace for method
+        };
+    }
 
-    // Keep the SimpleTypes definition - use OrdinalIgnoreCase for comparisons
-    private readonly static HashSet<string> SimpleTypes = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "string", "int", "long", "float", "double", "bool", "DateTime", "Guid",
-        "System.String", "System.Int32", "System.Int64", "System.Single",
-        "System.Double", "System.Boolean", "System.DateTime", "System.Guid"
-    };
-    // Updated IsSimpleType to handle potential null and nullable annotation '?'
+    // Helper to check if a type is a simple type
     private static bool IsSimpleType(string? typeName) => 
         typeName != null && SimpleTypes.Contains(typeName.TrimEnd('?'));
-
-    // Add this method to check for reserved type names
-    private static bool IsReservedTypeName(string name)
-    {
-        // Check if it's a simple built-in type
-        if (SimpleTypes.Contains(name))
-            return true;
-
-        // Additional check for other C# keywords and common types
-        var additionalReservedNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-        {
-            // C# keywords
-            "abstract", "as", "base", "break", "case", "catch", "checked",
-            "class", "const", "continue", "default", "delegate", "do", "else",
-            "enum", "event", "explicit", "extern", "false", "finally", "fixed", "for",
-            "foreach", "goto", "if", "implicit", "in", "interface", "internal", "is", "lock",
-            "namespace", "new", "null", "operator", "out", "override", "params",
-            "private", "protected", "public", "readonly", "ref", "return", "sealed",
-            "sizeof", "stackalloc", "static", "struct", "switch", "this", "throw",
-            "true", "try", "typeof", "unchecked", "unsafe", "using",
-            "virtual", "void", "volatile", "while",
-            
-            // Common .NET types
-            "TimeSpan", "Uri", "Version", "Type", "Exception",
-            "List", "Dictionary", "HashSet", "Queue", "Stack", "Tuple", "Task"
-        };
-
-        return additionalReservedNames.Contains(name);
-    }
-} // End class
+}
 
 
