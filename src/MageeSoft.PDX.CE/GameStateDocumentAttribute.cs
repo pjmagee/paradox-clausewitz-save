@@ -1,0 +1,25 @@
+using System;
+
+namespace MageeSoft.PDX.CE
+{
+    /// <summary>
+    /// Marks a class for source generation based on a specific Paradox gamestate schema file.
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
+    public class GameStateDocumentAttribute : Attribute
+    {
+        /// <summary>
+        /// Gets the schema file name to use for generating this class.
+        /// </summary>
+        public string SchemaFileName { get; }
+
+        /// <summary>
+        /// Creates a new instance of the GameStateDocumentAttribute.
+        /// </summary>
+        /// <param name="schemaFileName">The name of the schema file to use for generating this class.</param>
+        public GameStateDocumentAttribute(string schemaFileName)
+        {
+            SchemaFileName = schemaFileName;
+        }
+    }
+} 

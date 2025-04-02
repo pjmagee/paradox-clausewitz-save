@@ -1,31 +1,26 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
     <PropertyGroup>
         <TargetFramework>net10.0</TargetFramework>
-        <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
-        <CompilerGeneratedFilesOutputPath>$(BaseIntermediateOutputPath)\GeneratedFiles</CompilerGeneratedFilesOutputPath>
+        <PDXGenerateModels>true</PDXGenerateModels>
         <LangVersion>latest</LangVersion>
-    </PropertyGroup>
-
+        <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>  
+        <!-- emit to same dir as source code -->
+        <CompilerGeneratedFilesOutputPath>$(MSBuildThisFileDirectory)\Generated</CompilerGeneratedFilesOutputPath>
+    </PropertyGroup>    
     <PropertyGroup Condition="'$(Configuration)'=='Release'">
         <StripSymbols>true</StripSymbols>
     </PropertyGroup>
-
-    <ItemGroup>
-        <AdditionalFiles Include="meta.csf" />
+    <ItemGroup>      
         <AdditionalFiles Include="gamestate.csf" />
+        <AdditionalFiles Include="meta.csf" />
     </ItemGroup>
-
-    <ItemGroup>           
-        <ProjectReference Include="..\MageeSoft.PDX.CE\MageeSoft.PDX.CE.csproj" />
-    </ItemGroup>
-
     <ItemGroup>
-        <ProjectReference Include="..\MageeSoft.PDX.CE.SourceGenerator\MageeSoft.PDX.CE.SourceGenerator.csproj" 
-                          OutputItemType="Analyzer" 
-                          ReferenceOutputAssembly="false" />
+        <ProjectReference Include="..\MageeSoft.PDX.CE\MageeSoft.PDX.CE.csproj" />
+        <ProjectReference Include="..\MageeSoft.PDX.CE.SourceGenerator\MageeSoft.PDX.CE.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    </ItemGroup>
+    <ItemGroup>
+      <Folder Include="Generated\" />
     </ItemGroup>
 
 </Project>

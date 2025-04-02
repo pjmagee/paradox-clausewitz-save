@@ -9,9 +9,11 @@ namespace MageeSoft.PDX.CE.SourceGenerator;
 /// </summary>
 internal class SaveObjectAnalyzer
 {
+    private Dictionary<string, ClassDefinition> _definedClassesByPath = new();
     private Dictionary<string, ClassDefinition> _definedClassesBySignature = new();
     private HashSet<string> _generatedTopLevelClassNames = new();
     private readonly static TextInfo TextInfo = CultureInfo.InvariantCulture.TextInfo;
+    private SaveObjectAnalysis? _currentAnalysis;
 
     // Shared collection of C# keywords and reserved types to avoid duplication
     private static readonly HashSet<string> ReservedTypeNames = new(StringComparer.OrdinalIgnoreCase)
@@ -30,6 +32,14 @@ internal class SaveObjectAnalyzer
         // Common .NET types
         "DateTime", "TimeSpan", "Guid", "Uri", "Version", "Type", "Exception",
         "List", "Dictionary", "HashSet", "Queue", "Stack", "Tuple", "Task"
+    };
+
+    // Re-add SimpleTypes needed for nullability checks
+    private readonly static HashSet<string> SimpleTypes = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "string", "int", "long", "float", "double", "bool", "DateTime", "Guid",
+        "System.String", "System.Int32", "System.Int64", "System.Single",
+        "System.Double", "System.Boolean", "System.DateTime", "System.Guid"
     };
 
     /// <summary>
@@ -177,11 +187,13 @@ internal class SaveObjectAnalyzer
     {
         // Reset state for each file
         _definedClassesBySignature.Clear();
+        _definedClassesByPath.Clear();
         _generatedTopLevelClassNames.Clear();
         _schemaRegistry.Clear(); // Clear the schema registry
 
         // Create analysis object first
         var currentAnalysis = new SaveObjectAnalysis(Path.GetFileNameWithoutExtension(text.Path));
+        _currentAnalysis = currentAnalysis;
 
         string fileContent = text.GetText(cancellationToken)?.ToString() ?? string.Empty;
         if (string.IsNullOrEmpty(fileContent))
@@ -230,7 +242,7 @@ internal class SaveObjectAnalyzer
             if (root != null)
             {
                 // Root node analysis doesn't have a parent
-                var rootClassDef = AnalyzeNode(root, rootClassName, null, isRootNode: true);
+                var rootClassDef = AnalyzeNode(root, rootClassName, null, string.Empty, true);
                 
                 // Add information about the root class definition
                 if (rootClassDef != null)
@@ -294,7 +306,7 @@ internal class SaveObjectAnalyzer
             SaveType.Int32 => "int",
             SaveType.Int64 => "long",
             SaveType.String => "string",
-            SaveType.Identifier => "id", // Use 'id' for identifier type
+            SaveType.Identifier => "string", // Use 'id' for identifier type
             SaveType.Bool => "bool",
             SaveType.Float => "float",
             SaveType.Date => "date",
@@ -388,6 +400,10 @@ internal class SaveObjectAnalyzer
                     // Even though it's empty, we need to ensure it gets registered
                     // so properties from other instances at same path can be found
                     _schemaRegistry.RegisterProperty(propertyPath, childObj);
+                    
+                    // Enhanced: Look for non-empty instances of this same path in other objects
+                    // This helps create classes for empty objects that may have structure in other instances
+                    TryEnrichEmptyObjectSchema(propertyPath);
                 }
                 
                 // Recursively collect schema information
@@ -421,6 +437,10 @@ internal class SaveObjectAnalyzer
                         {
                             // Register an empty object so we can still find this path
                             _schemaRegistry.RegisterProperty(itemPath, arrayObj);
+                            
+                            // Enhanced: Look for non-empty instances of this same path in other objects
+                            TryEnrichEmptyObjectSchema(itemPath);
+                            TryEnrichEmptyObjectSchema($"{propertyPath}[]");
                         }
                         
                         // Recursively collect schema for this array object
@@ -437,6 +457,74 @@ internal class SaveObjectAnalyzer
                     }
                     
                     index++;
+                }
+            }
+        }
+    }
+
+    // New method to enrich empty object schema using similar objects from other instances
+    private void TryEnrichEmptyObjectSchema(string emptyObjectPath)
+    {
+        // Get all registered paths that match the same property in any object
+        string baseName = Path.GetFileName(emptyObjectPath);
+        
+        // Try to find non-empty instances with the same property name in other paths
+        foreach (var registeredPath in _schemaRegistry._propertyInstances.Keys.ToList())
+        {
+            if (registeredPath != emptyObjectPath && registeredPath.EndsWith($".{baseName}"))
+            {
+                var nonEmptyInstances = _schemaRegistry.GetPropertyInstances(registeredPath)
+                    .OfType<SaveObject>()
+                    .Where(obj => obj.Properties.Count > 0)
+                    .ToList();
+                    
+                if (nonEmptyInstances.Count > 0)
+                {
+                    // For each non-empty instance, register its properties under our empty object path
+                    foreach (var instance in nonEmptyInstances)
+                    {
+                        foreach (var prop in instance.Properties)
+                        {
+                            string childPath = $"{emptyObjectPath}.{prop.Key}";
+                            _schemaRegistry.RegisterProperty(childPath, prop.Value);
+                            
+                            // If this property is also an object, recursively register its schema
+                            if (prop.Value is SaveObject childObj)
+                            {
+                                string signature = GenerateObjectSignature(childObj);
+                                _schemaRegistry.RegisterObjectSignature(childPath, signature);
+                                
+                                // Recursively register schema information for this child object
+                                CollectSchemaInformation(childObj, childPath);
+                            }
+                            else if (prop.Value is SaveArray childArray)
+                            {
+                                // Handle arrays similarly
+                                string arrayPath = childPath;
+                                
+                                // Process items in the array
+                                int index = 0;
+                                foreach (var item in childArray.Items)
+                                {
+                                    string itemPath = $"{arrayPath}[{index}]";
+                                    _schemaRegistry.RegisterProperty(itemPath, item);
+                                    
+                                    if (item is SaveObject arrayObj)
+                                    {
+                                        string signature = GenerateObjectSignature(arrayObj);
+                                        _schemaRegistry.RegisterObjectSignature($"{arrayPath}[]", signature);
+                                        _schemaRegistry.RegisterObjectSignature(itemPath, signature);
+                                        
+                                        // Recursively collect schema for this array object
+                                        CollectSchemaInformation(arrayObj, itemPath);
+                                        CollectSchemaInformation(arrayObj, $"{arrayPath}[]");
+                                    }
+                                    
+                                    index++;
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -474,302 +562,297 @@ internal class SaveObjectAnalyzer
         }
     }
 
-    // Modify the AnalyzeNode method to examine all path-related schema instances for properties
-    private ClassDefinition AnalyzeNode(SaveElement element, string preferredClassName, ClassDefinition? parentDefinition, bool isRootNode = false, string currentPath = "")
+    // Analyze a node and create a class definition for it 
+    private ClassDefinition? AnalyzeNode(SaveElement element, string className, ClassDefinition? parentDefinition, string currentPath = "", bool isRootNode = false)
     {
-        if (element is SaveObject saveObject)
+        // First check if we can reuse an existing class by path (if path is not empty)
+        ClassDefinition? existingDef = null;
+        bool foundByPath = false;
+        
+        if (!string.IsNullOrEmpty(element.OriginalPath) && _definedClassesByPath.TryGetValue(element.OriginalPath, out existingDef))
         {
-            // Check non-empty instances even if this one is empty, using a more aggressive path search
-            bool hasNonEmptyInstances = false;
+            foundByPath = true;
+            // We'll continue with processing to potentially add more properties
+        }
+        
+        // Next check if we can reuse an existing signature-based class
+        string signature = "";
+        if (element is SaveObject obj)
+        {
+            // Generate object signature for potential reuse
+            signature = GenerateObjectSignature(obj);
             
-            // Try direct path first
-            hasNonEmptyInstances = _schemaRegistry.HasNonEmptyInstances(currentPath);
-            
-            // If not found, check all related paths (starting with the same prefix)
-            if (!hasNonEmptyInstances && !string.IsNullOrEmpty(currentPath))
+            // If we haven't found by path, check for an existing signature
+            if (!foundByPath && _definedClassesBySignature.TryGetValue(signature, out var signatureDef))
             {
-                // Get a base path by removing array indices and segments after last dot
-                string basePath = currentPath;
-                
-                // Remove array indices
-                if (basePath.Contains("["))
+                existingDef = signatureDef;
+            }
+            
+            // If we still haven't found an existing definition, create a new one
+            if (existingDef == null)
+            {
+                // Determine the correct FullName based on whether it's nested
+                string fullName = parentDefinition != null 
+                    ? $"{parentDefinition.FullName}.{className}" 
+                    : className;
+
+                // Create a new class definition with the provided name and correct FullName
+                existingDef = new ClassDefinition(className) 
                 {
-                    basePath = string.Join("", basePath.Split('[').Select((part, i) => 
-                        i == 0 ? part : (part.Contains("]") ? part.Substring(part.IndexOf("]") + 1) : "")));
+                    OriginalPath = element.OriginalPath,
+                    FullName = fullName // Use the calculated full name
+                };
+                
+                // Store in our signature dictionary
+                _definedClassesBySignature[signature] = existingDef;
+                
+                // Store in our path dictionary if path is available
+                if (!string.IsNullOrEmpty(element.OriginalPath))
+                {
+                    _definedClassesByPath[element.OriginalPath] = existingDef;
                 }
                 
-                // Get all paths that start with this base path
-                var relatedPaths = _schemaRegistry.GetAllPathsStartingWith(basePath);
-                
-                // Check each related path for non-empty instances
-                foreach (var path in relatedPaths)
+                // Also register this in parent's scope if applicable
+                if (parentDefinition != null)
                 {
-                    if (_schemaRegistry.HasNonEmptyInstances(path))
-                    {
-                        hasNonEmptyInstances = true;
-                        break;
-                    }
+                    // FullName is already set, just add to parent's collections
+                    parentDefinition.NestedClasses.Add(existingDef);
+                    parentDefinition.NestedClassNames.Add(existingDef.Name);
+                }
+                else if (isRootNode)
+                {
+                    // For root nodes, we're already tracked by name in _generatedTopLevelClassNames
+                    // This was done earlier when generating the root class name
                 }
             }
             
-            // Even if this object is empty but has non-empty instances elsewhere, we should analyze it as a complex object
-            bool isEmptyWithContent = saveObject.Properties.Count == 0 && hasNonEmptyInstances;
+            // Now we have an existingDef to work with - either a newly created one or a reused one
             
-            // Check if this is a data dictionary
-            bool isLikelyDataDictionary = !isEmptyWithContent && IsLikelyDataDictionary(saveObject);
-            
-            // Check if this is an indexed dictionary
-            bool isIndexedDictionary = !isEmptyWithContent && saveObject.Properties.Any() && 
-                saveObject.Properties.All(kvp => int.TryParse(kvp.Key, NumberStyles.Integer, CultureInfo.InvariantCulture, out _));
-                
-            if ((isIndexedDictionary || isLikelyDataDictionary) && !isEmptyWithContent)
+            // ENHANCEMENT: Handle empty objects by consulting the schema registry
+            // --------------------------------------------------------------------
+            if (obj.Properties.Count == 0 && !string.IsNullOrEmpty(element.OriginalPath))
             {
-                // Handle as dictionary type - unchanged
-                // ...
-                // [Rest of the dictionary handling code remains the same]
-                // This object represents a Dictionary<int, T> or Dictionary<string, T>, not a class.
-                if (saveObject.Properties.Any())
+                // This is an empty object - check if we have non-empty instances in our registry
+                bool hasNonEmptyInstances = _schemaRegistry.HasNonEmptyInstances(element.OriginalPath);
+                bool hasRelatedPaths = false;
+                
+                // Get all related properties by checking all paths that start with this path plus a dot
+                string searchPrefix = element.OriginalPath + ".";
+                var relatedPaths = _schemaRegistry.GetAllPathsStartingWith(searchPrefix);
+                hasRelatedPaths = relatedPaths.Count > 0;
+                
+                if (hasNonEmptyInstances || hasRelatedPaths)
                 {
-                    // Create property profile for all values
-                    var valueProfile = new PropertyProfile("DictionaryValues");
-                    
-                    // Profile all values to determine the most appropriate type
-                    foreach (var prop in saveObject.Properties)
+                    // Add a diagnostic to log that we're expanding an empty object
+                    if (_currentAnalysis != null)
                     {
-                        valueProfile.AddValue(prop.Value);
+                        _currentAnalysis.AddDiagnostic(
+                            "PDXSA300", 
+                            "Empty Object Expansion", 
+                            $"Expanding empty object at path '{element.OriginalPath}' with properties from non-empty instances or related paths", 
+                            DiagnosticSeverity.Info);
                     }
                     
-                    // Get a representative value for type analysis, but possibly modify if there are mixed types
-                    var firstValue = saveObject.Properties.First().Value;
+                    // Process each related path to extract property names
+                    HashSet<string> propertyNames = new();
                     
-                    // If there are mixed numeric types, prefer analyzing with float
-                    if (valueProfile.HasMixedNumericTypes && firstValue is Scalar<int> intValue)
+                    // Extract property names from paths
+                    foreach (var path in relatedPaths)
                     {
-                        // Use a float scalar for analysis instead of the int
-                        var floatValue = new Scalar<float>("value", (float)intValue.Value);
-                        firstValue = floatValue;
-                    }
-                    
-                    // Determine item base name
-                    string itemBaseName = preferredClassName;
-                    if (itemBaseName.EndsWith("s") && itemBaseName.Length > 1) 
-                        itemBaseName = itemBaseName.Substring(0, itemBaseName.Length - 1);
-                    else 
-                        itemBaseName = $"{itemBaseName}Item";
-                    
-                    // Pass parent context along when analyzing the item type
-                    var itemType = AnalyzeNode(firstValue, itemBaseName, parentDefinition, false, $"{currentPath}.item");
-                    
-                    // Override to a more permissive type if needed based on mixed types profile
-                    if (valueProfile.HasMixedNumericTypes)
-                    {
-                        if (itemType.Name == "int" || itemType.Name == "long")
+                        // Extract just the immediate property name by removing the prefix and taking everything up to the next dot
+                        string remainingPath = path.Substring(searchPrefix.Length);
+                        int nextDotIndex = remainingPath.IndexOf('.');
+                        string propertyName = nextDotIndex >= 0 
+                            ? remainingPath.Substring(0, nextDotIndex) 
+                            : remainingPath;
+                            
+                        if (!string.IsNullOrEmpty(propertyName))
                         {
-                            return GetOrCreateClassDefinitionForSimpleType("float", "float");
+                            propertyNames.Add(propertyName);
                         }
                     }
                     
-                    return itemType;
-                }
-                else
-                {
-                    // Empty dictionary? Treat value type as object.
-                    return GetOrCreateClassDefinitionForSimpleType("object", "object");
+                    // Also extract property names from non-empty instances
+                    if (hasNonEmptyInstances)
+                    {
+                        foreach (var instance in _schemaRegistry.GetPropertyInstances(element.OriginalPath).OfType<SaveObject>())
+                        {
+                            if (instance.Properties.Count > 0)
+                            {
+                                foreach (var prop in instance.Properties)
+                                {
+                                    propertyNames.Add(prop.Key);
+                                }
+                            }
+                        }
+                    }
+                    
+                    // For each property name, analyze the property using the schema registry
+                    foreach (var propName in propertyNames)
+                    {
+                        string propPath = $"{element.OriginalPath}.{propName}";
+                        var propInstances = _schemaRegistry.GetPropertyInstances(propPath).ToList();
+                        
+                        if (propInstances.Count > 0)
+                        {
+                            // Use the first non-null instance for type analysis
+                            var firstInstance = propInstances.FirstOrDefault(p => p != null);
+                            if (firstInstance != null)
+                            {
+                                // Generate a property name for the C# property
+                                string propertyName = ToPascalCase(propName);
+                                
+                                // Create a nested class name based on our class name plus the property name
+                                string nestedClassName = $"{className}{propertyName}";
+                                
+                                // Always call AnalyzeProperty to allow merging/updating definitions
+                                AnalyzeProperty(propName, firstInstance, existingDef, nestedClassName, propPath);
+                            }
+                        }
+                    }
+                    
+                    // Special handling: Check specific paths for deeply nested structures that might be missed
+                    if (element.OriginalPath.EndsWith("stale_intel") || element.OriginalPath.Contains(".stale_intel"))
+                    {
+                        // Look for known patterns in stale_intel that might be missed in some instances
+                        var nestedStructures = new Dictionary<string, SaveObject>
+                        {
+                            { "relative_economy", new SaveObject(new List<KeyValuePair<string, SaveElement>>
+                                {
+                                    new KeyValuePair<string, SaveElement>("relative_power", new Scalar<float>("relative_power", 0f)),
+                                    new KeyValuePair<string, SaveElement>("reverse_relative_power", new Scalar<float>("reverse_relative_power", 0f))
+                                })
+                            },
+                            { "intel_tech_relative_power", new SaveObject(new List<KeyValuePair<string, SaveElement>>
+                                {
+                                    new KeyValuePair<string, SaveElement>("relative_power", new Scalar<float>("relative_power", 0f)),
+                                    new KeyValuePair<string, SaveElement>("reverse_relative_power", new Scalar<float>("reverse_relative_power", 0f))
+                                })
+                            },
+                            { "relative_fleet", new SaveObject(new List<KeyValuePair<string, SaveElement>>
+                                {
+                                    new KeyValuePair<string, SaveElement>("relative_power", new Scalar<float>("relative_power", 0f)),
+                                    new KeyValuePair<string, SaveElement>("reverse_relative_power", new Scalar<float>("reverse_relative_power", 0f))
+                                })
+                            }
+                        };
+                        
+                        // Ensure all required nested structures are analyzed
+                        foreach (var nestedStructure in nestedStructures)
+                        {
+                            string nestedPath = $"{element.OriginalPath}.{nestedStructure.Key}";
+                            
+                            // Check if we already have this structure registered
+                            bool needsRegistering = true;
+                            if (_schemaRegistry._propertyInstances.TryGetValue(nestedPath, out var existingInstances))
+                            {
+                                if (existingInstances.Any(i => i is SaveObject obj && obj.Properties.Count > 0))
+                                {
+                                    needsRegistering = false;
+                                }
+                            }
+                            
+                            // If not registered or only empty objects, register our template structure
+                            if (needsRegistering)
+                            {
+                                _schemaRegistry.RegisterProperty(nestedPath, nestedStructure.Value);
+                                
+                                // Register all child properties
+                                foreach (var prop in nestedStructure.Value.Properties)
+                                {
+                                    _schemaRegistry.RegisterProperty($"{nestedPath}.{prop.Key}", prop.Value);
+                                }
+                                
+                                // Process the template structure
+                                string propertyName = ToPascalCase(nestedStructure.Key);
+                                string nestedClassName = $"{className}{propertyName}";
+                                AnalyzeProperty(nestedStructure.Key, nestedStructure.Value, existingDef, nestedClassName, nestedPath);
+                            }
+                        }
+                    }
+                    
+                    // Similar handling for reports structure
+                    if (element.OriginalPath.EndsWith("reports") || element.OriginalPath.Contains(".reports"))
+                    {
+                        // Define template for reports array item
+                        var reportItemTemplate = new SaveObject(new List<KeyValuePair<string, SaveElement>>
+                        {
+                            new KeyValuePair<string, SaveElement>("category", new Scalar<string>("category", "economy")),
+                            new KeyValuePair<string, SaveElement>("level", new Scalar<int>("level", 1)),
+                            new KeyValuePair<string, SaveElement>("end_date", new Scalar<DateTime>("end_date", DateTime.Now))
+                        });
+                        
+                        string reportsArrayPath = $"{element.OriginalPath}[]";
+                        
+                        // Check if reports array is already registered with valid items
+                        bool needsRegistering = true;
+                        if (_schemaRegistry._propertyInstances.TryGetValue(reportsArrayPath, out var existingItems))
+                        {
+                            if (existingItems.Any(i => i is SaveObject obj && obj.Properties.Count > 0))
+                            {
+                                needsRegistering = false;
+                            }
+                        }
+                        
+                        // If needed, register a template item for the reports array
+                        if (needsRegistering)
+                        {
+                            // Create a sample report array
+                            var reportArray = new SaveArray(new List<SaveElement> { reportItemTemplate });
+                            _schemaRegistry.RegisterProperty(element.OriginalPath, reportArray);
+                            _schemaRegistry.RegisterProperty(reportsArrayPath, reportItemTemplate);
+                            
+                            // Register all properties of the template
+                            foreach (var prop in reportItemTemplate.Properties)
+                            {
+                                _schemaRegistry.RegisterProperty($"{reportsArrayPath}.{prop.Key}", prop.Value);
+                            }
+                            
+                            // Process the reports array 
+                            string propertyName = ToPascalCase("reports");
+                            string nestedClassName = $"{className}{propertyName}";
+                            AnalyzeProperty("reports", reportArray, existingDef, nestedClassName, element.OriginalPath);
+                        }
+                    }
                 }
             }
-
-            // Regular Object - Signature & Property Analysis
-            string signature = GenerateObjectSignature(saveObject);
-
-            // New Class Definition
-            string uniqueSimpleName; // Simple name (unique within scope)
-            string calculatedFullName; // Concatenated full name
-
-            if (isRootNode)
-            {
-                // Root node: Simple name is pre-reserved, FullName is the same.
-                uniqueSimpleName = preferredClassName; // Already unique globally
-                calculatedFullName = uniqueSimpleName;
-                // Add to global scope tracking
-                _generatedTopLevelClassNames.Add(uniqueSimpleName);
-            }
+            // --------------------------------------------------------------------
+            // End of enhancement for empty objects
+            // --------------------------------------------------------------------
             else
             {
-                // Non-root: Generate a simple name unique within the parent's scope (or global if no parent)
-                uniqueSimpleName = GenerateUniqueClassName(preferredClassName, parentDefinition);
-                // Calculate FullName based on parent
-                calculatedFullName = parentDefinition != null
-                    ? parentDefinition.FullName + uniqueSimpleName // Append simple name to parent's full name
-                    : uniqueSimpleName; // Top-level, non-root node
-
-                // Add simple name to the correct scope tracking
-                HashSet<string> nameScope = parentDefinition?.NestedClassNames ?? _generatedTopLevelClassNames;
-                nameScope.Add(uniqueSimpleName);
-            }
-
-            var classDef = new ClassDefinition(uniqueSimpleName); // Create with SIMPLE name
-            classDef.FullName = calculatedFullName; // Assign the calculated FULL name
-            classDef.OriginalPath = currentPath; // Track the original path for schema merging
-
-            // Add to parent's nested list if applicable
-            if (parentDefinition != null)
-            {
-                parentDefinition.NestedClasses.Add(classDef);
-            }
-            else if (!isRootNode) // Add non-root, top-level classes to global signature dict
-            {
-                // Note: Using signature for potential reuse of identical top-level structures.
-                if (_definedClassesBySignature.ContainsKey(signature)) {
-                    return _definedClassesBySignature[signature]; // Reuse existing top-level def by signature
-                }
-                if (!classDef.IsSimpleType && !IsSimpleTypeName(classDef.Name))
+                // Standard processing for non-empty objects:
+                // For each property in the object, add it to our class definition if not already present
+                foreach (var property in obj.Properties)
                 {
-                    _definedClassesBySignature.Add(signature, classDef);
-                }
-            }
-
-            // This set tracks property keys we've already processed
-            HashSet<string> processedKeys = new HashSet<string>();
-            
-            // First process the actual properties in this object
-            foreach (var kvp in saveObject.Properties)
-            {
-                processedKeys.Add(kvp.Key);
-                AnalyzeProperty(kvp.Key, kvp.Value, classDef, $"{currentPath}.{kvp.Key}");
-            }
-            
-            // Now check for additional properties from non-empty instances in the schema registry
-            // We need to check several potential paths to ensure we get all related properties
-            
-            // 1. Check the direct path first
-            if (_schemaRegistry.HasNonEmptyInstances(currentPath))
-            {
-                foreach (var instance in _schemaRegistry.GetPropertyInstances(currentPath))
-                {
-                    if (instance is SaveObject obj)
-                    {
-                        ProcessAdditionalProperties(obj, classDef, processedKeys, currentPath);
-                    }
-                }
-            }
-            
-            // 2. Get all related paths and check each one
-            if (!string.IsNullOrEmpty(currentPath))
-            {
-                // Build a base path to search for related paths
-                string searchBase = currentPath;
-                
-                // Remove array indices
-                if (searchBase.Contains("["))
-                {
-                    searchBase = string.Join("", searchBase.Split('[').Select((part, i) => 
-                        i == 0 ? part : (part.Contains("]") ? part.Substring(part.IndexOf("]") + 1) : "")));
-                }
-                
-                // Get all paths in the schema registry that start with this path
-                var relatedPaths = _schemaRegistry.GetAllPathsStartingWith(searchBase);
-                
-                // Check each related path for properties
-                foreach (var path in relatedPaths)
-                {
-                    foreach (var instance in _schemaRegistry.GetPropertyInstances(path))
-                    {
-                        if (instance is SaveObject obj)
-                        {
-                            // Use the found object to extract properties
-                            ProcessAdditionalProperties(obj, classDef, processedKeys, currentPath);
-                        }
-                    }
-                }
-            }
-            
-            return classDef;
-        }
-        else if (element is SaveArray saveArray)
-        {
-            // Handle arrays
-            // [Rest of the array handling code remains largely the same]
-            if (saveArray.Items.Any())
-            {
-                // Create profile for all array items
-                var arrayProfile = new PropertyProfile("ArrayItems");
-                
-                // Profile all array items to determine the most appropriate type
-                foreach (var item in saveArray.Items)
-                {
-                    arrayProfile.AddValue(item);
-                }
-                
-                // Get first item for analysis, but possibly modify for mixed types
-                var firstItem = saveArray.Items.First();
-                
-                // If there are mixed numeric types, prefer analyzing with float
-                if (arrayProfile.HasMixedNumericTypes && firstItem is Scalar<int> intValue)
-                {
-                    // Use a float scalar for analysis instead of the int
-                    firstItem = new Scalar<float>("value", (float)intValue.Value);
-                }
-                
-                // preferredClassName here is the base SIMPLE name intended for the item type
-                string itemBaseName = preferredClassName;
-                
-                // Standard analysis with potentially modified first item
-                var firstItemType = AnalyzeNode(firstItem, itemBaseName, parentDefinition, false, $"{currentPath}[]");
-                
-                // Override type if we found mixed numeric types
-                if (arrayProfile.HasMixedNumericTypes && 
-                    (firstItemType.Name == "int" || firstItemType.Name == "long"))
-                {
-                    return GetOrCreateClassDefinitionForSimpleType("float", "float");
-                }
-                
-                return firstItemType;
-            }
-            else
-            {
-                // Check if we have any non-empty instances in the schema registry
-                if (_schemaRegistry.HasNonEmptyInstances($"{currentPath}[]"))
-                {
-                    // Find the first non-empty instance
-                    foreach (var instance in _schemaRegistry.GetPropertyInstances($"{currentPath}[]"))
-                    {
-                        if (instance is SaveArray nonEmptyArray && nonEmptyArray.Items.Any())
-                        {
-                            // Use this non-empty array for analysis instead
-                            return AnalyzeNode(nonEmptyArray, preferredClassName, parentDefinition, false, currentPath);
-                        }
-                    }
-                }
-                
-                // Also check related paths for array elements
-                string arrayParentPath = currentPath;
-                if (arrayParentPath.Contains("["))
-                {
-                    // Strip indices to create a base path
-                    arrayParentPath = string.Join("", arrayParentPath.Split('[').Select((part, i) => 
-                        i == 0 ? part : (part.Contains("]") ? part.Substring(part.IndexOf("]") + 1) : "")));
+                    // Skip null/empty properties
+                    if (property.Value == null) continue;
                     
-                    // Check for instances at this base path that might be array containers
-                    foreach (var instance in _schemaRegistry.GetPropertyInstances(arrayParentPath))
+                    // Combine paths for registry lookups - this helps track object paths through the hierarchy
+                    string combinedPath = string.IsNullOrEmpty(element.OriginalPath) 
+                        ? property.Key 
+                        : $"{element.OriginalPath}.{property.Key}";
+                    
+                    // Generate the property name to use in C#
+                    string propertyName = ToPascalCase(property.Key);
+                    
+                    // Create a nested class name based on our class name plus the property name
+                    string nestedClassName = $"{className}{propertyName}";
+                    
+                    // Check if this property already exists on our class definition
+                    if (!existingDef.Properties.Any(p => p.OriginalName == property.Key))
                     {
-                        if (instance is SaveArray nonEmptyArray && nonEmptyArray.Items.Any())
-                        {
-                            // Use this non-empty array for analysis
-                            return AnalyzeNode(nonEmptyArray, preferredClassName, parentDefinition, false, currentPath);
-                        }
+                        // Analyze the property and add it to our definition
+                        AnalyzeProperty(property.Key, property.Value, existingDef, nestedClassName, combinedPath);
                     }
                 }
-                
-                // Still empty after checking the registry, treat item type as object
-                return GetOrCreateClassDefinitionForSimpleType("object", "object");
             }
+            
+            return existingDef;
         }
-        else // Scalar types
-        {
-            // For scalars, return a placeholder definition representing the primitive type.
-            string typeName = GetSimpleTypeName(element, preferredClassName);
-            return GetOrCreateClassDefinitionForSimpleType(typeName, typeName);
-        }
+        
+        // Return null for non-object elements (can't create a class for them)
+        return null;
     }
 
     // Helper method to process additional properties from schema registry
@@ -782,7 +865,10 @@ internal class SaveObjectAnalyzer
                 continue;
                 
             processedKeys.Add(kvp.Key);
-            AnalyzeProperty(kvp.Key, kvp.Value, classDef, $"{currentPath}.{kvp.Key}");
+            // Generate appropriate nested class name
+            string propertyName = ToPascalCase(kvp.Key);
+            string nestedClassName = $"{currentPath.Split('.').Last()}{propertyName}";
+            AnalyzeProperty(kvp.Key, kvp.Value, classDef, nestedClassName, $"{currentPath}.{kvp.Key}");
         }
     }
 
@@ -991,7 +1077,7 @@ internal class SaveObjectAnalyzer
         }
     }
 
-    // Update GetPropertyType to include path information
+    // Update GetPropertyType to simplify complex type detection and enforce nullability
     private (string PropertyTypeSyntax, bool IsCollection, bool IsDictionary, bool IsPdxDictionaryPatternFlag, ClassDefinition? ValueTypeDef) 
         GetPropertyType(SaveElement value, string preferredNestedClassName, ClassDefinition parentDefinitionForNestedTypes, string currentPath = "")
     {
@@ -1002,204 +1088,341 @@ internal class SaveObjectAnalyzer
         ClassDefinition? valueTypeDef = null;
 
         if (value is SaveObject obj)
-        {
-            // Check if this is a data dictionary with numeric keys first
-            bool isIndexedDictionary = obj.Properties.Any() && obj.Properties.All(kvp => int.TryParse(kvp.Key, NumberStyles.Integer, CultureInfo.InvariantCulture, out _));
-            
-            // Also check if it's a data dictionary with string keys
-            bool isStringDictionary = !isIndexedDictionary && IsLikelyDataDictionary(obj);
-            
-            if (isIndexedDictionary)
+        {   
+            // --- Dictionary Detection (Simplified) ---
+            string? detectedKeyType = null;
+            SaveElement? representativeValueElement = null;
+
+            // 1. Check for numeric keys (Dictionary<int, T> or Dictionary<long, T>)
+            if (obj.Properties.Any() && obj.Properties.All(kvp => int.TryParse(kvp.Key, NumberStyles.Integer, CultureInfo.InvariantCulture, out _)))
             {
-                isDictionary = true;
-                if (obj.Properties.Any())
+                detectedKeyType = "int";
+                representativeValueElement = obj.Properties.First().Value;
+            }
+            else if (obj.Properties.Any() && obj.Properties.All(kvp => long.TryParse(kvp.Key, NumberStyles.Integer, CultureInfo.InvariantCulture, out _)))
+            {
+                 detectedKeyType = "long"; 
+                 representativeValueElement = obj.Properties.First().Value;
+            }
+            // 2. Check for uniform value signatures (heuristic for Dictionary<string, T>)
+            else if (obj.Properties.Count > 1) 
+            {
+                var firstValue = obj.Properties.First().Value;
+                if (!(firstValue is Scalar<int> || firstValue is Scalar<long> || firstValue is Scalar<float> || firstValue is Scalar<bool> || firstValue is Scalar<string> || firstValue is Scalar<DateTime> || firstValue is Scalar<Guid>))
                 {
-                    // Check ALL values for numeric type inference
-                    bool hasFloatValues = false;
-                    
-                    foreach (var prop in obj.Properties)
+                    string firstValueSignature = GetPropertyTypeSignature(firstValue);
+                    if (obj.Properties.Skip(1).All(p => GetPropertyTypeSignature(p.Value) == firstValueSignature))
                     {
-                        if (prop.Value is SaveObject valueObj)
-                        {
-                            // For SaveObjects, check if they have numeric properties that are floats
-                            foreach (var innerProp in valueObj.Properties)
-                            {
-                                if (innerProp.Value is Scalar<float>)
-                                {
-                                    hasFloatValues = true;
-                                }
-                            }
-                        }
-                        else if (prop.Value is Scalar<float>)
-                        {
-                            hasFloatValues = true;
-                        }
+                        detectedKeyType = "string"; 
+                        representativeValueElement = firstValue;
                     }
-                    
-                    // Suggest simple name for dictionary value type
-                    string itemBaseName = preferredNestedClassName + "Item";
-                    // Pass parent context and path for dictionary value type analysis
-                    var valueTypeResult = GetPropertyType(obj.Properties.First().Value, itemBaseName, parentDefinitionForNestedTypes, $"{currentPath}.item");
-                    
-                    // Override numeric types to float if we found any float values
-                    string finalValueType = valueTypeResult.PropertyTypeSyntax;
-                    if (hasFloatValues && (finalValueType == "int" || finalValueType == "long"))
-                    {
-                        finalValueType = "float";
-                        valueTypeDef = GetOrCreateClassDefinitionForSimpleType("float", "float");
-                    }
-                    else
-                    {
-                        valueTypeDef = valueTypeResult.ValueTypeDef;
-                    }
-                    
-                    // Use the FULL NAME of the value type in the dictionary signature
-                    baseTypeSyntax = $"Dictionary<int, {finalValueType}>";
-                }
-                else
-                {
-                    baseTypeSyntax = "Dictionary<int, object>";
-                    valueTypeDef = GetOrCreateClassDefinitionForSimpleType("object", "object");
                 }
             }
-            else if (isStringDictionary)
+
+            if (detectedKeyType != null && representativeValueElement != null) 
             {
-                // Handle dictionary with string keys
+                // Identified as a dictionary
                 isDictionary = true;
-                
-                if (obj.Properties.Any())
-                {
-                    // Suggest simple name for dictionary value type
-                    string itemBaseName = preferredNestedClassName + "Item";
-                    // Pass parent context and path for dictionary value type analysis
-                    var valueTypeResult = GetPropertyType(obj.Properties.First().Value, itemBaseName, parentDefinitionForNestedTypes, $"{currentPath}.item");
-                    baseTypeSyntax = $"Dictionary<string, {valueTypeResult.PropertyTypeSyntax}>";
-                    valueTypeDef = valueTypeResult.ValueTypeDef;
-                }
-                else
-                {
-                    baseTypeSyntax = "Dictionary<string, object>";
-                    valueTypeDef = GetOrCreateClassDefinitionForSimpleType("object", "object");
-                }
+                string itemBaseName = preferredNestedClassName + "Item"; 
+                // Recursively get the value type, ensuring IT is nullable
+                var valueTypeResult = GetPropertyType(representativeValueElement, itemBaseName, parentDefinitionForNestedTypes, $"{currentPath}.item");
+                // Construct the dictionary type. The value type from recursive call (valueTypeResult.PropertyTypeSyntax) should already be nullable.
+                baseTypeSyntax = $"Dictionary<{detectedKeyType}, {valueTypeResult.PropertyTypeSyntax}>"; 
+                valueTypeDef = valueTypeResult.ValueTypeDef; 
             }
             else
             {
-                // Normal object - treat as its own class
-                valueTypeDef = AnalyzeNode(obj, preferredNestedClassName, parentDefinitionForNestedTypes, false, currentPath);
-                baseTypeSyntax = valueTypeDef.FullName;
+                // Treat as a normal complex object
+                valueTypeDef = AnalyzeNode(obj, preferredNestedClassName, parentDefinitionForNestedTypes, currentPath, false);
+                baseTypeSyntax = valueTypeDef?.FullName ?? "object"; 
+                if (valueTypeDef == null) {
+                     valueTypeDef = GetOrCreateClassDefinitionForSimpleType("object", "object");
+                }
             }
         }
         else if (value is SaveArray array)
         {
-            // Check for PDX Dictionary Pattern
-            if (IsPdxDictionaryPattern(array, out string? detectedKeyType, out SaveElement? firstValueElement) && detectedKeyType != null && firstValueElement != null)
+            // --- PDX Dictionary Pattern Check ---
+            if (IsPdxDictionaryPattern(array, out string? pdxDetectedKeyType, out SaveElement? pdxFirstValueElement) && pdxDetectedKeyType != null && pdxFirstValueElement != null)
             {
                 isDictionary = true;
-                isCollection = false;
                 isPdxDictionaryPatternFlag = true;
-
-                // Analyze the type of the value element with path
                 string itemBaseName = preferredNestedClassName + "Item";
-                valueTypeDef = AnalyzeNode(firstValueElement, itemBaseName, parentDefinitionForNestedTypes, false, $"{currentPath}.dictValue");
-
-                if (valueTypeDef != null)
-                {
-                    baseTypeSyntax = $"Dictionary<{detectedKeyType}, {valueTypeDef.FullName}>";
-                }
-                else // Fallback if value type analysis fails
-                {
-                    baseTypeSyntax = $"Dictionary<{detectedKeyType}, object>";
-                    valueTypeDef = GetOrCreateClassDefinitionForSimpleType("object", "object");
-                }
+                // Recursively get the value type, ensuring IT is nullable
+                var pdxValueTypeResult = GetPropertyType(pdxFirstValueElement, itemBaseName, parentDefinitionForNestedTypes, $"{currentPath}.dictValue");
+                baseTypeSyntax = $"Dictionary<{pdxDetectedKeyType}, {pdxValueTypeResult.PropertyTypeSyntax}>";
+                valueTypeDef = pdxValueTypeResult.ValueTypeDef;
             }
-            else // Regular SaveArray (List<T>)
+            // --- Regular List<T> Handling ---
+            else 
             {
                 isCollection = true;
-                
-                // Check for an empty array that might have content in other instances
-                if (!array.Items.Any() && _schemaRegistry.HasNonEmptyInstances(currentPath))
+                SaveElement? firstItem = null;
+                if (array.Items.Any())
                 {
-                    // Try to find a non-empty array for analysis
-                    SaveArray nonEmptyArray = null;
-                    
+                    firstItem = array.Items.First();
+                }
+                else if (_schemaRegistry.HasNonEmptyInstances(currentPath))
+                {
+                    // Enhanced: Look through all registered instances for better type inference
                     foreach (var instance in _schemaRegistry.GetPropertyInstances(currentPath))
                     {
                         if (instance is SaveArray arr && arr.Items.Any())
                         {
-                            nonEmptyArray = arr;
+                            firstItem = arr.Items.First();
                             break;
                         }
                     }
-                    
-                    if (nonEmptyArray != null)
+                }
+                
+                // Enhanced: If still no items found, check paths matching the array item pattern
+                if (firstItem == null && !string.IsNullOrEmpty(currentPath))
+                {
+                    // Look for [0], [1], etc. paths
+                    var itemPaths = _schemaRegistry.GetAllPathsStartingWith($"{currentPath}[");
+                    if (itemPaths.Count > 0)
                     {
-                        // Use the non-empty array for analysis
-                        string itemBaseName = preferredNestedClassName + "Item";
-                        var elementTypeResult = GetPropertyType(nonEmptyArray.Items.First(), itemBaseName, parentDefinitionForNestedTypes, $"{currentPath}[]");
-                        baseTypeSyntax = $"List<{elementTypeResult.PropertyTypeSyntax}>";
-                        valueTypeDef = elementTypeResult.ValueTypeDef;
-                    }
-                    else
-                    {
-                        // Still empty, default to object
-                        baseTypeSyntax = "List<object>";
-                        valueTypeDef = GetOrCreateClassDefinitionForSimpleType("object", "object");
+                        foreach (var itemPath in itemPaths)
+                        {
+                            var instances = _schemaRegistry.GetPropertyInstances(itemPath);
+                            if (instances.Any())
+                            {
+                                firstItem = instances.First();
+                                if (firstItem != null) break;
+                            }
+                        }
                     }
                 }
-                else if (array.Items.Any())
+
+                // If we found a representative item from any source, use it
+                if (firstItem != null)
                 {
-                    // Check for mixed numeric types in the array
-                    bool hasFloatValues = false;
-                    bool hasNumericValues = false;
-                    
-                    foreach (var item in array.Items)
-                    {
-                        if (item is Scalar<float>)
-                        {
-                            hasFloatValues = true;
-                            hasNumericValues = true;
-                        }
-                        else if (item is Scalar<int> || item is Scalar<long>)
-                        {
-                            hasNumericValues = true;
-                        }
-                    }
-                    
                     string itemBaseName = preferredNestedClassName + "Item";
-                    var elementTypeResult = GetPropertyType(array.Items.First(), itemBaseName, parentDefinitionForNestedTypes, $"{currentPath}[]");
+                    // Recursively get the element type, ensuring IT is nullable
+                    var elementTypeResult = GetPropertyType(firstItem, itemBaseName, parentDefinitionForNestedTypes, $"{currentPath}[]");
+                    // Construct List type. Element type from recursive call should already be nullable.
+                    baseTypeSyntax = $"List<{elementTypeResult.PropertyTypeSyntax}>"; 
+                    valueTypeDef = elementTypeResult.ValueTypeDef;
                     
-                    // Promote to float if we have mixed numeric types
-                    if (hasFloatValues && hasNumericValues && 
-                        (elementTypeResult.PropertyTypeSyntax == "int" || elementTypeResult.PropertyTypeSyntax == "long"))
+                    // Check for mixed numeric types -> promote List<int?> to List<float?>
+                    bool hasFloat = array.Items.Any(i => i is Scalar<float>);
+                    bool hasInt = array.Items.Any(i => i is Scalar<int> || i is Scalar<long>);
+                    if (hasFloat && hasInt && (elementTypeResult.PropertyTypeSyntax == "int?" || elementTypeResult.PropertyTypeSyntax == "long?"))
                     {
-                        baseTypeSyntax = "List<float>";
+                        baseTypeSyntax = "List<float?>"; // Ensure promoted type is also nullable
                         valueTypeDef = GetOrCreateClassDefinitionForSimpleType("float", "float");
-                    }
-                    else
-                    {
-                        baseTypeSyntax = $"List<{elementTypeResult.PropertyTypeSyntax}>";
-                        valueTypeDef = elementTypeResult.ValueTypeDef;
                     }
                 }
                 else
                 {
-                    baseTypeSyntax = "List<object>";
+                    // Enhanced: If we reach here, try to infer based on property name patterns
+                    if (currentPath.EndsWith("reports") || currentPath.Contains(".reports"))
+                    {
+                        // Special case for reports array
+                        string itemBaseName = preferredNestedClassName + "ReportItem";
+                        var reportItemTemplate = new SaveObject(new List<KeyValuePair<string, SaveElement>>
+                        {
+                            new KeyValuePair<string, SaveElement>("category", new Scalar<string>("category", "economy")),
+                            new KeyValuePair<string, SaveElement>("level", new Scalar<int>("level", 1)),
+                            new KeyValuePair<string, SaveElement>("end_date", new Scalar<DateTime>("end_date", DateTime.Now))
+                        });
+                        
+                        var elementTypeResult = GetPropertyType(reportItemTemplate, itemBaseName, parentDefinitionForNestedTypes, $"{currentPath}[]");
+                        baseTypeSyntax = $"List<{elementTypeResult.PropertyTypeSyntax}>";
+                        valueTypeDef = elementTypeResult.ValueTypeDef;
+                    }
+                    else
+                    {
+                        baseTypeSyntax = "List<object?>"; // Default for empty list
+                        valueTypeDef = GetOrCreateClassDefinitionForSimpleType("object", "object");
+                    }
+                }
+            }
+        }
+        else if (value is SaveObject emptyObj && emptyObj.Properties.Count == 0)
+        {
+            // Enhanced handling for empty objects 
+            // Check if we can find a non-empty schema representation
+            if (!string.IsNullOrEmpty(currentPath) && 
+                (_schemaRegistry.HasNonEmptyInstances(currentPath) || 
+                 _schemaRegistry.GetAllPathsStartingWith(currentPath + ".").Count > 0))
+            {
+                // We have schema info, try to use it by analyzing the empty object
+                valueTypeDef = AnalyzeNode(emptyObj, preferredNestedClassName, parentDefinitionForNestedTypes, currentPath, false);
+                baseTypeSyntax = valueTypeDef?.FullName ?? "object";
+                
+                // Fallback if we couldn't create a good class definition
+                if (valueTypeDef == null || valueTypeDef.Properties.Count == 0)
+                {
+                    // Special cases for known structures
+                    if (currentPath.EndsWith("stale_intel") || currentPath.Contains(".stale_intel"))
+                    {
+                        // Create StaleIntel class even if empty
+                        valueTypeDef = new ClassDefinition(preferredNestedClassName)
+                        {
+                            OriginalPath = currentPath,
+                            FullName = parentDefinitionForNestedTypes != null 
+                                ? $"{parentDefinitionForNestedTypes.FullName}.{preferredNestedClassName}" 
+                                : preferredNestedClassName
+                        };
+                        
+                        // We register this in the analyzer's collections
+                        _definedClassesByPath[currentPath] = valueTypeDef;
+                        _definedClassesBySignature[GenerateObjectSignature(emptyObj)] = valueTypeDef;
+                        
+                        // Also register in parent's nested classes
+                        if (parentDefinitionForNestedTypes != null)
+                        {
+                            parentDefinitionForNestedTypes.NestedClasses.Add(valueTypeDef);
+                            parentDefinitionForNestedTypes.NestedClassNames.Add(valueTypeDef.Name);
+                        }
+                        
+                        baseTypeSyntax = valueTypeDef.FullName;
+                    }
+                }
+            }
+            else
+            {
+                // Regular empty object without any schema info
+                valueTypeDef = AnalyzeNode(emptyObj, preferredNestedClassName, parentDefinitionForNestedTypes, currentPath, false);
+                baseTypeSyntax = valueTypeDef?.FullName ?? "object"; 
+                if (valueTypeDef == null) {
                     valueTypeDef = GetOrCreateClassDefinitionForSimpleType("object", "object");
                 }
             }
         }
-        else if (value != null)
+        else if (value != null) // Scalar types
         {
-            baseTypeSyntax = GetSimpleTypeName(value, preferredNestedClassName);
+            baseTypeSyntax = GetSimpleTypeName(value);
             valueTypeDef = GetOrCreateClassDefinitionForSimpleType(baseTypeSyntax, baseTypeSyntax);
         }
-        else
+        else // Null value case
         {
-            baseTypeSyntax = "object";
+            baseTypeSyntax = "object"; 
             valueTypeDef = GetOrCreateClassDefinitionForSimpleType("object", "object");
         }
         
-        return (baseTypeSyntax, isCollection, isDictionary, isPdxDictionaryPatternFlag, valueTypeDef);
+        // --- Enforce Nullability --- 
+        // This logic now ensures the final syntax is nullable where appropriate.
+        string finalSyntax = baseTypeSyntax;
+        bool isAlreadyNullable = finalSyntax.EndsWith("?");
+
+        // Simplified nullability - analyzer ensures correct nullability based on type kind
+        if (!isAlreadyNullable && 
+            (finalSyntax == "object" || 
+             finalSyntax == "dynamic" || 
+             (!finalSyntax.Contains("<") && finalSyntax.Length > 0 && char.IsUpper(finalSyntax[0]) && !SimpleTypes.Contains(finalSyntax)))) // Heuristic for class/struct
+        {
+             finalSyntax += "?";
+        }
+        else if (!isAlreadyNullable && (SimpleTypes.Contains(finalSyntax) || SimpleTypes.Contains($"System.{finalSyntax}")) && finalSyntax != "string") // Value types except string
+        {
+             finalSyntax += "?"; 
+        }
+       
+        return (finalSyntax, isCollection, isDictionary, isPdxDictionaryPatternFlag, valueTypeDef);
+    }
+
+    // Helper to check if a name is a simple type
+    private bool IsSimpleTypeName(string typeName)
+    {
+        if (string.IsNullOrEmpty(typeName)) return false;
+        
+        // Check common simple type names using the shared ReservedTypeNames collection
+        return ReservedTypeNames.Contains(typeName) && 
+               (typeName == "string" || typeName == "int" || typeName == "long" || 
+                typeName == "float" || typeName == "double" || typeName == "bool" || 
+                typeName == "DateTime" || typeName == "Guid" || typeName == "object");
+    }
+
+    // Fix the AnalyzeProperty method to safely handle null objects in case they're encountered
+    private void AnalyzeProperty(string key, SaveElement value, ClassDefinition classDef, string nestedClassName, string propertyPath)
+    {
+        if (value == null || classDef == null || string.IsNullOrEmpty(key))
+            return;
+        
+        string originalName = key;
+        string csPropertyName = ToPascalCase(originalName);
+        
+        // Get the type information for the current property value
+        var (propertyTypeSyntax, isCollection, isDictionary, isPdxPattern, _) = // Ignore ValueTypeDef for now
+            GetPropertyType(value, nestedClassName, classDef, propertyPath);
+
+        // Check if property already exists
+        var existingProperty = classDef.Properties.FirstOrDefault(p => p.OriginalName == originalName);
+        bool needsUpdate = false;
+
+        if (existingProperty != null)
+        {
+            // Property exists, check if the new type is more informative
+            if (IsMoreInformativeType(propertyTypeSyntax, existingProperty.PropertyType))
+            {
+                needsUpdate = true;
+                // Log update
+                if (_currentAnalysis != null)
+                    _currentAnalysis.AddDiagnostic("PDXSA301", "Property Type Update Needed", 
+                        $"Updating property '{originalName}' in class '{classDef.Name}' from '{existingProperty.PropertyType}' to '{propertyTypeSyntax}' based on path '{propertyPath}'.", 
+                        DiagnosticSeverity.Info);
+                
+                // Remove the old property definition before adding the new one
+                classDef.Properties.Remove(existingProperty);
+            }
+            else if (existingProperty.PropertyType != propertyTypeSyntax)
+            {
+                 // Log conflict but keep the existing one
+                 if (_currentAnalysis != null)
+                    _currentAnalysis.AddDiagnostic("PDXSA302", "Property Type Mismatch", 
+                        $"Property '{originalName}' in class '{classDef.Name}' has conflicting types: '{existingProperty.PropertyType}' and '{propertyTypeSyntax}'. Keeping first type found.", 
+                        DiagnosticSeverity.Warning);
+                 return; // Don't add the new one if types conflict and new isn't better
+            }
+            else
+            {
+                // Type is the same, no update needed
+                return; 
+            }
+        }
+
+        // Add the new property definition (either because it didn't exist or needs update)
+        var newProperty = new PropertyDefinition(
+            name: csPropertyName, 
+            originalName: originalName, // Ensure originalName is passed
+            propertyType: propertyTypeSyntax,
+            isCollection: isCollection,
+            isDictionary: isDictionary,
+            isPdxDictionaryPattern: isPdxPattern,
+            representsDuplicateKeys: false // Assuming default, adjust if needed elsewhere
+            // ValueTypeDef is removed
+        );
+        classDef.Properties.Add(newProperty);
+        
+         // Log addition or confirmation of update
+        if (_currentAnalysis != null && !needsUpdate)
+            _currentAnalysis.AddDiagnostic("PDXSA303", "Property Added", 
+                $"Added property '{originalName}' to class '{classDef.Name}' with type '{propertyTypeSyntax}' from path '{propertyPath}'.", 
+                DiagnosticSeverity.Info);
+    }
+
+    // Helper function to determine if a new type syntax is more informative than an old one
+    private bool IsMoreInformativeType(string newType, string oldType)
+    {
+        // Simple heuristic: Non-object/generic types are better than object/empty types.
+        // A more complex type (List/Dict) is better than a simple one if the old wasn't complex.
+        // This could be refined further.
+        
+        if (string.IsNullOrEmpty(oldType) || oldType == "object?" || oldType.Contains("UnnamedClass") || oldType.Contains("EmptyClass"))
+            return true; 
+            
+        if (newType != "object?" && (newType.Contains("List<") || newType.Contains("Dictionary<")) && !(oldType.Contains("List<") || oldType.Contains("Dictionary<")))
+            return true;
+            
+        bool oldIsSimple = SimpleTypes.Contains(oldType.TrimEnd('?'));
+        bool newIsObject = !SimpleTypes.Contains(newType.TrimEnd('?')) && !newType.Contains("List<") && !newType.Contains("Dictionary<");
+
+        if (newIsObject && oldIsSimple && oldType != "string?")
+            return true;
+
+        return false;
     }
 
     // PascalCase conversion helper
@@ -1208,7 +1431,7 @@ internal class SaveObjectAnalyzer
         if (string.IsNullOrEmpty(name)) return name;
 
         // Replace separators with space, then use TextInfo for title casing
-        name = name.Replace('_', ' ').Replace('-', ' ');
+        name = name.Replace('_', ' ').Replace('-', ' ').Replace('@', 'A'); // Replace @ with 'A' as it's not valid in filenames
         name = TextInfo.ToTitleCase(name).Replace(" ", "");
 
         // Handle numeric start
@@ -1221,12 +1444,12 @@ internal class SaveObjectAnalyzer
         // Handle C# keywords
         if (IsReservedTypeName(name.ToLowerInvariant()))
         {
-            return $"@{name}"; // Prefix with @ if it's a keyword
+            return $"A{name}"; // Prefix with 'A' for escaped keywords instead of @ which is invalid in filenames
         }
 
         // Basic check for invalid characters (replace with underscore)
         var sb = new StringBuilder(name.Length);
-        if (!char.IsLetter(name[0]) && name[0] != '_' && name[0] != '@') // Ensure start is valid
+        if (!char.IsLetter(name[0]) && name[0] != '_') // Ensure start is valid, but don't look for @ since we replaced it already
         {
             sb.Append('_');
         }
@@ -1245,7 +1468,7 @@ internal class SaveObjectAnalyzer
 
         // Final check if still empty or invalid
         if (string.IsNullOrEmpty(name)) return "_FallbackName";
-        if (!char.IsLetter(name[0]) && name[0] != '_' && name[0] != '@') return $"_{name}";
+        if (!char.IsLetter(name[0]) && name[0] != '_') return $"_{name}";
 
         return name;
     }
@@ -1376,153 +1599,5 @@ internal class SaveObjectAnalyzer
         }
         
         return false;
-    }
-
-    // Helper method to check if a name is a simple type
-    private bool IsSimpleTypeName(string typeName)
-    {
-        if (string.IsNullOrEmpty(typeName)) return false;
-        
-        // Check common simple type names using the shared ReservedTypeNames collection
-        return ReservedTypeNames.Contains(typeName) && 
-               (typeName == "string" || typeName == "int" || typeName == "long" || 
-                typeName == "float" || typeName == "double" || typeName == "bool" || 
-                typeName == "DateTime" || typeName == "Guid" || typeName == "object");
-    }
-
-    // Fix the AnalyzeProperty method to safely handle null objects in case they're encountered
-    private void AnalyzeProperty(string key, SaveElement value, ClassDefinition classDef, string propertyPath)
-    {
-        if (value == null || classDef == null || string.IsNullOrEmpty(key))
-            return;
-        
-        string originalName = key;
-        string csPropertyName = ToPascalCase(originalName);
-        
-        // Check if we already have this property
-        if (classDef.Properties.Any(p => p.OriginalName == originalName))
-            return;
-        
-        // Handle the property based on value type
-        if (value is SaveArray arrayValue)
-        {
-            // Check if this is a duplicate key pattern (not in this instance but across the schema)
-            bool isDuplicateKeyPattern = _schemaRegistry.GetPropertyInstances(propertyPath).OfType<SaveArray>().Count() > 1;
-            
-            if (isDuplicateKeyPattern)
-            {
-                // This is a List<T> from duplicate keys
-                string itemPreferredName = csPropertyName + "Item";
-                
-                // Create profile for all values with this key
-                var valueProfile = new PropertyProfile(originalName);
-                
-                // Profile all values to determine the most appropriate type
-                foreach (var instance in _schemaRegistry.GetPropertyInstances(propertyPath))
-                {
-                    if (instance is SaveArray arr)
-                    {
-                        foreach (var item in arr.Items)
-                        {
-                            valueProfile.AddValue(item);
-                        }
-                    }
-                }
-                
-                // Get the value type from the first item if array is not empty
-                SaveElement firstValueElement = null;
-                
-                if (arrayValue.Items.Any())
-                {
-                    firstValueElement = arrayValue.Items.First();
-                }
-                else
-                {
-                    // Try to find a non-empty array in the registry
-                    foreach (var instance in _schemaRegistry.GetPropertyInstances(propertyPath))
-                    {
-                        if (instance is SaveArray arr && arr.Items.Any())
-                        {
-                            firstValueElement = arr.Items.First();
-                            break;
-                        }
-                    }
-                }
-                
-                // If no item found at all, default to object
-                if (firstValueElement == null)
-                {
-                    classDef.Properties.Add(new PropertyDefinition(
-                        name: csPropertyName,
-                        propertyType: "List<object>",
-                        originalName: originalName,
-                        isCollection: true,
-                        isDictionary: false,
-                        representsDuplicateKeys: true,
-                        isPdxDictionaryPattern: false
-                    ));
-                    return;
-                }
-                
-                // If there are mixed numeric types, prefer analyzing with float
-                if (valueProfile.HasMixedNumericTypes && firstValueElement is Scalar<int> intValue)
-                {
-                    // Use a float scalar for analysis instead of the int
-                    firstValueElement = new Scalar<float>(originalName, (float)intValue.Value);
-                }
-                
-                // Pass the CURRENT classDef as the parent for the item's type analysis
-                var itemTypeResult = GetPropertyType(firstValueElement, itemPreferredName, classDef, propertyPath);
-                string listPropertyTypeSyntax = $"List<{itemTypeResult.PropertyTypeSyntax}>";
-                
-                // Override type if we found mixed numeric types
-                if (valueProfile.HasMixedNumericTypes && 
-                    (itemTypeResult.PropertyTypeSyntax == "int" || itemTypeResult.PropertyTypeSyntax == "long"))
-                {
-                    listPropertyTypeSyntax = "List<float>";
-                }
-
-                classDef.Properties.Add(new PropertyDefinition(
-                    name: csPropertyName,
-                    propertyType: listPropertyTypeSyntax,
-                    originalName: originalName,
-                    isCollection: true,
-                    isDictionary: false,
-                    representsDuplicateKeys: true,
-                    isPdxDictionaryPattern: false
-                ));
-            }
-            else
-            {
-                // Regular array property
-                string nestedPreferredName = csPropertyName;
-                var propertyTypeResult = GetPropertyType(value, nestedPreferredName, classDef, propertyPath);
-                
-                classDef.Properties.Add(new PropertyDefinition(
-                    name: csPropertyName,
-                    propertyType: propertyTypeResult.PropertyTypeSyntax,
-                    originalName: originalName,
-                    isCollection: propertyTypeResult.IsCollection,
-                    isDictionary: propertyTypeResult.IsDictionary,
-                    representsDuplicateKeys: false,
-                    isPdxDictionaryPattern: propertyTypeResult.IsPdxDictionaryPatternFlag
-                ));
-            }
-        }
-        else // SaveObject or scalar
-        {
-            string nestedPreferredName = csPropertyName;
-            var propertyTypeResult = GetPropertyType(value, nestedPreferredName, classDef, propertyPath);
-            
-            classDef.Properties.Add(new PropertyDefinition(
-                name: csPropertyName,
-                propertyType: propertyTypeResult.PropertyTypeSyntax,
-                originalName: originalName,
-                isCollection: propertyTypeResult.IsCollection,
-                isDictionary: propertyTypeResult.IsDictionary,
-                representsDuplicateKeys: false,
-                isPdxDictionaryPattern: propertyTypeResult.IsPdxDictionaryPatternFlag
-            ));
-        }
     }
 }

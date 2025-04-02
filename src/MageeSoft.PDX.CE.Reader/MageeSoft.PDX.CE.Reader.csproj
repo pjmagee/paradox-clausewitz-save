@@ -1,9 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>    
+  </PropertyGroup>
 
+  <!-- Nuget package properties -->
+  <PropertyGroup>
     <PackageId>MageeSoft.Paradox.Clausewitz.Save.Reader</PackageId>
     <Authors>Patrick Magee</Authors>
     <Company>MageeSoft</Company>
@@ -19,8 +24,6 @@
     <RepositoryType>git</RepositoryType>
     <PackageProjectUrl>https://github.com/pjmagee/stellaris-sav-parser</PackageProjectUrl>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
-    <LangVersion>default</LangVersion>
-    <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>

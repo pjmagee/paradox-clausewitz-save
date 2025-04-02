@@ -854,24 +854,32 @@ ship_names=
         
         Assert.AreEqual(2, intelArray.Items.Count);
 
+        // Each item in the 'intel' array is itself an array [ID, DataObject]
+        
         // Check first item
-        Assert.IsInstanceOfType(intelArray.Items[0], typeof(SaveArray)); // Each item in the 'intel' array is itself an array [ID, DataObject]
+        Assert.IsInstanceOfType(intelArray.Items[0], typeof(SaveArray)); 
         var firstItemArray = (SaveArray)intelArray.Items[0];
-        Assert.AreEqual(2, firstItemArray.Items.Count); // Should contain ID and DataObject
+        Assert.AreEqual(2, firstItemArray.Items.Count);
 
+        // the first item in the array is an ID
         Assert.IsInstanceOfType(firstItemArray.Items[0], typeof(Scalar<int>));
         Assert.AreEqual(67108916, ((Scalar<int>)firstItemArray.Items[0]).Value);
-
+        
+        // the second item in the array is a data object
         Assert.IsInstanceOfType(firstItemArray.Items[1], typeof(SaveObject));
+        
         var firstDataObject = (SaveObject)firstItemArray.Items[1];
         Assert.AreEqual(2, firstDataObject.Properties.Count); // intel and stale_intel
+        
         var firstIntelValueProp = firstDataObject.Properties.First(p => p.Key == "intel");
         Assert.IsInstanceOfType(firstIntelValueProp.Value, typeof(Scalar<int>));
         Assert.AreEqual(10, ((Scalar<int>)firstIntelValueProp.Value).Value);
+        
         var firstStaleIntelProp = firstDataObject.Properties.First(p => p.Key == "stale_intel");
         Assert.IsInstanceOfType(firstStaleIntelProp.Value, typeof(SaveObject));
         Assert.AreEqual(0, ((SaveObject)firstStaleIntelProp.Value).Properties.Count);
 
+        
         // Check second item
         Assert.IsInstanceOfType(intelArray.Items[1], typeof(SaveArray)); // Second item is also an array [ID, DataObject]
         var secondItemArray = (SaveArray)intelArray.Items[1];
