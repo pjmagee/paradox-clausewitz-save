@@ -68,13 +68,9 @@ public static class ModelsGenerator
                 return;
             }
 
-            // Determine the root model name from the file name
-            string fileName = Path.GetFileName(file.Path);
-            string rootModelName = DetermineRootModelName(fileName);
-
-            // Group analyses by root file type - using dynamically determined root name
+            // Group analyses by root name from the analysis itself, not determined from the file name
             var analysisGroups = analysisList.Where(a => a.Error == null)
-                .GroupBy(_ => rootModelName)
+                .GroupBy(a => a.RootName)
                 .ToDictionary(g => g.Key, g => g.ToList());
 
             // Generate one file for each group of analyses
@@ -190,28 +186,6 @@ public static class ModelsGenerator
                 new DiagnosticDescriptor("PDXSG001", "Generator Exception", $"Generator failed unexpectedly: {ex.GetType().Name} - {ex.Message} {ex.StackTrace}", "StellarisModelsGenerator", DiagnosticSeverity.Error, true),
                 Location.None));
         }
-    }
-
-    /// <summary>
-    /// Determines the root model name based on the file name.
-    /// This replaces the hardcoded GetModelRootName function with a more flexible approach.
-    /// </summary>
-    /// <param name="fileName">The name of the file being processed</param>
-    /// <returns>The appropriate root model name</returns>
-    private static string DetermineRootModelName(string fileName)
-    {
-        // Extract base name without extension
-        string baseName = Path.GetFileNameWithoutExtension(fileName).ToLowerInvariant();
-        
-        // Apply naming rules based on file name pattern
-        // For future extensibility, this could be moved to a configuration file
-        if (baseName.EndsWith("meta", StringComparison.OrdinalIgnoreCase))
-        {
-            return "Meta";
-        }
-        
-        // Default to Gamestate for any other file type
-        return "Gamestate";
     }
 
     /// <summary>

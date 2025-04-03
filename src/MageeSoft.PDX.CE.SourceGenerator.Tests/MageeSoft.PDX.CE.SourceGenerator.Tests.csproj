@@ -1,0 +1,37 @@
+<Project Sdk="MSTest.Sdk/3.8.2">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>    
+    <LangVersion>latest</LangVersion>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="..\MageeSoft.PDX.CE\MageeSoft.PDX.CE.csproj" Private="true" />
+    <ProjectReference Include="..\MageeSoft.PDX.CE.SourceGenerator\MageeSoft.PDX.CE.SourceGenerator.csproj" Private="true" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.13.0" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.11.0" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.SourceGenerators.Testing" Version="1.1.1" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.13.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Testing.Verifiers.MSTest" Version="1.1.1" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <None Remove="TestSchemas\**\*.csf" />
+    <Content Include="TestSchemas\**\*.csf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <None Remove="TestSource\**\*.cs" />
+    <Content Include="TestSource\**\*.cs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+</Project> 

@@ -1,6 +1,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Text;
 using System.Collections.Immutable;
 using System.Diagnostics;
 
@@ -16,6 +17,21 @@ public class IncrementalGenerator : IIncrementalGenerator
                 """
                 // Code generator initialized
                 // This file is just a marker for debugging
+                
+                // This is a duplicate definition of GameStateDocumentAttribute to ensure proper resolution
+                namespace MageeSoft.PDX.CE
+                {
+                    [System.AttributeUsage(System.AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
+                    internal class GameStateDocumentAttribute : System.Attribute
+                    {
+                        public string SchemaFileName { get; }
+
+                        public GameStateDocumentAttribute(string schemaFileName)
+                        {
+                            SchemaFileName = schemaFileName;
+                        }
+                    }
+                }
                 """
             )
         );
@@ -58,18 +74,17 @@ public class IncrementalGenerator : IIncrementalGenerator
         // Find classes with GameStateDocumentAttribute
         IncrementalValuesProvider<AttributedClass> attributedClasses = context.SyntaxProvider
             .CreateSyntaxProvider(
-                predicate: static (s, _) => s is ClassDeclarationSyntax cls && cls.AttributeLists.Count > 0,
+                predicate: static (syntaxNode, _) => syntaxNode is ClassDeclarationSyntax cls && cls.AttributeLists.Count > 0,
                 transform: static (ctx, ct) => GetAttributedClass(ctx, ct)
             )
             .Where(static m => m is not null)
             .Select(static (m, _) => m!);
 
-        // Register additional files for schema discovery
+        // Register additional files for schema discovery 
         var additionalFiles = context.AdditionalTextsProvider;
         
-        // Add logging to show file paths
+        // Log additional files
         var filePathsPipeline = additionalFiles.Select((file, _) => file.Path);
-
         context.RegisterSourceOutput(filePathsPipeline, (ctx, path) => 
         {
             Debug.WriteLine($"SOURCE GENERATOR: Found additional file: {path}");
@@ -79,147 +94,150 @@ public class IncrementalGenerator : IIncrementalGenerator
             ));
         });
 
-        // Combine the attributed classes with additional files and generation flag
-        var combinedInputs = attributedClasses
-            .Combine(additionalFiles.Collect())
+        // Create a provider that analyzes each additional file only when its content changes
+        // This is the key improvement: we now track file content and only reanalyze when it changes
+        var analyzedFiles = additionalFiles
+            .Select((file, ct) => {
+                // Get text to track content changes
+                var text = file.GetText(ct);
+                if (text == null) 
+                    return (file.Path, Analyses: Array.Empty<SaveObjectAnalysis>());
+                
+                // Only analyze if file has content
+                if (text.Length > 0) 
+                {
+                    Debug.WriteLine($"SOURCE GENERATOR: Analyzing file {file.Path} with length {text.Length}");
+                    try 
+                    {
+                        var analyzer = new SaveObjectAnalyzer();
+                        var analyses = analyzer.AnalyzeAdditionalFile(file, ct).ToArray();
+                        Debug.WriteLine($"SOURCE GENERATOR: Completed analysis for {file.Path}, found {analyses.Length} results");
+                        return (file.Path, Analyses: analyses);
+                    }
+                    catch (Exception ex) 
+                    {
+                        Debug.WriteLine($"SOURCE GENERATOR: Error analyzing {file.Path}: {ex.Message}");
+                        return (file.Path, Analyses: Array.Empty<SaveObjectAnalysis>());
+                    }
+                }
+                else 
+                {
+                    Debug.WriteLine($"SOURCE GENERATOR: File {file.Path} has no content, skipping analysis");
+                    return (file.Path, Analyses: Array.Empty<SaveObjectAnalysis>());
+                }
+            })
+            .WithTrackingName("Schema Analysis"); // Give it a name for debug tracking
+            
+        // Collect all analyses into a dictionary for lookup
+        var analysisLookup = analyzedFiles
+            .Collect()
+            .Select((items, ct) => {
+                var result = new Dictionary<string, SaveObjectAnalysis[]>(StringComparer.OrdinalIgnoreCase);
+                foreach (var item in items) 
+                {
+                    Debug.WriteLine($"SOURCE GENERATOR: Adding {item.Analyses.Length} analyses to lookup for {item.Path}");
+                    result[item.Path] = item.Analyses;
+                }
+                return result;
+            })
+            .WithTrackingName("Analysis Dictionary");
+
+        // Combine attributed classes with analyses and generation flag
+        var generationInputs = attributedClasses
+            .Combine(analysisLookup)
             .Combine(generateModels)
             .Where(pair => pair.Right) // Only process if generation is enabled
-            .Select((pair, _) => (AttributedClass: pair.Left.Left, AdditionalFiles: pair.Left.Right));
+            .Select((pair, ct) => (AttributedClass: pair.Left.Left, AnalysisLookup: pair.Left.Right));
 
-        // Generate code for each attributed class
-        context.RegisterSourceOutput(combinedInputs, (ctx, data) => 
+        // Generate code for each attributed class using cached analyses
+        context.RegisterSourceOutput(generationInputs, (ctx, data) => 
         {
-            var (attributedClass, afs) = data;
+            var (attributedClass, analysisLookup) = data;
             
-            // Find the matching schema file
-            var matchingFile = FindMatchingSchemaFile(attributedClass, afs);
-            if (matchingFile == null)
+            Debug.WriteLine($"SOURCE GENERATOR: Processing attribution for {attributedClass.ClassName} with schema {attributedClass.SchemaFileName}");
+            
+            // Try to find matching schema file analyses
+            var matchingFilePath = FindMatchingSchemaFilePath(attributedClass.SchemaFileName, analysisLookup.Keys.ToArray());
+            
+            if (string.IsNullOrEmpty(matchingFilePath) || !analysisLookup.TryGetValue(matchingFilePath, out var analyses) || analyses.Length == 0)
             {
                 ctx.ReportDiagnostic(Diagnostic.Create(
-                    new DiagnosticDescriptor("PDXSG201", "Schema File Not Found", 
-                        $"Schema file '{attributedClass.SchemaFileName}' not found for class {attributedClass.Namespace}.{attributedClass.ClassName}", 
+                    new DiagnosticDescriptor("PDXSG201", "Schema Analyses Not Found", 
+                        $"No analyses found for schema file '{attributedClass.SchemaFileName}' for class {attributedClass.Namespace}.{attributedClass.ClassName}", 
                         "StellarisCodeGenerator", DiagnosticSeverity.Warning, true),
                     null
                 ));
                 return;
             }
-
-            // Generate models for the class based on the schema file
-            GenerateModelsForAttributedClass(ctx, attributedClass, matchingFile);
-        });
-    }
-
-    private static void GenerateModelsForAttributedClass(SourceProductionContext ctx, AttributedClass attributedClass, AdditionalText schemaFile)
-    {
-        try
-        {
-            Debug.WriteLine($"SOURCE GENERATOR: Generating code for {attributedClass.ClassName} using schema file {schemaFile.Path}");
-            ctx.ReportDiagnostic(Diagnostic.Create(
-                new DiagnosticDescriptor("PDXSG202", "Generating Code", 
-                    $"Generating code for {attributedClass.ClassName} using schema file {schemaFile.Path}", 
-                    "StellarisCodeGenerator", DiagnosticSeverity.Info, true),
-                null
-            ));
             
-            ctx.CancellationToken.ThrowIfCancellationRequested();
+            Debug.WriteLine($"SOURCE GENERATOR: Found {analyses.Length} analyses for {attributedClass.ClassName}");
             
-            var analyses = AnalyzeFile(schemaFile, ctx.CancellationToken);
+            // Filter analyses for this class
+            var filteredAnalyses = FilterAnalysesForAttributedClass(analyses, attributedClass).ToList();
             
-            // Convert to list to work with multiple times
-            var analysesList = analyses.ToList();
-            
-            if (analysesList.Any())
+            if (filteredAnalyses.Any())
             {
-                // Log what analyses were found before filtering
-                ctx.ReportDiagnostic(Diagnostic.Create(
-                    new DiagnosticDescriptor("PDXSG205", "Analyses Before Filtering", 
-                        $"Found {analysesList.Count} analyses in schema file {Path.GetFileName(schemaFile.Path)} before filtering: " +
-                        string.Join(", ", analysesList.Select(a => a.RootName)), 
-                        "StellarisCodeGenerator", DiagnosticSeverity.Info, true),
-                    null
-                ));
-                
-                // Filter the analyses to only include the ones relevant to this class type
-                var analysesForClass = FilterAnalysesForAttributedClass(analysesList, attributedClass).ToList();
-                
-                // Log the filtered analyses
-                ctx.ReportDiagnostic(Diagnostic.Create(
-                    new DiagnosticDescriptor("PDXSG206", "Analyses After Filtering", 
-                        $"After filtering for {attributedClass.ClassName}: Found {analysesForClass.Count} analyses in schema file {Path.GetFileName(schemaFile.Path)}: " +
-                        string.Join(", ", analysesForClass.Select(a => a.RootName)), 
-                        "StellarisCodeGenerator", DiagnosticSeverity.Info, true),
-                    null
-                ));
-                
-                if (analysesForClass.Any())
-                {
-                    // Generate code for this class as a partial class
-                    ModelsGenerator.GeneratePartialClass(ctx, attributedClass, schemaFile, analysesForClass);
-                }
-                else
-                {
-                    ctx.ReportDiagnostic(Diagnostic.Create(
-                        new DiagnosticDescriptor("PDXSG207", "No Matching Analyses", 
-                            $"No matching analyses found for class {attributedClass.ClassName} in schema file {schemaFile.Path} after filtering", 
-                            "StellarisCodeGenerator", DiagnosticSeverity.Warning, true),
-                        null
-                    ));
-                    
-                    // If no analyses matched after filtering, try using all of them as a fallback
-                    // This is a workaround that might help in some cases
-                    ctx.ReportDiagnostic(Diagnostic.Create(
-                        new DiagnosticDescriptor("PDXSG208", "Fallback to All Analyses", 
-                            $"Attempting fallback to use all analyses for class {attributedClass.ClassName}", 
-                            "StellarisCodeGenerator", DiagnosticSeverity.Info, true),
-                        null
-                    ));
-                    
-                    ModelsGenerator.GeneratePartialClass(ctx, attributedClass, schemaFile, analysesList);
-                }
+                Debug.WriteLine($"SOURCE GENERATOR: Generating code for {attributedClass.ClassName} with {filteredAnalyses.Count} analyses");
+                // Create a dummy AdditionalText to satisfy the ModelsGenerator.GeneratePartialClass interface
+                AdditionalText dummyFile = new CustomAdditionalText(matchingFilePath);
+                ModelsGenerator.GeneratePartialClass(ctx, attributedClass, dummyFile, filteredAnalyses);
             }
             else
             {
-                ctx.ReportDiagnostic(Diagnostic.Create(
-                    new DiagnosticDescriptor("PDXSG203", "No Analyses Found", 
-                        $"No analyses found in schema file {schemaFile.Path} for class {attributedClass.ClassName}", 
-                        "StellarisCodeGenerator", DiagnosticSeverity.Warning, true),
-                    null
-                ));
+                Debug.WriteLine($"SOURCE GENERATOR: No matching analyses after filtering for {attributedClass.ClassName}, trying all");
+                // Fallback to all analyses
+                AdditionalText dummyFile = new CustomAdditionalText(matchingFilePath);
+                ModelsGenerator.GeneratePartialClass(ctx, attributedClass, dummyFile, analyses);
             }
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"SOURCE GENERATOR: ERROR in GenerateModelsForAttributedClass: {ex.Message}\n{ex.StackTrace}");
-            ctx.ReportDiagnostic(Diagnostic.Create(
-                new DiagnosticDescriptor("PDXSG204", "Generation Error", 
-                    $"Error generating code for {attributedClass.ClassName}: {ex.Message}", 
-                    "StellarisCodeGenerator", DiagnosticSeverity.Error, true),
-                null
-            ));
-        }
+        });
     }
-
-    /// <summary>
-    /// DEPRECATED: Use FilterAnalysesForAttributedClass instead.
-    /// This method relies on hardcoded class names rather than using attribute information.
-    /// Maintained for backward compatibility.
-    /// </summary>
-    private static IEnumerable<SaveObjectAnalysis> FilterAnalysesForClass(IEnumerable<SaveObjectAnalysis> analyses, string className)
+    
+    // Helper class to create a dummy AdditionalText
+    private class CustomAdditionalText : AdditionalText
     {
-        // Use file name from GameStateDocumentAttribute to determine which analyses to include
-        if (className.Equals("Meta", StringComparison.OrdinalIgnoreCase))
+        private readonly string _path;
+        
+        public CustomAdditionalText(string path)
         {
-            // Meta class: filter to analyses that are from meta files
-            return analyses.Where(a => a.RootName.EndsWith("meta", StringComparison.OrdinalIgnoreCase));
-        }
-        else if (className.Equals("Gamestate", StringComparison.OrdinalIgnoreCase))
-        {
-            // Gamestate class: filter to analyses that are from gamestate files
-            return analyses.Where(a => !a.RootName.EndsWith("meta", StringComparison.OrdinalIgnoreCase));
+            _path = path;
         }
         
-        // Default - return all analyses if class name doesn't match known patterns
-        return analyses;
+        public override string Path => _path;
+        
+        public override SourceText? GetText(CancellationToken cancellationToken = default)
+        {
+            return null; // We don't need the actual text since analysis is already done
+        }
+    }
+    
+    // Helper method to find matching schema file from a list of paths
+    private static string FindMatchingSchemaFilePath(string schemaFileName, string[] availablePaths)
+    {
+        Debug.WriteLine($"SOURCE GENERATOR: Looking for schema file {schemaFileName} in {availablePaths.Length} paths");
+        
+        // Try exact match first
+        var exactMatch = availablePaths.FirstOrDefault(p => 
+            Path.GetFileName(p).Equals(schemaFileName, StringComparison.OrdinalIgnoreCase));
+            
+        if (exactMatch != null)
+        {
+            Debug.WriteLine($"SOURCE GENERATOR: Found exact match for {schemaFileName}: {exactMatch}");
+            return exactMatch;
+        }
+        
+        // Try base name match as fallback
+        string baseSchemaName = Path.GetFileNameWithoutExtension(schemaFileName);
+        var baseNameMatch = availablePaths.FirstOrDefault(p => 
+            Path.GetFileNameWithoutExtension(p).Equals(baseSchemaName, StringComparison.OrdinalIgnoreCase));
+            
+        if (baseNameMatch != null)
+        {
+            Debug.WriteLine($"SOURCE GENERATOR: Found base name match for {schemaFileName}: {baseNameMatch}");
+            return baseNameMatch;
+        }
+        
+        Debug.WriteLine($"SOURCE GENERATOR: No match found for {schemaFileName}");
+        return string.Empty;
     }
 
     // Add a new method that uses the AttributedClass directly for filtering
@@ -259,46 +277,6 @@ public class IncrementalGenerator : IIncrementalGenerator
         return result;
     }
 
-    private static AdditionalText? FindMatchingSchemaFile(AttributedClass attributedClass, ImmutableArray<AdditionalText> additionalFiles)
-    {
-        Debug.WriteLine($"SOURCE GENERATOR: Looking for schema file {attributedClass.SchemaFileName} for class {attributedClass.ClassName}");
-        Debug.WriteLine($"SOURCE GENERATOR: Available additional files: {additionalFiles.Length}");
-        
-        // Log all available additional files
-        foreach (var file in additionalFiles)
-        {
-            Debug.WriteLine($"SOURCE GENERATOR: Additional file: {file.Path}");
-        }
-        
-        // Try to find an exact match first
-        var exactMatch = additionalFiles.FirstOrDefault(f => 
-            Path.GetFileName(f.Path).Equals(attributedClass.SchemaFileName, StringComparison.OrdinalIgnoreCase));
-        
-        if (exactMatch != null)
-        {
-            Debug.WriteLine($"SOURCE GENERATOR: Found exact match for schema file: {exactMatch.Path}");
-            return exactMatch;
-        }
-        
-        Debug.WriteLine($"SOURCE GENERATOR: No exact match found for {attributedClass.SchemaFileName}");
-        
-        // Try to match by base name (without extension) if exact match not found
-        string baseSchemaName = Path.GetFileNameWithoutExtension(attributedClass.SchemaFileName);
-        Debug.WriteLine($"SOURCE GENERATOR: Looking for files with base name: {baseSchemaName}");
-        
-        var baseNameMatch = additionalFiles.FirstOrDefault(f => 
-            Path.GetFileNameWithoutExtension(f.Path).Equals(baseSchemaName, StringComparison.OrdinalIgnoreCase));
-            
-        if (baseNameMatch != null)
-        {
-            Debug.WriteLine($"SOURCE GENERATOR: Found base name match: {baseNameMatch.Path}");
-            return baseNameMatch;
-        }
-        
-        Debug.WriteLine($"SOURCE GENERATOR: No schema file found for {attributedClass.SchemaFileName}");
-        return null;
-    }
-
     private static AttributedClass? GetAttributedClass(GeneratorSyntaxContext context, CancellationToken cancellationToken)
     {
         var classDeclaration = (ClassDeclarationSyntax)context.Node;
@@ -309,6 +287,7 @@ public class IncrementalGenerator : IIncrementalGenerator
         
         // Check if the class is partial
         bool isPartial = classDeclaration.Modifiers.Any(m => m.IsKind(SyntaxKind.PartialKeyword));
+        
         if (!isPartial)
         {
             Debug.WriteLine($"SOURCE GENERATOR: Class {className} is not partial, skipping");
@@ -352,6 +331,7 @@ public class IncrementalGenerator : IIncrementalGenerator
         
         // Get the schema file name from the attribute
         string? schemaFileName = null;
+        
         if (gameStateDocAttr.ConstructorArguments.Length > 0 && 
             gameStateDocAttr.ConstructorArguments[0].Value is string fileName)
         {
@@ -370,7 +350,7 @@ public class IncrementalGenerator : IIncrementalGenerator
         {
             ClassName = classSymbol.Name,
             Namespace = classSymbol.ContainingNamespace.ToDisplayString(),
-            SchemaFileName = schemaFileName
+            SchemaFileName = schemaFileName!
         };
         
         Debug.WriteLine($"SOURCE GENERATOR: Created AttributedClass for {result.ClassName} in {result.Namespace} with schema {result.SchemaFileName}");
@@ -408,6 +388,7 @@ public class IncrementalGenerator : IIncrementalGenerator
         var result = enhancedAnalyzer.AnalyzeAdditionalFile(text, cancellationToken).ToList();
         
         Debug.WriteLine($"SOURCE GENERATOR: AnalyzeFile returned {result.Count} analyses for {text.Path}");
+        
         if (result.Count == 0)
         {
             Debug.WriteLine($"SOURCE GENERATOR: WARNING - No analyses found for {text.Path}!");

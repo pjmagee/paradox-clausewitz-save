@@ -11,4 +11,5 @@
   <Project Path="MageeSoft.PDX.CE.Save/MageeSoft.PDX.CE.Save.csproj" />
   <Project Path="MageeSoft.PDX.CE.Cli/MageeSoft.PDX.CE.Cli.csproj" />  
   <Project Path="MageeSoft.PDX.CE.Tests/MageeSoft.PDX.CE.Tests.csproj" />
+  <Project Path="MageeSoft.PDX.CE.SourceGenerator.Tests/MageeSoft.PDX.CE.SourceGenerator.Tests.csproj" />
 </Solution>

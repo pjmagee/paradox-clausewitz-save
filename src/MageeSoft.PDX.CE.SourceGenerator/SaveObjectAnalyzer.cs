@@ -195,15 +195,32 @@ internal class SaveObjectAnalyzer
         var currentAnalysis = new SaveObjectAnalysis(Path.GetFileNameWithoutExtension(text.Path));
         _currentAnalysis = currentAnalysis;
 
-        string fileContent = text.GetText(cancellationToken)?.ToString() ?? string.Empty;
-        if (string.IsNullOrEmpty(fileContent))
+        // Get file content efficiently - add this check to potentially avoid loading the entire file
+        var sourceText = text.GetText(cancellationToken);
+        if (sourceText == null || sourceText.Length == 0)
         {
             currentAnalysis.AddDiagnostic("PDXSA100", "Empty File", $"File has no content: {text.Path}", DiagnosticSeverity.Warning);
             return Enumerable.Empty<SaveObjectAnalysis>();
         }
+        
+        // Add file size warning for large files (over 10MB)
+        if (sourceText.Length > 10 * 1024 * 1024) 
+        {
+            currentAnalysis.AddDiagnostic("PDXSA106", "Large File", 
+                $"File {text.Path} is very large ({sourceText.Length / (1024 * 1024)}MB), analysis may be slow", 
+                DiagnosticSeverity.Warning);
+        }
 
         try
         {
+            // Convert the SourceText to string only once (efficient)
+            string fileContent = sourceText.ToString();
+            if (string.IsNullOrEmpty(fileContent))
+            {
+                currentAnalysis.AddDiagnostic("PDXSA100", "Empty File", $"File has no content: {text.Path}", DiagnosticSeverity.Warning);
+                return Enumerable.Empty<SaveObjectAnalysis>();
+            }
+
             SaveObject? root = Parser.Parse(fileContent);
             root = (SaveObject) TransformNestedDictionaries(root);
 
@@ -375,88 +392,129 @@ internal class SaveObjectAnalyzer
     private static bool IsReservedTypeName(string name) => ReservedTypeNames.Contains(name);
 
     // Modify the first-pass schema collection method to handle nested properties in arrays
-    private void CollectSchemaInformation(SaveObject root, string basePath = "")
+    private void CollectSchemaInformation(SaveObject root, string basePath = "", int depth = 0)
     {
+        // Add a maximum depth limit to prevent stack overflows or excessive processing
+        if (depth > 20)
+        {
+            if (_currentAnalysis != null)
+            {
+                _currentAnalysis.AddDiagnostic("PDXSA107", "Maximum Depth Reached", 
+                    $"Maximum schema collection depth reached at path: {basePath}. Deeper structures will be skipped.", 
+                    DiagnosticSeverity.Warning);
+            }
+            return;
+        }
+        
         // First ensure we register this object at this path
         _schemaRegistry.RegisterProperty(basePath, root);
         
+        // Skip if too many properties (to avoid excessive analysis)
+        if (root.Properties.Count > 1000 && depth > 5)
+        {
+            if (_currentAnalysis != null)
+            {
+                _currentAnalysis.AddDiagnostic("PDXSA108", "Excessive Properties", 
+                    $"Object at path {basePath} has {root.Properties.Count} properties at depth {depth}. Only essential keys will be analyzed.", 
+                    DiagnosticSeverity.Warning);
+            }
+            
+            // Only process essential properties (add key properties you want to ensure are processed)
+            var essentialKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "meta", "gamestate", "id", "type", "name" };
+            foreach (var property in root.Properties)
+            {
+                if (essentialKeys.Contains(property.Key))
+                {
+                    ProcessProperty(property.Key, property.Value, basePath, depth);
+                }
+            }
+            return;
+        }
+        
+        // Regular processing for normal-sized objects
         foreach (var property in root.Properties)
         {
-            string propertyPath = string.IsNullOrEmpty(basePath) 
-                ? property.Key 
-                : $"{basePath}.{property.Key}";
-                
-            _schemaRegistry.RegisterProperty(propertyPath, property.Value);
+            ProcessProperty(property.Key, property.Value, basePath, depth);
+        }
+    }
+    
+    // Helper method to process each property during schema collection
+    private void ProcessProperty(string key, SaveElement value, string basePath, int depth)
+    {
+        string propertyPath = string.IsNullOrEmpty(basePath) 
+            ? key 
+            : $"{basePath}.{key}";
             
-            // If it's an object, register its signature and process recursively
-            if (property.Value is SaveObject childObj)
+        _schemaRegistry.RegisterProperty(propertyPath, value);
+        
+        // If it's an object, register its signature and process recursively
+        if (value is SaveObject childObj)
+        {
+            string signature = GenerateObjectSignature(childObj);
+            _schemaRegistry.RegisterObjectSignature(propertyPath, signature);
+            
+            // Special handling for empty objects to ensure they get registered properly
+            if (childObj.Properties.Count == 0)
             {
-                string signature = GenerateObjectSignature(childObj);
-                _schemaRegistry.RegisterObjectSignature(propertyPath, signature);
+                // Even though it's empty, we need to ensure it gets registered
+                _schemaRegistry.RegisterProperty(propertyPath, childObj);
                 
-                // Special handling for empty objects to ensure they get registered properly
-                if (childObj.Properties.Count == 0)
-                {
-                    // Even though it's empty, we need to ensure it gets registered
-                    // so properties from other instances at same path can be found
-                    _schemaRegistry.RegisterProperty(propertyPath, childObj);
-                    
-                    // Enhanced: Look for non-empty instances of this same path in other objects
-                    // This helps create classes for empty objects that may have structure in other instances
-                    TryEnrichEmptyObjectSchema(propertyPath);
-                }
-                
-                // Recursively collect schema information
-                CollectSchemaInformation(childObj, propertyPath);
+                // Try to enrich empty objects with schema from other instances
+                TryEnrichEmptyObjectSchema(propertyPath);
             }
-            // If it's an array, register each item and process nested objects
-            else if (property.Value is SaveArray childArray)
+            else
             {
-                // Register the array path
-                string arrayPath = $"{propertyPath}";
+                // Recursively collect schema information for this object
+                CollectSchemaInformation(childObj, propertyPath, depth + 1);
+            }
+        }
+        // If it's an array, register element types
+        else if (value is SaveArray arr)
+        {
+            // Register the array itself
+            _schemaRegistry.RegisterProperty(propertyPath, arr);
+            
+            // Process the first few array items to understand their structure
+            // Limit processing to avoid excessive work on large arrays
+            int itemsToProcess = Math.Min(arr.Items.Count, 5);
+            
+            for (int i = 0; i < itemsToProcess; i++)
+            {
+                var item = arr.Items[i];
+                string itemPath = $"{propertyPath}[{i}]";
                 
-                // If any item is a SaveObject, we need to analyze their structure too
-                int index = 0;
-                foreach (var item in childArray.Items)
+                _schemaRegistry.RegisterProperty(itemPath, item);
+                
+                // If array element is an object, process it recursively but with depth limit
+                if (item is SaveObject itemObj)
                 {
-                    // Also register each item with its index
-                    string itemPath = $"{propertyPath}[{index}]";
-                    _schemaRegistry.RegisterProperty(itemPath, item);
-                    
-                    if (item is SaveObject arrayObj)
+                    // To avoid excessive processing, limit the depth for array items
+                    if (depth < 10) // Less depth for array items
                     {
-                        string signature = GenerateObjectSignature(arrayObj);
-                        
-                        // Register at both the array path level (for type tracking)
-                        // and the individual item level (for schema merging)
-                        _schemaRegistry.RegisterObjectSignature($"{propertyPath}[]", signature);
+                        string signature = GenerateObjectSignature(itemObj);
                         _schemaRegistry.RegisterObjectSignature(itemPath, signature);
                         
-                        // Special handling for empty objects in arrays
-                        if (arrayObj.Properties.Count == 0)
+                        // Register at the array path level for type tracking
+                        _schemaRegistry.RegisterObjectSignature($"{propertyPath}[]", signature);
+                        
+                        // Handle empty objects in arrays
+                        if (itemObj.Properties.Count == 0)
                         {
-                            // Register an empty object so we can still find this path
-                            _schemaRegistry.RegisterProperty(itemPath, arrayObj);
-                            
-                            // Enhanced: Look for non-empty instances of this same path in other objects
                             TryEnrichEmptyObjectSchema(itemPath);
                             TryEnrichEmptyObjectSchema($"{propertyPath}[]");
                         }
                         
-                        // Recursively collect schema for this array object
-                        CollectSchemaInformation(arrayObj, itemPath);
-                        CollectSchemaInformation(arrayObj, $"{propertyPath}[]");
+                        CollectSchemaInformation(itemObj, itemPath, depth + 1);
+                        CollectSchemaInformation(itemObj, $"{propertyPath}[]", depth + 1);
                     }
-                    else if (item is SaveArray nestedArray)
-                    {
-                        // Handle nested arrays similarly
-                        _schemaRegistry.RegisterProperty($"{propertyPath}[]", nestedArray);
-                        
-                        // Process each item in the nested array
-                        ProcessNestedArray(nestedArray, $"{itemPath}");
-                    }
+                }
+                else if (item is SaveArray nestedArray)
+                {
+                    // Handle nested arrays 
+                    _schemaRegistry.RegisterProperty($"{propertyPath}[]", nestedArray);
                     
-                    index++;
+                    // Process a limited sample of the nested array
+                    ProcessNestedArray(nestedArray, itemPath, Math.Min(3, depth + 1));
                 }
             }
         }
@@ -530,35 +588,46 @@ internal class SaveObjectAnalyzer
         }
     }
 
-    // Fix SaveArray detection to handle possible null values safely
-    private void ProcessNestedArray(SaveArray array, string basePath)
+    // Helper method to process nested arrays with depth control
+    private void ProcessNestedArray(SaveArray array, string basePath, int depth)
     {
-        if (array == null)
-            return;
+        // Early exit if we've reached maximum depth
+        if (depth > 7) return;
         
-        int index = 0;
-        foreach (var item in array.Items)
+        // Process only a small sample of items (max 3)
+        int itemsToProcess = Math.Min(array.Items.Count, 3);
+        
+        for (int i = 0; i < itemsToProcess; i++)
         {
-            string itemPath = $"{basePath}[{index}]";
+            var item = array.Items[i];
+            string itemPath = $"{basePath}[{i}]";
+            
+            // Register this item
             _schemaRegistry.RegisterProperty(itemPath, item);
             
-            if (item is SaveObject arrayObj)
+            // Process recursively if it's an object
+            if (item is SaveObject obj)
             {
-                string signature = GenerateObjectSignature(arrayObj);
-                _schemaRegistry.RegisterObjectSignature($"{basePath}[]", signature);
+                string signature = GenerateObjectSignature(obj);
                 _schemaRegistry.RegisterObjectSignature(itemPath, signature);
+                _schemaRegistry.RegisterObjectSignature($"{basePath}[]", signature);
                 
-                // Recursively collect schema for this array object
-                CollectSchemaInformation(arrayObj, itemPath);
-                CollectSchemaInformation(arrayObj, $"{basePath}[]");
+                if (obj.Properties.Count == 0)
+                {
+                    TryEnrichEmptyObjectSchema(itemPath);
+                    TryEnrichEmptyObjectSchema($"{basePath}[]");
+                }
+                else
+                {
+                    CollectSchemaInformation(obj, itemPath, depth + 1);
+                    CollectSchemaInformation(obj, $"{basePath}[]", depth + 1);
+                }
             }
-            else if (item is SaveArray nestedArray)
+            // Handle nested arrays (but with stricter depth control)
+            else if (item is SaveArray nestedArray && depth < 5) 
             {
-                // Recursively process nested arrays (with null check)
-                ProcessNestedArray(nestedArray, itemPath);
+                ProcessNestedArray(nestedArray, itemPath, depth + 1);
             }
-            
-            index++;
         }
     }
 
