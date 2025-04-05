@@ -8,9 +8,17 @@ namespace MageeSoft.PDX.CE.Save;
 /// </summary>
 public class StellarisSave
 {
+    /// <summary>
+    /// The meta information of the save file.
+    /// </summary>
     public Meta Meta { get; private set; } = null!;
+    
+    /// <summary>
+    ///  The gamestate information of the save file.
+    /// </summary>
     public Gamestate GameState { get; private set; } = null!;
 
+    // Private constructor to prevent external instantiation.
     private StellarisSave()
     {
         

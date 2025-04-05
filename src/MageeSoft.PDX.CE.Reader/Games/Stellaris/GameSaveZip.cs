@@ -3,7 +3,11 @@ using System.IO.Compression;
 namespace MageeSoft.PDX.CE.Reader.Games.Stellaris;
 
 /// <summary>
-/// Represents a game save zip file. (.sav)
+/// Represents a game save zip file.
+/// Different games have different file extensions for their save files.
+/// <remarks>
+/// Stellaris uses a .sav file that is a zip file containing a gamestate and meta file.
+/// </remarks>
 /// </summary>          
 public class GameSaveZip : IDisposable
 {

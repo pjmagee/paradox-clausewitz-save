@@ -2,21 +2,37 @@ using MageeSoft.PDX.CE.Reader.Games.Stellaris;
 
 namespace MageeSoft.PDX.CE.Reader;
 
+/// <summary>
+///  Represents a parsed game state document which is a file found within a compressed save file.
+/// </summary>
 public class GameStateDocument
 {
+    /// <summary>
+    ///  The root object of the parsed document.
+    ///  This is the top-level object that contains all other properties
+    /// </summary>
     public SaveObject Root { get; }
     
+    /// <summary>
+    ///  Creates a new instance of the GameStateDocument class with the specified root object.
+    /// </summary>
+    /// <param name="root">
+    ///  The root object of the parsed document.
+    /// </param>
+    /// <exception cref="ArgumentException">
+    ///  Thrown when the root object is null.
+    /// </exception>
     private GameStateDocument(SaveObject root)
     {
-        //ArgumentNullException.ThrowIfNull(root, nameof(root));
-        Root = root;
+        Root = root ?? throw new ArgumentException("Root object cannot be null", nameof(root));
     }
     
     public static GameStateDocument Parse(string input)
     {
-        //ArgumentException.ThrowIfNullOrWhiteSpace(input, nameof(input));
-        var root = Parser.Parse(input);
-        return new GameStateDocument(root);
+        if (string.IsNullOrWhiteSpace(input))
+            throw new ArgumentException("Input cannot be null or empty", nameof(input));
+        
+        return new GameStateDocument(Parser.Parse(input));
     }
 
     /// <summary>
@@ -24,7 +40,9 @@ public class GameStateDocument
     /// Alternatively, use GameSaveZip to parse the entire .sav file.
     /// Or you can load a txt file with the same format as the meta or gamestate files
     /// </summary>
-    /// <param name="fileInfo"></param>
+    /// <param name="fileInfo">
+    /// The compressed save file to decompress and parse.
+    /// </param>
     /// <returns>
     ///  The parsed GameStateDocument.
     /// </returns>
@@ -36,7 +54,8 @@ public class GameStateDocument
     /// </exception>
     public static GameStateDocument Parse(FileInfo fileInfo)
     {
-        //ArgumentNullException.ThrowIfNull(fileInfo, nameof(fileInfo));
+        if (fileInfo is null)
+            throw new ArgumentNullException(nameof(fileInfo), "FileInfo cannot be null");
         
         if (!fileInfo.Exists)
             throw new FileNotFoundException("File not found", fileInfo.FullName);
@@ -49,8 +68,18 @@ public class GameStateDocument
 
     public static GameStateDocument Parse(Stream stream)
     {
-        //ArgumentNullException.ThrowIfNull(stream, nameof(stream));
-        using var reader = new StreamReader(stream);
-        return Parse(reader.ReadToEnd());
+        if (stream is null)
+            throw new ArgumentNullException(nameof(stream), "Stream cannot be null");
+
+        var reader = new StreamReader(stream);
+
+        try
+        {
+            return Parse(reader.ReadToEnd());
+        }
+        finally
+        {
+            reader.Dispose();
+        }
     }
 }

@@ -4,23 +4,22 @@
         <Nullable>enable</Nullable>
         <PDXGenerateModels>true</PDXGenerateModels>
         <LangVersion>latest</LangVersion>
-        <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>  
+        <EmitCompilerGeneratedFiles>false</EmitCompilerGeneratedFiles>  
         <!-- emit to same dir as source code -->
         <CompilerGeneratedFilesOutputPath>$(MSBuildThisFileDirectory)\Generated</CompilerGeneratedFilesOutputPath>
     </PropertyGroup>    
+    
     <PropertyGroup Condition="'$(Configuration)'=='Release'">
         <StripSymbols>true</StripSymbols>
     </PropertyGroup>
+    
     <ItemGroup>      
         <AdditionalFiles Include="gamestate.csf" />
         <AdditionalFiles Include="meta.csf" />
     </ItemGroup>
+    
     <ItemGroup>
         <ProjectReference Include="..\MageeSoft.PDX.CE\MageeSoft.PDX.CE.csproj" />
         <ProjectReference Include="..\MageeSoft.PDX.CE.SourceGenerator\MageeSoft.PDX.CE.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     </ItemGroup>
-    <ItemGroup>
-      <Folder Include="Generated\" />
-    </ItemGroup>
-
 </Project>

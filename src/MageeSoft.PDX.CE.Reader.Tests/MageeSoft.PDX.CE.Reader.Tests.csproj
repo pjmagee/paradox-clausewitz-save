@@ -1,0 +1,37 @@
+<Project Sdk="MSTest.Sdk/3.8.2">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <LangVersion>latest</LangVersion>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="coverlet.msbuild" Version="6.0.4">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Update="Microsoft.Testing.Extensions.CodeCoverage" Version="17.14.2" />
+        <PackageReference Update="Microsoft.Testing.Extensions.TrxReport" Version="1.6.3" />
+        <PackageReference Update="MSTest.TestFramework" Version="3.8.3" />
+        <PackageReference Update="MSTest.TestAdapter" Version="3.8.3" />
+    </ItemGroup> 
+
+    <ItemGroup>
+      <ProjectReference Include="..\MageeSoft.PDX.CE.Reader\MageeSoft.PDX.CE.Reader.csproj" />
+    </ItemGroup> 
+
+    <ItemGroup>
+      <None Update="Stellaris\TestData\gamestate">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Stellaris\TestData\meta">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Stellaris\TestData\ironman.sav">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
+</Project>

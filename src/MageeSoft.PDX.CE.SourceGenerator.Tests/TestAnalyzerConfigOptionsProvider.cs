@@ -3,18 +3,11 @@ using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace MageeSoft.PDX.CE.SourceGenerator.Tests;
 
-class TestAnalyzerConfigOptionsProvider : AnalyzerConfigOptionsProvider
+class TestAnalyzerConfigOptionsProvider(AnalyzerConfigOptions globalOptions) : AnalyzerConfigOptionsProvider
 {
-    private readonly AnalyzerConfigOptions _globalOptions;
+    public override AnalyzerConfigOptions GetOptions(SyntaxTree tree) => globalOptions;
 
-    public TestAnalyzerConfigOptionsProvider(AnalyzerConfigOptions globalOptions)
-    {
-        _globalOptions = globalOptions;
-    }
+    public override AnalyzerConfigOptions GetOptions(AdditionalText textFile) => globalOptions;
 
-    public override AnalyzerConfigOptions GetOptions(SyntaxTree tree) => _globalOptions;
-
-    public override AnalyzerConfigOptions GetOptions(AdditionalText textFile) => _globalOptions;
-
-    public override AnalyzerConfigOptions GlobalOptions => _globalOptions;
+    public override AnalyzerConfigOptions GlobalOptions => globalOptions;
 }

@@ -10,6 +10,8 @@ namespace MageeSoft.PDX.CE.SourceGenerator;
 [Generator]
 public class IncrementalGenerator : IIncrementalGenerator
 {
+    
+    
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         // Add a diagnostic marker file
