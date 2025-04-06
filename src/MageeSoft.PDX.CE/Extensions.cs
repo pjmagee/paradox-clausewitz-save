@@ -1,10 +1,26 @@
+using System.ComponentModel;
 using System.Text.RegularExpressions;
 
 namespace MageeSoft.PDX.CE;
 
 public static class Extensions
 {
-    
+    public static bool TryGet<T>(this SaveObject saveObject, string key, out T? value) where T : SaveElement
+    {
+        value = null;
+        KeyValuePair<string, SaveElement>? element = saveObject.Properties.FirstOrDefault(p => p.Key == key);
+
+        if (element.HasValue)
+        {
+            if (element.Value.Value is T t)
+            {
+                value = t;
+                return true;
+            }
+        }
+
+        return false;
+    }
     
     public static bool TryGetFloats(this SaveObject saveObject, string key, out List<float>? items)
     {

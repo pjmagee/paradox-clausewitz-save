@@ -4,6 +4,7 @@
         <Nullable>enable</Nullable>
         <PDXGenerateModels>true</PDXGenerateModels>
         <LangVersion>latest</LangVersion>
+        <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
     </PropertyGroup>
     
     <PropertyGroup Condition="'$(Configuration)'=='Release'">
