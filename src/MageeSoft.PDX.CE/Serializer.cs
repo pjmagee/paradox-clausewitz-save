@@ -7,17 +7,9 @@ namespace MageeSoft.PDX.CE;
 /// </summary>
 public class Serializer
 {
-    private readonly StringBuilder _builder;
-    private int _indentLevel;
+    private readonly StringBuilder _builder = new();
+    private int _indentLevel = 0;
     private const string IndentString = "\t";
-    private bool _isFirstElement = true;
-
-    public Serializer()
-    {
-        _builder = new StringBuilder();
-        _indentLevel = 0;
-        _isFirstElement = true;
-    }
 
     /// <summary>
     /// Serializes a SaveElement to a string in Paradox save file format.
@@ -26,7 +18,6 @@ public class Serializer
     {
         _builder.Clear();
         _indentLevel = 0;
-        _isFirstElement = true;
         SerializeElement(element);
         return _builder.ToString().TrimEnd();
     }
@@ -42,11 +33,6 @@ public class Serializer
 
     private void SerializeElement(SaveElement element, string? key = null)
     {
-        // if (!_isFirstElement && key != null)
-        // {
-        //     _builder.Append('\n');
-        // }
-        
         if (key != null)
         {
             WriteIndent();
@@ -93,8 +79,6 @@ public class Serializer
             default:
                 throw new ArgumentException($"Unsupported element type: {element.GetType().Name}");
         }
-
-        _isFirstElement = false;
     }
 
     private void SerializeObject(SaveObject obj)

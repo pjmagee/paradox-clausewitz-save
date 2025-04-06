@@ -4,6 +4,223 @@ namespace MageeSoft.PDX.CE;
 
 public static class Extensions
 {
+    
+    
+    public static bool TryGetFloats(this SaveObject saveObject, string key, out List<float>? items)
+    {
+        items = null;
+        KeyValuePair<string, SaveElement>? element = saveObject.Properties.FirstOrDefault(p => p.Key == key);
+
+        if (element.HasValue)
+        {
+            if (element.Value.Value is SaveArray array)
+            {
+                items = new List<float>();
+                
+                foreach (var item in array.Items)
+                {
+                    if (item is Scalar<float> scalar)
+                    {
+                        items.Add(scalar.Value);
+                    }
+                    
+                    if(item is Scalar<int> intScalar)
+                    {
+                        items.Add(intScalar.Value);
+                    }
+                    
+                    if(item is Scalar<long> longScalar)
+                    {
+                        items.Add((float)longScalar.Value);
+                    }
+                    
+                    if (item is Scalar<string> stringScalar)
+                    {
+                        if (float.TryParse(stringScalar.Value, out float floatValue))
+                        {
+                            items.Add(floatValue);
+                        }
+                    }
+                }
+            }
+        }
+
+        return items != null;
+    }
+    
+    public static bool TryGetDoubles(this SaveObject saveObject, string key, out List<double>? items)
+    {
+        items = null;
+        KeyValuePair<string, SaveElement>? element = saveObject.Properties.FirstOrDefault(p => p.Key == key);
+
+        if (element.HasValue)
+        {
+            if (element.Value.Value is SaveArray array)
+            {
+                items = new List<double>();
+                
+                foreach (var item in array.Items)
+                {
+                    if (item is Scalar<double> scalar)
+                    {
+                        items.Add(scalar.Value);
+                    }
+                    
+                    if(item is Scalar<int> intScalar)
+                    {
+                        items.Add(intScalar.Value);
+                    }
+                    
+                    if(item is Scalar<long> longScalar)
+                    {
+                        items.Add(longScalar.Value);
+                    }
+                    
+                    if (item is Scalar<string> stringScalar)
+                    {
+                        if (double.TryParse(stringScalar.Value, out double doubleValue))
+                        {
+                            items.Add(doubleValue);
+                        }
+                    }
+                }
+            }
+        }
+
+        return items != null;
+    }
+    
+    public static bool TryGetLongs(this SaveObject saveObject, string key, out List<long>? items)
+    {
+        items = null;
+        KeyValuePair<string, SaveElement>? element = saveObject.Properties.FirstOrDefault(p => p.Key == key);
+
+        if (element.HasValue)
+        {
+            if( element.Value.Value is SaveArray array)
+            {
+                items = new List<long>();
+            
+                foreach (var item in array.Items)
+                {
+                    if (item is Scalar<long> scalar)
+                    {
+                        items.Add(scalar.Value);
+                    }
+                    
+                    if(item is Scalar<int> intScalar)
+                    {
+                        items.Add(intScalar.Value);
+                    }
+                    
+                    if(item is Scalar<float> floatScalar)
+                    {
+                        items.Add((long)floatScalar.Value);
+                    }
+                    
+                    if(item is Scalar<double> doubleScalar)
+                    {
+                        items.Add((long)doubleScalar.Value);
+                    }
+                    
+                    if(item is Scalar<string> stringScalar)
+                    {
+                        if (long.TryParse(stringScalar.Value, out long longValue))
+                        {
+                            items.Add(longValue);
+                        }
+                    }
+                }
+            }
+        }
+
+        return items != null;
+    }
+    
+    /// <summary>
+    ///  Tries to get a list of strings from a SaveObject key=value pair.
+    /// </summary>
+    /// <param name="obj">
+    /// The SaveObject to search for the key in.
+    /// </param>
+    /// <param name="key">
+    /// The key of the property that is an array of strings.
+    /// </param>
+    /// <param name="items">
+    /// The list of strings if the key is found and the value is an array of strings.
+    /// </param>
+    /// <returns>
+    /// true if the key is found and the value is an array of strings; otherwise, false.
+    /// </returns>
+    public static bool TryGetStrings(this SaveObject obj, string key, out List<string>? items)
+    {
+        items = null;
+        var element = obj.Properties.FirstOrDefault(p => p.Key == key).Value;
+
+        if (element is SaveArray array)
+        {
+            items = new List<string>();
+            
+            foreach (var item in array.Items)
+            {
+                if (item is Scalar<string> scalar)
+                {
+                    items.Add(scalar.Value);
+                }
+            }
+        }
+        
+        return items != null;
+    }
+   
+    /// <summary>
+    /// Tries to get a list of booleans from a SaveObject key=value pair.
+    /// </summary>
+    /// <param name="obj">
+    /// The SaveObject to search for the key in.
+    /// </param>
+    /// <param name="key">
+    /// The key of the property that is an array of booleans.
+    /// </param>
+    /// <param name="items">
+    /// The list of booleans if the key is found and the value is an array of booleans.
+    /// </param>
+    /// <returns>
+    ///  true if the key is found and the value is an array of booleans; otherwise, false.
+    /// </returns>
+    public static bool TryGetBools(this SaveObject obj, string key, out List<bool>? items)
+    {
+        items = null;
+        var element = obj.Properties.FirstOrDefault(p => p.Key == key).Value;
+
+        if (element is SaveArray array)
+        {
+            items = new List<bool>();
+            
+            foreach (var item in array.Items)
+            {
+                if (item is Scalar<bool> scalar)
+                {
+                    items.Add(scalar.Value);
+                }
+            }
+        }
+        
+        return items != null;
+    }
+    
+    public static T? TryGetScalar<T>(this SaveObject obj, string key)
+    {
+        var element = obj.Properties.FirstOrDefault(p => p.Key == key).Value;
+        
+        if (element is Scalar<T> scalar)
+        {
+            return scalar.Value;
+        }
+
+        return default(T?);
+    }
+    
     public static bool TryGetElement<T>(this IEnumerable<KeyValuePair<string, SaveElement>> properties, string name, out T? value) where T : SaveElement
     {
         foreach (var property in properties)
@@ -22,9 +239,9 @@ public static class Extensions
         return false;
     }
     
-    public static bool TryGetString(this SaveObject obj, string key, out string value)
+    public static bool TryGetString(this SaveObject obj, string key, out string? value)
     {
-        value = string.Empty;
+        value = null;
         var element = obj.Properties.FirstOrDefault(p => p.Key == key).Value;
         
         if (element is Scalar<string> scalar)
@@ -36,9 +253,9 @@ public static class Extensions
         return false;
     }
 
-    public static bool TryGetInt(this SaveObject obj, string key, out int value)
+    public static bool TryGetInt(this SaveObject obj, string key, out int? value)
     {
-        value = 0;
+        value = null;
         var element = obj.Properties.FirstOrDefault(p => p.Key == key).Value;
         
         if (element is Scalar<int> scalar)
@@ -50,9 +267,9 @@ public static class Extensions
         return false;
     }
 
-    public static bool TryGetLong(this SaveObject obj, string key, out long value)
+    public static bool TryGetLong(this SaveObject obj, string key, out long? value)
     {
-        value = 0;
+        value = null;
         var element = obj.Properties.FirstOrDefault(p => p.Key == key).Value;
         
         if (element is Scalar<long> longScalar)
@@ -70,9 +287,9 @@ public static class Extensions
         return false;
     }
 
-    public static bool TryGetFloat(this SaveObject obj, string key, out float value)
+    public static bool TryGetFloat(this SaveObject obj, string key, out float? value)
     {
-        value = 0;
+        value = null;
         var element = obj.Properties.FirstOrDefault(p => p.Key == key).Value;
         
         if (element is Scalar<float> scalar)
@@ -90,9 +307,9 @@ public static class Extensions
         return false;
     }
 
-    public static bool TryGetBool(this SaveObject obj, string key, out bool value)
+    public static bool TryGetBool(this SaveObject obj, string key, out bool? value)
     {
-        value = false;
+        value = null;
         var element = obj.Properties.FirstOrDefault(p => p.Key == key).Value;
         
         if (element is Scalar<bool> boolScalar)
@@ -104,9 +321,9 @@ public static class Extensions
         return false;
     }
 
-    public static bool TryGetGuid(this SaveObject obj, string key, out Guid value)
+    public static bool TryGetGuid(this SaveObject obj, string key, out Guid? value)
     {
-        value = Guid.Empty;
+        value = null;
         var element = obj.Properties.FirstOrDefault(p => p.Key == key).Value;
         
         if (element is Scalar<Guid> guidScalar)
@@ -118,32 +335,15 @@ public static class Extensions
         return false;
     }
     
-    public static bool TryGetDateTime(this SaveObject obj, string key, out DateTime value)
+    public static bool TryGetDateTime(this SaveObject obj, string key, out DateTime? value)
     {
-        value = default;
+        value = null;
         var element = obj.Properties.FirstOrDefault(p => p.Key == key).Value;
 
         if (element is Scalar<DateTime> dateScalar)
         {
             value = dateScalar.Value;
             return true;
-        }
-
-        return false;
-        
-        // TODO: not sure about this
-
-        if (element is Scalar<string> stringScalar)
-        {
-            var parts = stringScalar.Value.Split('.');
-            if (parts.Length == 3 && 
-                int.TryParse(parts[0], out var year) && 
-                int.TryParse(parts[1], out var month) && 
-                int.TryParse(parts[2], out var day))
-            {
-                value = new DateTime(year, month, day);
-                return true;
-            }
         }
 
         return false;
@@ -163,9 +363,9 @@ public static class Extensions
         return false;
     }
 
-    public static bool TryGetSaveArray(this SaveObject obj, string key, out SaveArray? value)
+    public static bool TryGetSaveArray(this SaveObject obj, string key, out SaveArray value)
     {
-        value = null;
+        value = null!;
         var element = obj.Properties.FirstOrDefault(p => p.Key == key).Value;
         
         if (element is SaveArray array)

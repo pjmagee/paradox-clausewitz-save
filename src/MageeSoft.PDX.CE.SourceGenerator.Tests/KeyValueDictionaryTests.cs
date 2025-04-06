@@ -68,23 +68,23 @@ public class KeyValueDictionaryTests
             parseOptions: new CSharpParseOptions(LanguageVersion.Latest)
         );
 
-        var compilation = CSharpCompilation.Create( 
+        var compilation = CSharpCompilation.Create(
             assemblyName: nameof(KeyValueArrayTests),
             syntaxTrees: [CSharpSyntaxTree.ParseText(ModelTestClass),],
             references: [MetadataReference.CreateFromFile(typeof(object).Assembly.Location)],
             options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
-        );  
+        );
 
         // Act
         driver.RunGeneratorsAndUpdateCompilation(compilation, out var newCompilation, out _);
 
         // Assert
-        var modelTree = newCompilation.SyntaxTrees.FirstOrDefault(tree => tree.FilePath.Contains("Model.g.cs"));    
+        var modelTree = newCompilation.SyntaxTrees.FirstOrDefault(tree => tree.FilePath.Contains("Model.g.cs"));
         Assert.IsNotNull(modelTree, "Generated Model class not found");
 
         TestContext.WriteLine($"Found generated model at: {modelTree.FilePath}");
         TestContext.WriteLine(modelTree.ToString());
-        
+
         var actualProperty = modelTree
             .GetRoot()
             .DescendantNodes()
@@ -94,7 +94,7 @@ public class KeyValueDictionaryTests
         Assert.IsNotNull(actualProperty, "IntegerKeys property not found");
 
         Assert.AreEqual(expectedProperty.ToString(), actualProperty.ToString(), "Property does not match");
-    }   
+    }
 
 
     [TestMethod]
@@ -104,26 +104,41 @@ public class KeyValueDictionaryTests
     public void IntegerKeyObjectValues()
     {
         // Arrange
-        var generator = new IncrementalGenerator(); 
+        var generator = new IncrementalGenerator();
         var csfText = """
                       nested_object={
                         class_dictionary={
                           0={
-                            int_value=0
-                            string_value="0"
+                            key_integer=0
                           }
                           1={
-                            int_value=1
-                            string_value="1"
+                            key_quoted_string="1"
+                          }
+                          2={
+                             key_unquoted_false=no
                           }
                         }
                       }                   
                       """;
 
-        var expectedProperty = CSharpSyntaxTree.ParseText("public Dictionary<int, Model.ModelNestedObject.ModelNestedObjectClassDictionaryItem?>? ClassDictionary { get; set; }")
+        var expectedModelProperty = CSharpSyntaxTree.ParseText("public Dictionary<int, Model.ModelNestedObject.ModelNestedObjectClassDictionaryItem?>? ClassDictionary { get; set; }")
             .GetRoot()
             .DescendantNodes()
-            .OfType<PropertyDeclarationSyntax>()                .Single();
+            .OfType<PropertyDeclarationSyntax>()
+            .Single();
+
+        // should be found across multiple instances in the integer key
+        var nestedObjectItemProperties = new List<string>()
+            {
+                "public SaveObject? SourceObject { get; private set; }",
+                "public int? KeyInteger { get; set; }",
+                "public string? KeyQuotedString { get; set; }",
+                "public bool? KeyUnquotedFalse { get; set; }"
+            };
+
+        var expectedNestedClassProperties = nestedObjectItemProperties
+            .Select(p => CSharpSyntaxTree.ParseText(p).GetRoot().DescendantNodes().OfType<PropertyDeclarationSyntax>().Single())
+            .ToList();
 
         GeneratorDriver driver = CSharpGeneratorDriver.Create(
             generators: [generator.AsSourceGenerator()],
@@ -143,7 +158,7 @@ public class KeyValueDictionaryTests
         driver.RunGeneratorsAndUpdateCompilation(compilation, out var newCompilation, out _);
 
         // Assert
-        var  modelTree = newCompilation.SyntaxTrees.FirstOrDefault(tree => tree.FilePath.Contains("Model.g.cs"));
+        var modelTree = newCompilation.SyntaxTrees.FirstOrDefault(tree => tree.FilePath.Contains("Model.g.cs"));
         Assert.IsNotNull(modelTree, "Generated Model class not found");
 
         TestContext.WriteLine($"Found generated model at: {modelTree.FilePath}");
@@ -153,9 +168,30 @@ public class KeyValueDictionaryTests
             .GetRoot()
             .DescendantNodes()
             .OfType<PropertyDeclarationSyntax>()
-            .SingleOrDefault(p => p.ToString().Equals(expectedProperty.ToString()));
+            .SingleOrDefault(p => p.ToString().Equals(expectedModelProperty.ToString()));
 
         Assert.IsNotNull(actualProperty, "ClassDictionary property not found");
+        Assert.AreEqual(expectedModelProperty.ToString(), actualProperty.ToString(), "Property does not match");
+
+        var generatedNestedClass = modelTree
+            .GetRoot()
+            .DescendantNodes()
+            .OfType<ClassDeclarationSyntax>()
+            .SingleOrDefault(c => c.Identifier.ValueText.Equals("ModelNestedObjectClassDictionaryItem"));
+        
+        Assert.IsNotNull(generatedNestedClass, "Generated nested class not found");
+        TestContext.WriteLine($"Found generated nested class at: {generatedNestedClass.Identifier.ValueText}");
+
+        foreach (var nestedClassProperty in expectedNestedClassProperties)
+        {
+            var actualNestedProperty = generatedNestedClass
+                .ChildNodes()
+                .OfType<PropertyDeclarationSyntax>()
+                .SingleOrDefault(p => p.ToString().Equals(nestedClassProperty.ToString()));
+
+            Assert.IsNotNull(actualNestedProperty, $"{nestedClassProperty.Identifier.ValueText} property not found");
+            Assert.AreEqual(nestedClassProperty.ToString(), actualNestedProperty.ToString(), "Property does not match");
+        }
     }
 
 }

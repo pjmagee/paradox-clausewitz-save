@@ -577,7 +577,6 @@ public class KeyValueArrayTests
         );
     }
 
-
     [TestMethod]
     [Description("""
                  An array of objects is created based on repeated instances of the same key and its found properties.
@@ -618,19 +617,21 @@ public class KeyValueArrayTests
             "public bool? KeyBool { get; set; }"
         };
 
+        var expectedNestedClass = CSharpSyntaxTree.ParseText($@"""
+            public class ModelNestedObjectItem
+            {{   
+                {string.Join('\n', nestedClassProperties)}
+            }}
+            """)
+            .GetRoot()
+            .DescendantNodes()
+            .OfType<ClassDeclarationSyntax>()
+            .Single();
+
         var expectedNestedClassProperties = nestedClassProperties
             .Select(p => CSharpSyntaxTree.ParseText(p).GetRoot().ChildNodes().OfType<PropertyDeclarationSyntax>().Single())
             .ToList();
 
-        var expectedNestedClass = CSharpSyntaxTree.ParseText(
-            $@"""
-            public class ModelNestedObjectItem
-            {{   
-                {string.Join('\n', expectedNestedClassProperties)}
-            }}
-            """
-        ).GetRoot().DescendantNodes().OfType<ClassDeclarationSyntax>().Single();
-        
         GeneratorDriver driver = CSharpGeneratorDriver.Create(
             generators: [generator.AsSourceGenerator()],
             additionalTexts: [new TestAdditionalFile(Path.GetFullPath(SchemaFileName), csfText)],

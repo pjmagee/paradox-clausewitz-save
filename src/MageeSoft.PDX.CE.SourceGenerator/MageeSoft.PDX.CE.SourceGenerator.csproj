@@ -7,8 +7,6 @@
         <Nullable>enable</Nullable>
         <IsRoslynComponent>true</IsRoslynComponent>
         <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
-        <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
-        <CompilerGeneratedFilesOutputPath>$(BaseIntermediateOutputPath)\GeneratedFiles</CompilerGeneratedFilesOutputPath>
     </PropertyGroup>
 
     <ItemGroup>
@@ -31,7 +29,7 @@
         <ItemGroup>
             <TargetPathWithTargetPlatformMoniker
                     Include="..\MageeSoft.PDX.CE\bin\debug\netstandard2.0\MageeSoft.PDX.CE.dll"
-                    IncludeRuntimeDependency="false"/>
+                    IncludeRuntimeDependency="false" />
         </ItemGroup>
     </Target>
 
