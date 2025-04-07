@@ -30,4 +30,5 @@
   <Project Path="MageeSoft.PDX.CE.SourceGenerator/MageeSoft.PDX.CE.SourceGenerator.csproj" />
   <Project Path="MageeSoft.PDX.CE.Tests/MageeSoft.PDX.CE.Tests.csproj" />
   <Project Path="MageeSoft.PDX.CE/MageeSoft.PDX.CE.csproj" />
+  <Project Path="MageeSoft.PDX.CE2/MageeSoft.PDX.CE2.csproj" />
 </Solution>

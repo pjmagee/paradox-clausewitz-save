@@ -3,6 +3,9 @@ using System.CommandLine.IO;
 using System.Text.Json;
 using MageeSoft.PDX.CE.Cli.Games;
 using MageeSoft.PDX.CE.Save;
+using MageeSoft.PDX.CE.Cli.JsonContext;
+using MageeSoft.PDX.CE.Cli.Services.Model;
+using MageeSoft.PDX.CE.Reader.Cli;
 
 namespace MageeSoft.PDX.CE.Cli.Services.Games.Stellaris;
 
@@ -16,37 +19,25 @@ public class StellarisSaveService(IConsole console, GamePathResolver pathResolve
 
     public IEnumerable<FileInfo> FindSaveFiles()
     {
-        var savePaths = pathResolver.GetPotentialSavePaths(GameName);
-        var saveFiles = new List<FileInfo>();
-
-        foreach (var savePath in savePaths)
+        var saveDirectory = pathResolver.GetSaveDirectory(GameType);
+        if (saveDirectory is null || !Directory.Exists(saveDirectory))
         {
-            console.WriteLine($"Searching for save files in {savePath}");
-            
-            try
-            {
-                if (!Directory.Exists(savePath))
-                {
-                    console.WriteLine($"Directory does not exist: {savePath}");
-                    continue;
-                }
-                
-                var files = Directory.GetFiles(savePath, $"*{SaveFileExtension}", SearchOption.AllDirectories)
-                    .Select(f => new FileInfo(f))
-                    .Where(IsValidSaveFile)
-                    .ToArray();
-                
-                saveFiles.AddRange(files);
-                
-                console.WriteLine($"Found {files.Length} save files in {savePath}");
-            }
-            catch (Exception ex)
-            {
-                console.Error.WriteLine($"Error accessing save directory: {savePath}. Exception: {ex.Message}");
-            }
+            console.Error.WriteLine($"Save directory for {GameName} not found.");
+            return Array.Empty<FileInfo>();
         }
 
-        return saveFiles;
+        try
+        {
+            var directory = new DirectoryInfo(saveDirectory);
+            return directory.GetFiles("*" + SaveFileExtension, SearchOption.TopDirectoryOnly)
+                .Where(file => file.Length > 0)
+                .OrderByDescending(file => file.LastWriteTime);
+        }
+        catch (Exception ex)
+        {
+            console.Error.WriteLine($"Error finding save files: {ex.Message}");
+            return Array.Empty<FileInfo>();
+        }
     }
 
     public bool IsValidSaveFile(FileInfo file)
@@ -67,8 +58,8 @@ public class StellarisSaveService(IConsole console, GamePathResolver pathResolve
                 FileName = saveFile.Name,
                 FileSize = saveFile.Length,
                 LastModified = saveFile.LastWriteTime,
-                Ironman = save.Meta.Ironman!.Value,
-                Version = save.Meta.AVersion!,
+                Ironman = save.Meta.Ironman != null && save.Meta.Ironman == true,
+                Version = save.Meta.Version ?? "Unknown",
                 Error = null,
             };
 
