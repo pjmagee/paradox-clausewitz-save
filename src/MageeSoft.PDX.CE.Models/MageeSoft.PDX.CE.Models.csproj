@@ -3,8 +3,7 @@
         <TargetFramework>net10.0</TargetFramework>
         <Nullable>enable</Nullable>
         <PDXGenerateModels>true</PDXGenerateModels>
-        <LangVersion>latest</LangVersion>
-        <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+        <LangVersion>latest</LangVersion>        
     </PropertyGroup>
     
     <PropertyGroup Condition="'$(Configuration)'=='Release'">

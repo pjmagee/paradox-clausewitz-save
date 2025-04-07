@@ -61,7 +61,7 @@ public class StellarisSave
                     
                 try
                 {
-                    meta = Meta.Bind(documents.MetaDocument.Root);
+                    meta = Meta.Load(documents.MetaDocument.Root);
                 }
                 catch (Exception ex)
                 {
@@ -70,7 +70,7 @@ public class StellarisSave
                     
                 try
                 {
-                    gameState = Gamestate.Bind(documents.GameStateDocument.Root);
+                    gameState = Gamestate.Load(documents.GameStateDocument.Root);
                 }
                 catch (Exception ex)
                 {

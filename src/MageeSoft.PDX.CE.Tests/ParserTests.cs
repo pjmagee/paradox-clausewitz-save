@@ -21,10 +21,9 @@ ship_names=
         var root = Parser.Parse(input);
         
         Assert.IsInstanceOfType(root, typeof(SaveObject));
-        var rootObj = (SaveObject)root;
-        Assert.AreEqual(1, rootObj.Properties.Count, "Root should have exactly one property");
+        Assert.AreEqual(1, root.Properties.Count, "Root should have exactly one property");
         
-        var shipNamesProp = rootObj.Properties[0];
+        var shipNamesProp = root.Properties[0];
         Assert.AreEqual("ship_names", shipNamesProp.Key, "Property key should be 'ship_names'");
         Assert.IsInstanceOfType(shipNamesProp.Value, typeof(SaveObject));
         
@@ -218,10 +217,9 @@ ship_names=
 
         // Assert
         Assert.IsInstanceOfType(root, typeof(SaveObject));
-        var rootObj = (SaveObject)root;
         
-        Assert.AreEqual(1, rootObj.Properties.Count, "Root should have exactly one property");
-        var arrayProp = rootObj.Properties[0];
+        Assert.AreEqual(1, root.Properties.Count, "Root should have exactly one property");
+        var arrayProp = root.Properties[0];
         Assert.AreEqual("mixed_array", arrayProp.Key, "Property key should be 'mixed_array'");
         
         Assert.IsInstanceOfType(arrayProp.Value, typeof(SaveArray));

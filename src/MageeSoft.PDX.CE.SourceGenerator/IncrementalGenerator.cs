@@ -200,7 +200,7 @@ public class IncrementalGenerator : IIncrementalGenerator
 
         switch (value)
         {
-            case Scalar<string>:
+            case Scalar<string> s:
                 property.Type = "string";
                 property.SaveDataType = SaveDataType.String;
                 break;
@@ -230,32 +230,69 @@ public class IncrementalGenerator : IIncrementalGenerator
                 break;
             case SaveObject obj:
             {
-                // Dictionary<int, T> check
-                if (obj.Properties.Count >= 0 && obj.Properties.All(p => int.TryParse(p.Key, out _))) // Allow empty dict { }
-                {
-                    if (obj.Properties.Count > 0 && obj.Properties.First().Value is SaveObject firstValueObj)
-                    {
-                        string dictValueClassName = GenerateUniqueClassName(parentClassName, propertyName + "Value", processedTypes.Keys);
-                        Schema dictValueSchema = InferSchemaRecursive(firstValueObj, dictValueClassName, allSchemas, processedTypes);
+                // Check if ALL keys are numeric (int or long)
+                bool allKeysNumeric = obj.Properties.Count >= 0 && obj.Properties.All(p => long.TryParse(p.Key, out _));
 
-                        // Merge properties from other values
-                        foreach (var item in obj.Properties.Skip(1))
+                if (allKeysNumeric)
+                {
+                    // Determine if long is needed for keys
+                    bool useLongKey = obj.Properties.Any(p => !int.TryParse(p.Key, out _) && long.TryParse(p.Key, out _));
+                    string keyType = useLongKey ? "long" : "int";
+                    property.KeySaveDataType = useLongKey ? SaveDataType.Long : SaveDataType.Int;
+
+                    // Infer value type (TValue) by merging schemas from all non-null SaveObject values
+                    Schema? mergedValueSchema = null;
+                    string? valueClassName = null;
+                    bool hasNullValues = false;
+
+                    foreach (var kvp in obj.Properties)
+                    {
+                        if (kvp.Value is SaveObject valueObj)
                         {
-                            if (item.Value is SaveObject otherValueObj)
+                            if (mergedValueSchema == null)
                             {
-                                InferProperties(otherValueObj, dictValueSchema, allSchemas, processedTypes);
+                                // First object found, infer base schema
+                                valueClassName = GenerateUniqueClassName(parentClassName, propertyName + "Value", processedTypes.Keys);
+                                mergedValueSchema = InferSchemaRecursive(valueObj, valueClassName, allSchemas, processedTypes);
+                            }
+                            else
+                            {
+                                // Merge properties from subsequent objects into the existing schema
+                                InferProperties(valueObj, mergedValueSchema, allSchemas, processedTypes);
                             }
                         }
-
-                        property.Type = $"Dictionary<int, {dictValueSchema.Name}>";
-                        property.SaveDataType = SaveDataType.DictionaryIntKey;
-                        property.NestedSchema = dictValueSchema;
+                        else if (kvp.Value is Scalar<string> scalarValue && scalarValue.Value.Equals("none", StringComparison.OrdinalIgnoreCase))
+                        {
+                            hasNullValues = true;
+                        }
+                        // Else: handle unexpected value types within the numeric-keyed object if necessary
                     }
-                    else // Empty or non-object values
+
+                    if (mergedValueSchema != null)
                     {
-                        property.Type = "Dictionary<int, object>"; // Fallback for empty or non-object values
-                        property.SaveDataType = SaveDataType.DictionaryIntKey;
-                        property.NestedSchema = null;
+                        property.NestedSchema = mergedValueSchema;
+                        string valueType = mergedValueSchema.Name;
+                        string nullableMarker = hasNullValues ? "?" : "";
+                        property.Type = $"Dictionary<{keyType}, {valueType}{nullableMarker}>";
+                        property.SaveDataType = SaveDataType.DictionaryNumericKey;
+                        property.ElementSaveDataType = SaveDataType.Object; // Elements are objects (or null)
+                        property.HasDictionaryNullValues = hasNullValues;
+                    }
+                    else if (hasNullValues)
+                    {
+                        // Only had 'none' values, assume Dictionary<TKey, object?> or string?
+                        property.Type = $"Dictionary<{keyType}, string?>"; // Defaulting to string? for none-only dicts
+                        property.SaveDataType = SaveDataType.DictionaryNumericKey;
+                        property.ElementSaveDataType = SaveDataType.String;
+                        property.HasDictionaryNullValues = true;
+                    }
+                    else
+                    {
+                        // Empty object {} with numeric keys? Treat as Dictionary<TKey, object?>
+                        property.Type = $"Dictionary<{keyType}, object?>";
+                        property.SaveDataType = SaveDataType.DictionaryNumericKey;
+                        property.ElementSaveDataType = SaveDataType.Unknown; // Or Object? Decide best default
+                        property.HasDictionaryNullValues = true; // Can add anything
                     }
                 }
                 else // Regular nested object
@@ -507,6 +544,7 @@ public class IncrementalGenerator : IIncrementalGenerator
             string nullableMarker = prop.IsNullable ? "?" : "";
             string initializer = (prop.SaveDataType == SaveDataType.Array ||
                                   prop.SaveDataType == SaveDataType.DictionaryIntKey ||
+                                  prop.SaveDataType == SaveDataType.DictionaryNumericKey ||
                                   prop.SaveDataType == SaveDataType.DictionaryStringKey ||
                                   prop.SaveDataType == SaveDataType.DictionaryScalarKeyObjectValue)
                 ? " = new();"
@@ -539,12 +577,10 @@ public class IncrementalGenerator : IIncrementalGenerator
                 case SaveDataType.Float:
                 case SaveDataType.Bool:
                 case SaveDataType.DateTime:
+                case SaveDataType.Guid:
                     string tryGetMethod = GetTryGetMethodName(prop.SaveDataType);
-                    // Call specific TryGetX method (e.g., TryGetInt)
-                    // The out parameter will be nullable (e.g., out int? value)
                     // Use simple string concatenation for the if statement line itself
                     sb.AppendLine(methodIndent + "if (saveObject." + tryGetMethod + "(" + keyNameLiteral + ", out " + typeWithoutNullable + "? " + varName + "))");
-                    // Keep the rest of the block using interpolation or original structure
                     sb.AppendLine($"{methodIndent}{{");
                     if (prop.IsNullable)
                     {
@@ -558,7 +594,6 @@ public class IncrementalGenerator : IIncrementalGenerator
                     break;
 
                 case SaveDataType.Object:
-                    // Use original interpolation/structure for non-scalar types
                     sb.AppendLine($"{methodIndent}if (saveObject.TryGet<SaveObject>({keyNameLiteral}, out var {varName}Obj) && {varName}Obj != null)");
                     sb.AppendLine($"{methodIndent}{{");
                     if (prop.NestedSchema != null)
@@ -611,12 +646,57 @@ public class IncrementalGenerator : IIncrementalGenerator
                     sb.AppendLine($"{methodIndent}}}");
                     break;
 
+                case SaveDataType.DictionaryNumericKey:
+                    // Handle Dictionary<int/long, TValue?> from SaveObject { "123"={}, "456"=none, ... }
+                    sb.AppendLine($"{methodIndent}if (saveObject.TryGet<SaveObject>({keyNameLiteral}, out var {varName}DictObj) && {varName}DictObj != null)");
+                    sb.AppendLine($"{methodIndent}{{");
+                    // Infer key/value types from SchemaProperty
+                    string keyTypeName = GetScalarTypeName(prop.KeySaveDataType); // "int" or "long"
+                    string valueTypeName;
+                    if (prop.NestedSchema != null) {
+                        valueTypeName = prop.NestedSchema.Name;
+                    } else if (prop.ElementSaveDataType == SaveDataType.String) {
+                        valueTypeName = "string"; // Case where only 'none' was present
+                    } else {
+                        valueTypeName = "object"; // Fallback for empty or unknown value types
+                    }
+                    // Value is nullable if 'none' was seen during inference, or if we couldn't determine a specific object schema (fallback to string/object)
+                    bool valueIsNullable = prop.HasDictionaryNullValues || prop.NestedSchema == null || prop.ElementSaveDataType == SaveDataType.String || prop.ElementSaveDataType == SaveDataType.Unknown;
+                    string nullableMarker = valueIsNullable ? "?" : "";
+
+                    sb.AppendLine($"{methodIndent}    var dictBuilder = new Dictionary<{keyTypeName}, {valueTypeName}{nullableMarker}>();");
+                    sb.AppendLine($"{methodIndent}    foreach (var kvp in {varName}DictObj.Properties)");
+                    sb.AppendLine($"{methodIndent}    {{");
+                    sb.AppendLine($"{methodIndent}        if ({keyTypeName}.TryParse(kvp.Key, out var parsedKey))");
+                    sb.AppendLine($"{methodIndent}        {{");
+                    sb.AppendLine($"{methodIndent}            bool isNone = kvp.Value is Scalar<string> scalarValueForNoneCheck && scalarValueForNoneCheck.Value.Equals(\"none\", StringComparison.OrdinalIgnoreCase);");
+                    sb.AppendLine($"{methodIndent}            if (kvp.Value is SaveObject valueObj)");
+                    sb.AppendLine($"{methodIndent}            {{");
+                    if (prop.NestedSchema != null) {
+                        sb.AppendLine($"{methodIndent}                dictBuilder[parsedKey] = {valueTypeName}.Load(valueObj);");
+                    } else {
+                         sb.AppendLine($"{methodIndent}                // Warning: No schema for value object for key '{{kvp.Key}}', cannot load into specific type '{valueTypeName}'.");
+                    }
+                    sb.AppendLine($"{methodIndent}            }}"); // End `if (kvp.Value is SaveObject...`
+                    sb.AppendLine($"{methodIndent}            else if (isNone)");
+                    sb.AppendLine($"{methodIndent}            {{");
+                    if (valueIsNullable) {
+                        sb.AppendLine($"{methodIndent}                dictBuilder[parsedKey] = null;");
+                    }
+                    sb.AppendLine($"{methodIndent}            }}"); // End `if (kvp.Value is Scalar<string> ...`
+                    // Else: Handle other unexpected value types? Log warning?
+                    sb.AppendLine($"{methodIndent}        }}"); // End `if (TryParse...)`
+                    sb.AppendLine($"{methodIndent}    }}"); // End foreach
+                    sb.AppendLine($"{methodIndent}    {targetProperty} = dictBuilder;");
+                    sb.AppendLine($"{methodIndent}}}");
+                    break;
+
                 case SaveDataType.DictionaryScalarKeyObjectValue: // From Array { {key, obj}, ... }
                     sb.AppendLine($"{methodIndent}if (saveObject.TryGet<SaveArray>({keyNameLiteral}, out var {varName}IdArr) && {varName}IdArr != null)");
                     sb.AppendLine($"{methodIndent}{{");
                     if (prop.NestedSchema != null)
                     {
-                        string keyScalarType = "int"; // Assuming int keys
+                        string keyScalarType = "int"; // Assuming int keys - TODO: could infer key type
                         sb.AppendLine($"{methodIndent}    try {{");
                         sb.AppendLine($"{methodIndent}        {targetProperty} = {varName}IdArr.Items.OfType<SaveArray>()");
                         sb.AppendLine($"{methodIndent}            .Where(innerArr => innerArr.Items.Count == 2 && innerArr.Items[0] is Scalar<{keyScalarType}> && innerArr.Items[1] is SaveObject)");
@@ -627,9 +707,7 @@ public class IncrementalGenerator : IIncrementalGenerator
                         sb.AppendLine($"{methodIndent}        Console.WriteLine($\"Error parsing dictionary '{prop.KeyName}': {{ex.Message}}\");");
                         sb.AppendLine($"{methodIndent}        {targetProperty} ??= new();"); // Ensure initialized on error
                         sb.AppendLine($"{methodIndent}    }}");
-                    }
-                    else
-                    {
+                    } else {
                         sb.AppendLine($"{methodIndent}    // Warning: Nested schema for DictionaryScalarKeyObjectValue '{prop.PropertyName}' is null.");
                         sb.AppendLine($"{methodIndent}    {targetProperty} ??= new();");
                     }
@@ -672,7 +750,9 @@ public class IncrementalGenerator : IIncrementalGenerator
         SaveDataType.Bool => "TryGetBool",
         SaveDataType.DateTime => "TryGetDateTime",
         SaveDataType.Guid => "TryGetGuid",
-        // Add cases for SaveObject/SaveArray if needed, though currently handled differently
+        SaveDataType.DictionaryNumericKey => string.Empty, // Not used directly with TryGet
+        SaveDataType.DictionaryStringKey => string.Empty, // Not used directly with TryGet
+        SaveDataType.DictionaryScalarKeyObjectValue => string.Empty, // Not used directly with TryGet
         _ => throw new ArgumentOutOfRangeException(nameof(dataType), $"No corresponding TryGet method for {dataType}")
     };
 
@@ -808,6 +888,8 @@ public class IncrementalGenerator : IIncrementalGenerator
         public bool IsNullable { get; set; } = true;
         public SaveDataType SaveDataType { get; set; } = SaveDataType.Unknown;
         public SaveDataType ElementSaveDataType { get; set; } = SaveDataType.Unknown; // For arrays/lists
+        public SaveDataType KeySaveDataType { get; set; } = SaveDataType.Unknown; // For dictionaries with non-string keys
+        public bool HasDictionaryNullValues { get; set; } = false; // Specifically for dictionaries, indicates if value type should be T?
         public Schema? NestedSchema { get; set; } // For objects or elements/values that are objects
     }
 
@@ -823,7 +905,8 @@ public class IncrementalGenerator : IIncrementalGenerator
         Guid,
         Object, // SaveObject -> class
         Array, // SaveArray -> List<T>
-        DictionaryIntKey, // SaveObject { 0={}, 1={}, ... } -> Dictionary<int, T>
+        DictionaryIntKey, // No longer primary used, superseded by DictionaryNumericKey? Or keep for specific int-only cases?
+        DictionaryNumericKey, // Keys are int or long, value can be object or null (if 'none' present)
         DictionaryStringKey, // SaveObject { "a"={}, "b"={}, ... } -> Dictionary<string, T> (if needed)
         DictionaryScalarKeyObjectValue // SaveArray { { key1, {...} }, { key2, {...} } } -> Dictionary<TKey, TValue>
     }

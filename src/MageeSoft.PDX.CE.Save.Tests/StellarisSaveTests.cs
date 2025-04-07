@@ -16,10 +16,10 @@ public class StellarisSaveTests
         Assert.IsNotNull(save.GameState);
         Assert.IsNotNull(save.Meta);
         
-        Assert.AreEqual(expected: "Circinus v3.14.15926", actual: save.Meta.AVersion);
+        Assert.AreEqual(expected: "Circinus v3.14.15926", actual: save.Meta.Version);
         Assert.AreEqual(new DateTime(2250, 11, 15), save.Meta.Date);
         Assert.AreEqual("United Nations of Earth", save.Meta.Name);
-        Assert.IsTrue(save.Meta.Ironman ?? false);
+        Assert.IsTrue(save.Meta.Ironman);
     }
 
     [TestMethod]
