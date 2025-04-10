@@ -9,14 +9,14 @@ namespace MageeSoft.PDX.CE2;
 public class PdxSaveReader
 {
     private readonly ReadOnlyMemory<char> _inputMemory;
-    private PdxLexer _pdxLexer; // Lexer is a struct
-    private Token _currentToken;
+    private PdxLexer _lexer; 
+    private PdxToken _currentToken;
 
     private PdxSaveReader(ReadOnlyMemory<char> inputMemory)
     {
         _inputMemory = inputMemory;
-        _pdxLexer = new PdxLexer(inputMemory);
-        ConsumeToken(); // Initialize _currentToken
+        _lexer = new PdxLexer(inputMemory);
+        _currentToken = _lexer.NextToken(); // Initialize _currentToken
     }
 
     /// <summary>
@@ -60,12 +60,12 @@ public class PdxSaveReader
 
     private void ConsumeToken()
     {
-        _currentToken = _pdxLexer.NextToken();
+        _currentToken = _lexer.NextToken();
     }
 
     private void SkipWhitespaceAndNewlines()
     {
-        while (_currentToken.Type == TokenType.Whitespace || _currentToken.Type == TokenType.NewLine)
+        while (_currentToken.Type == PdxTokenType.Whitespace || _currentToken.Type == PdxTokenType.NewLine)
         {
             ConsumeToken();
         }
@@ -78,36 +78,49 @@ public class PdxSaveReader
     {
         List<KeyValuePair<string, PdxElement>> items = new();
 
-        while (_currentToken.Type != TokenType.EndOfFile)
+        while (_currentToken.Type != PdxTokenType.EndOfFile)
         {
             SkipWhitespaceAndNewlines();
-            if (_currentToken.Type == TokenType.EndOfFile) break;
 
-            // Expect Key = Value structure at root
-            if (_currentToken.Type == TokenType.Identifier)
+            if (_currentToken.Type == PdxTokenType.EndOfFile)
+                break;
+
+            if (_currentToken.Type == PdxTokenType.Identifier)
             {
                 string key = GetCurrentTokenSpan().ToString();
                 ConsumeToken(); // Eat identifier
 
                 SkipWhitespaceAndNewlines();
 
-                if (_currentToken.Type == TokenType.Equals)
+                if (_currentToken.Type == PdxTokenType.Equals)
                 {
                     ConsumeToken(); // Eat equals
-                }
-                else
-                {
-                    throw new FormatException($"Expected '=' after root key '{key}' but found {_currentToken.Type} at position {_currentToken.Start}");
                 }
 
                 PdxElement value = ParseValue();
                 items.Add(new KeyValuePair<string, PdxElement>(key, value));
             }
-            // Allow root level comments? Need '#' token type in Lexer if so.
-            // else if (_currentToken.Type == TokenType.Comment) { ConsumeToken(); continue; }
+            else if (_currentToken.Type == PdxTokenType.StringLiteral)
+            {
+                // Handle string literal keys (with quotes)
+                string key = _currentToken.ProcessedString ?? "";
+                ConsumeToken(); // Eat quoted key
+
+                SkipWhitespaceAndNewlines();
+
+                if (_currentToken.Type == PdxTokenType.Equals)
+                {
+                    ConsumeToken(); // Eat equals
+                }
+
+                PdxElement value = ParseValue();
+                items.Add(new KeyValuePair<string, PdxElement>(key, value));
+            }
             else
             {
-                 throw new FormatException($"Unexpected token at root level: {_currentToken.Type} at position {_currentToken.Start}");
+                // Skip any unrecognized tokens and continue parsing
+                // This matches Parser.cs behavior of silently skipping unexpected tokens
+                ConsumeToken();
             }
         }
 
@@ -119,188 +132,202 @@ public class PdxSaveReader
     {
         SkipWhitespaceAndNewlines();
 
-        Token valueToken = _currentToken; // Capture token before consuming
-        ReadOnlySpan<char> valueSpan = GetCurrentTokenSpan();
+        if (_currentToken.Type == PdxTokenType.EndOfFile)
+            return new PdxScalar<string>(""); // Handle EOF as empty string, matching Parser.cs
 
-        switch (valueToken.Type)
+        if (_currentToken.Type == PdxTokenType.CurlyOpen)
+            return ParseBlock();
+
+        if (_currentToken.Type == PdxTokenType.CurlyClose)
         {
-            case TokenType.CurlyOpen:
-                return ParseBlock();
-
-            case TokenType.StringLiteral:
-                {
-                    // Lexer provides the *unescaped* string value
-                    ConsumeToken(); // Consume after getting value
-                    string stringValue = valueToken.ProcessedString ?? string.Empty;
-
-                    // Attempt to parse specific formats first
-                    if (Guid.TryParse(stringValue, out Guid guid)) return new PdxScalar<Guid>(guid);
-                    if (TryParseDate(stringValue, out DateTime date)) return new PdxScalar<DateTime>(date);
-
-                    // Default to string if no specific format matches
-                    return new PdxScalar<string>(stringValue);
-                }
-
-            case TokenType.NumberLiteral:
-                {
-                    ConsumeToken(); // Consume after getting span
-
-                    // Try parsing float first if decimal point exists
-                    if (valueSpan.IndexOf('.') >= 0)
-                    {
-                        // Use float.TryParse. CultureInfo.InvariantCulture is crucial.
-                        if (float.TryParse(valueSpan, NumberStyles.Any, CultureInfo.InvariantCulture, out float f))
-                            return new PdxScalar<float>(f);
-                    }
-                    else // No decimal point, try integer types
-                    {
-                        // Try int first, then long. CultureInfo.InvariantCulture is crucial.
-                        if (int.TryParse(valueSpan, NumberStyles.Any, CultureInfo.InvariantCulture, out int i32))
-                            return new PdxScalar<int>(i32);
-                        if (long.TryParse(valueSpan, NumberStyles.Any, CultureInfo.InvariantCulture, out long i64))
-                            return new PdxScalar<long>(i64);
-                    }
-
-                    // Fallback: If parsing fails (e.g., invalid format), treat as string.
-                    return new PdxScalar<string>(valueSpan.ToString());
-                }
-
-            case TokenType.Identifier: // Handles yes, no, none, or other unquoted strings
-                {
-                    ConsumeToken(); // Consume after getting span
-
-                    if (valueSpan.Equals("yes", StringComparison.OrdinalIgnoreCase)) return new PdxScalar<bool>(true);
-                    if (valueSpan.Equals("no", StringComparison.OrdinalIgnoreCase)) return new PdxScalar<bool>(false);
-
-                    // Represent "none" identifier as a specific string scalar.
-                    // Consumers (like the source generator) must interpret this specific string value.
-                    // This avoids needing a nullable type directly in the base parser model.
-                    // It also correctly handles cases where "none" might be a legitimate unquoted string value.
-                    return new PdxScalar<string>(valueSpan.ToString());
-                }
-
-            case TokenType.CurlyClose: // Handles empty values, e.g., key={} or array={ val1 {} val2 }
-                 // This indicates an empty object value in these contexts.
-                 // It's consumed by ParseBlock when closing, so reaching here means it's acting as a value.
-                 return new PdxObject(new List<KeyValuePair<string, PdxElement>>());
-
-            default:
-                // Consider handling TokenType.Unknown more gracefully if desired
-                throw new FormatException($"Unexpected token as value: {valueToken.Type} at position {valueToken.Start}");
+            // Handle closing brace without opening brace as empty object
+            return new PdxObject(new List<KeyValuePair<string, PdxElement>>());
         }
+
+        if (_currentToken.Type == PdxTokenType.StringLiteral)
+        {
+            // Get the raw string value without processing
+            string stringValue = _currentToken.ProcessedString ?? GetCurrentTokenSpan().ToString();
+            ConsumeToken(); // Consume the token
+
+            // Handle special types
+            if (Guid.TryParse(stringValue, out Guid guid))
+                return new PdxScalar<Guid>(guid);
+
+            if (TryParseDate(stringValue, out DateTime date))
+                return new PdxScalar<DateTime>(date);
+
+            // Default to string
+            return new PdxScalar<string>(stringValue);
+        }
+
+        if (_currentToken.Type == PdxTokenType.NumberLiteral || _currentToken.Type == PdxTokenType.Identifier)
+        {
+            string text = GetCurrentTokenSpan().ToString();
+            PdxTokenType origType = _currentToken.Type;
+            ConsumeToken(); // Consume the token
+
+            if (origType == PdxTokenType.Identifier)
+            {
+                if (string.Equals(text, "yes", StringComparison.OrdinalIgnoreCase))
+                    return new PdxScalar<bool>(true);
+
+                if (string.Equals(text, "no", StringComparison.OrdinalIgnoreCase))
+                    return new PdxScalar<bool>(false);
+
+                return new PdxScalar<string>(text);
+            }
+            else // NumberLiteral
+            {
+                if (text.Contains('.'))
+                {
+                    if (float.TryParse(text, NumberStyles.Any, CultureInfo.InvariantCulture, out float f))
+                        return new PdxScalar<float>(f);
+                    
+                    return new PdxScalar<string>(text);
+                }
+                else
+                {
+                    if (int.TryParse(text, NumberStyles.Any, CultureInfo.InvariantCulture, out int i32))
+                        return new PdxScalar<int>(i32);
+
+                    if (long.TryParse(text, NumberStyles.Any, CultureInfo.InvariantCulture, out long i64))
+                        return new PdxScalar<long>(i64);
+
+                    return new PdxScalar<string>(text);
+                }
+            }
+        }
+        else if (_currentToken.Type == PdxTokenType.Equals)
+        {
+            // Handle equals as a value (just like Parser.cs does)
+            string text = GetCurrentTokenSpan().ToString();
+            ConsumeToken();
+            return new PdxScalar<string>(text);
+        }
+
+        // Default fallback for unrecognized token types - skip and return empty string
+        string defaultText = GetCurrentTokenSpan().ToString();
+        ConsumeToken();
+        return new PdxScalar<string>(defaultText);
     }
 
     // Parses a block delimited by '{' and '}'. Determines if it's an Object or Array.
     private PdxElement ParseBlock()
     {
-        ConsumeToken(); // Eat '{'
+        // Eat the opening brace
+        ConsumeToken();
         SkipWhitespaceAndNewlines();
 
-        if (_currentToken.Type == TokenType.CurlyClose) // Handle empty block {}
+        if (_currentToken.Type == PdxTokenType.CurlyClose) // Handle empty block {}
         {
             ConsumeToken(); // Eat '}'
             return new PdxObject(new List<KeyValuePair<string, PdxElement>>());
         }
 
-        // --- Peeking Logic to determine Object vs Array ---
-        bool isObject = false;
-        int startPos = _pdxLexer.CurrentPosition;
-        Token startToken = _currentToken;
-        try
-        {
-            // Try parsing the first element as if it were a value
-            ParseValue();
-            // Skip any whitespace after it
-            SkipWhitespaceAndNewlines();
-            // If the *next* token is '=', it must be an object block
-            isObject = _currentToken.Type == TokenType.Equals;
-        }
-        catch (FormatException)
-        {
-            // If parsing the first element as a value failed, it *might* be a key.
-            // A common case is `key=value`. If the first token is an Identifier,
-            // strongly suggests it's an object.
-            isObject = startToken.Type == TokenType.Identifier;
-        }
-        finally
-        {
-            // IMPORTANT: Reset lexer state regardless of peek success/failure
-            _pdxLexer.SetPosition(startPos);
-            _currentToken = startToken;
-        }
-        // --- End Peeking Logic ---
-
-        if (isObject)
-        {
-            return ParseObjectBlockContent();
-        }
-        else
-        {
-            return ParseArrayBlockContent();
-        }
-    }
-
-    // Parses the content of a block assuming it's an Object ({ key=value key2=value2 ... })
-    private PdxObject ParseObjectBlockContent()
-    {
         var properties = new List<KeyValuePair<string, PdxElement>>();
-        while (_currentToken.Type != TokenType.CurlyClose && _currentToken.Type != TokenType.EndOfFile)
+        var values = new List<PdxElement>();
+        
+        while (_currentToken.Type != PdxTokenType.CurlyClose && _currentToken.Type != PdxTokenType.EndOfFile)
         {
             SkipWhitespaceAndNewlines();
-            if (_currentToken.Type == TokenType.CurlyClose) break;
 
-            if (_currentToken.Type == TokenType.Identifier) // Expect key
+            if (_currentToken.Type == PdxTokenType.CurlyClose || _currentToken.Type == PdxTokenType.EndOfFile)
+                break;
+
+            // Check if this is a property (key=value) or just a value
+            bool isProperty = false;
+            if (_currentToken.Type == PdxTokenType.Identifier ||
+                _currentToken.Type == PdxTokenType.NumberLiteral ||
+                _currentToken.Type == PdxTokenType.StringLiteral)
             {
-                string key = GetCurrentTokenSpan().ToString();
-                ConsumeToken(); // Eat key identifier
-
+                // Look ahead to see if there's an equals sign
+                int savedPosition = _lexer.CurrentPosition;
+                PdxToken currentToken = _currentToken;
+                
+                // Consume the current token
+                ConsumeToken();
+                
+                // Skip any whitespace/newlines
                 SkipWhitespaceAndNewlines();
-                if (_currentToken.Type != TokenType.Equals)
-                     throw new FormatException($"Expected '=' after key '{key}' inside object block, found {_currentToken.Type} at position {_currentToken.Start}");
-                ConsumeToken(); // Eat '='
-
-                PdxElement value = ParseValue();
-                properties.Add(new KeyValuePair<string, PdxElement>(key, value));
+                
+                // Check if the next token is '='
+                if (_currentToken.Type == PdxTokenType.Equals)
+                {
+                    isProperty = true;
+                    // Restore position
+                    _lexer.SetPosition(savedPosition);
+                    _currentToken = currentToken;
+                }
+                else
+                {
+                    // Restore position
+                    _lexer.SetPosition(savedPosition);
+                    _currentToken = currentToken;
+                }
             }
-            // Allow comments inside objects?
-            // else if (_currentToken.Type == TokenType.Comment) { ConsumeToken(); continue; }
+            
+            if (isProperty)
+            {
+                // Handle property (key=value)
+                string key;
+                if (_currentToken.Type == PdxTokenType.StringLiteral)
+                {
+                    // Use the processed string for quoted keys
+                    key = _currentToken.ProcessedString ?? "";
+                }
+                else
+                {
+                    // Use the span directly for regular keys
+                    key = GetCurrentTokenSpan().ToString();
+                }
+                
+                ConsumeToken(); // Eat key
+                
+                SkipWhitespaceAndNewlines();
+                
+                if (_currentToken.Type == PdxTokenType.Equals)
+                    ConsumeToken(); // Eat equals
+                
+                SkipWhitespaceAndNewlines();
+                
+                PdxElement val = ParseValue();
+                properties.Add(new KeyValuePair<string, PdxElement>(key, val));
+            }
             else
             {
-                 throw new FormatException($"Expected Identifier key inside object block, found {_currentToken.Type} at position {_currentToken.Start}");
+                // Handle value (no key)
+                PdxElement val = ParseValue();
+                values.Add(val);
             }
         }
-
-        if (_currentToken.Type == TokenType.CurlyClose)
+        
+        if (_currentToken.Type == PdxTokenType.CurlyClose)
             ConsumeToken(); // Eat '}'
-        else
-             throw new FormatException($"Expected '}}' to close object block, found {_currentToken.Type} at position {_currentToken.Start}");
 
-        return new PdxObject(properties);
-    }
-
-        // Parses the content of a block assuming it's an Array ({ value1 value2 ... })
-    private PdxArray ParseArrayBlockContent()
-    {
-        var items = new List<PdxElement>();
-        while (_currentToken.Type != TokenType.CurlyClose && _currentToken.Type != TokenType.EndOfFile)
+        // Determine what type of element to return based on content
+        if (properties.Count > 0 && values.Count > 0)
         {
-            SkipWhitespaceAndNewlines();
-            if (_currentToken.Type == TokenType.CurlyClose) break;
-
-            // Simply parse values and add them
-            items.Add(ParseValue());
-            // Allow comments inside arrays?
-            // if (_currentToken.Type == TokenType.Comment) { ConsumeToken(); continue; }
+            // Mixed content - convert values to properties with numeric keys
+            for (int i = 0; i < values.Count; i++)
+            {
+                string autoKey = i.ToString();
+                properties.Add(new KeyValuePair<string, PdxElement>(autoKey, values[i]));
+            }
+            
+            return new PdxObject(properties);
         }
-
-        if (_currentToken.Type == TokenType.CurlyClose)
-            ConsumeToken(); // Eat '}'
-         else
-             throw new FormatException($"Expected '}}' to close array block, found {_currentToken.Type} at position {_currentToken.Start}");
-
-        return new PdxArray(items);
+        else if (properties.Count > 0)
+        {
+            // Only properties - return as object
+            return new PdxObject(properties);
+        }
+        else
+        {
+            // Only values - return as array
+            return new PdxArray(values);
+        }
     }
-
 
     // Helper for parsing multiple date formats efficiently
     private static bool TryParseDate(string s, out DateTime date)

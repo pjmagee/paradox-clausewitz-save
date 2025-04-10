@@ -65,8 +65,7 @@ public class PdxArray : PdxElement, IEquatable<PdxArray>
     }
 
     public static bool operator ==(PdxArray? left, PdxArray? right) =>
-        left is null ? right is null : left.Equals(right);
+        left?.Equals(right) ?? right is null;
 
-    public static bool operator !=(PdxArray? left, PdxArray? right) =>
-        !(left == right);
+    public static bool operator !=(PdxArray? left, PdxArray? right) => !(left == right);
 } 

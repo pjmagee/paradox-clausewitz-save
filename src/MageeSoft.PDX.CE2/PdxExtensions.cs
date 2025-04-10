@@ -3,7 +3,7 @@ namespace MageeSoft.PDX.CE2;
 /// <summary>
 /// Extension methods for working with SaveElement objects.
 /// </summary>
-public static class Extensions
+public static class PdxExtensions
 {
     public static bool TryGet<T>(this PdxObject pdxObject, string key, out T? value) where T : notnull
     {
