@@ -5,6 +5,24 @@ namespace MageeSoft.PDX.CE2;
 /// </summary>
 public static class Extensions
 {
+    public static bool TryGet<T>(this PdxObject pdxObject, string key, out T? value) where T : notnull
+    {
+        foreach (var property in pdxObject.Properties)
+        {
+            if (property.Key == key)
+            {
+                if(property.Value is T t)
+                {
+                    value = t;
+                    return true;
+                }
+            }
+        }
+        
+        value = default;
+        return false;
+    }
+    
     /// <summary>
     /// Try to get a value from a SaveObject by key.
     /// </summary>

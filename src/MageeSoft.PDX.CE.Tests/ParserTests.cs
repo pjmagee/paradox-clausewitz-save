@@ -896,4 +896,43 @@ ship_names=
         Assert.IsInstanceOfType(secondStaleIntelProp.Value, typeof(SaveObject));
         Assert.AreEqual(0, ((SaveObject)secondStaleIntelProp.Value).Properties.Count);
     }
+
+    [TestMethod]
+    public void Parse_Multiple_Repeated_Keys_With_Specialized_Collection()
+    {
+        var input = """
+        test_record={
+            asteroid_postfix={ "413" "3254" }
+            asteroid_postfix={ "1287" "7291" }
+            asteroid_postfix={ "Alpha" "Beta" }
+            asteroid_postfix={ "Gamma" "Delta" }
+            name="Test System"
+            id=123
+        }
+        """;
+        
+        // Act
+        var root = Parser.Parse(input);
+        
+        // Check the property values in the original SaveObject
+        Assert.IsInstanceOfType(root, typeof(SaveObject));
+        Assert.AreEqual(1, root.Properties.Count);
+
+        Assert.IsTrue(root.TryGetSaveObject("test_record", out var testRecord));
+        Assert.AreEqual(6, testRecord!.Properties.Count);
+        
+        // Verify we have 4 asteroid_postfix properties, each with array values
+        var asteroidProps = testRecord.Properties
+            .Where(p => p.Key == "asteroid_postfix")
+            .ToList();
+        
+        Assert.AreEqual(4, asteroidProps.Count, "Should have 4 asteroid_postfix properties");
+        
+        // Check the first asteroid_postfix property
+        Assert.IsInstanceOfType(asteroidProps[0].Value, typeof(SaveArray));
+        var firstArray = (SaveArray)asteroidProps[0].Value;
+        Assert.AreEqual(2, firstArray.Items.Count);
+        Assert.AreEqual("413", ((Scalar<string>)firstArray.Items[0]).Value);
+        Assert.AreEqual("3254", ((Scalar<string>)firstArray.Items[1]).Value);
+    }
 }

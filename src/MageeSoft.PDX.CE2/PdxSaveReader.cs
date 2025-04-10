@@ -9,13 +9,13 @@ namespace MageeSoft.PDX.CE2;
 public class PdxSaveReader
 {
     private readonly ReadOnlyMemory<char> _inputMemory;
-    private Lexer _lexer; // Lexer is a struct
+    private PdxLexer _pdxLexer; // Lexer is a struct
     private Token _currentToken;
 
     private PdxSaveReader(ReadOnlyMemory<char> inputMemory)
     {
         _inputMemory = inputMemory;
-        _lexer = new Lexer(inputMemory);
+        _pdxLexer = new PdxLexer(inputMemory);
         ConsumeToken(); // Initialize _currentToken
     }
 
@@ -60,7 +60,7 @@ public class PdxSaveReader
 
     private void ConsumeToken()
     {
-        _currentToken = _lexer.NextToken();
+        _currentToken = _pdxLexer.NextToken();
     }
 
     private void SkipWhitespaceAndNewlines()
@@ -204,7 +204,7 @@ public class PdxSaveReader
 
         // --- Peeking Logic to determine Object vs Array ---
         bool isObject = false;
-        int startPos = _lexer.CurrentPosition;
+        int startPos = _pdxLexer.CurrentPosition;
         Token startToken = _currentToken;
         try
         {
@@ -225,7 +225,7 @@ public class PdxSaveReader
         finally
         {
             // IMPORTANT: Reset lexer state regardless of peek success/failure
-            _lexer.SetPosition(startPos);
+            _pdxLexer.SetPosition(startPos);
             _currentToken = startToken;
         }
         // --- End Peeking Logic ---

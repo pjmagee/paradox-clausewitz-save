@@ -46,12 +46,12 @@ public enum TokenType
 /// Lexer implementation using ReadOnlyMemory/Span (V2, performance focused).
 /// No longer a ref struct.
 /// </summary>
-public struct Lexer // Removed 'ref'
+public struct PdxLexer // Removed 'ref'
 {
     private readonly ReadOnlyMemory<char> _inputMemory; // Use Memory for potential slicing
     private int _position;
 
-    public Lexer(ReadOnlyMemory<char> input)
+    public PdxLexer(ReadOnlyMemory<char> input)
     {
         _inputMemory = input;
         _position = 0;

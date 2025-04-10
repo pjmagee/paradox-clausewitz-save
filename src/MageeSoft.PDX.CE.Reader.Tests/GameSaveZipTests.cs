@@ -73,6 +73,7 @@ public class GameSaveZipTests
                 var meta = documents.MetaDocument.Root;
                 Assert.IsNotNull(meta);
                 meta.TryGetString("version", out var version);
+                Assert.IsNotNull(version);
                 Assert.Contains("3.10.0", version);
             }
         }

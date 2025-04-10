@@ -1,18 +1,15 @@
-﻿<Project Sdk="MSTest.Sdk/3.8.2">
+﻿<Project Sdk="MSTest.Sdk">
     
     <PropertyGroup>
         <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <IsPackable>false</IsPackable>
         <LangVersion>latest</LangVersion>
     </PropertyGroup>
     
     <ItemGroup>
+        <ProjectReference Include="..\MageeSoft.PDX.CE2\MageeSoft.PDX.CE2.csproj" />
         <ProjectReference Include="..\MageeSoft.PDX.CE\MageeSoft.PDX.CE.csproj"/>
-        <ProjectReference Include="..\MageeSoft.PDX.CE.Models\MageeSoft.PDX.CE.Models.csproj"/>
-        <ProjectReference Include="..\MageeSoft.PDX.CE.Reader\MageeSoft.PDX.CE.Reader.csproj"/>
-        <ProjectReference Include="..\MageeSoft.PDX.CE.Save\MageeSoft.PDX.CE.Save.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -20,10 +17,6 @@
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Update="Microsoft.Testing.Extensions.CodeCoverage" Version="17.14.2"/>
-        <PackageReference Update="Microsoft.Testing.Extensions.TrxReport" Version="1.6.3"/>
-        <PackageReference Update="MSTest.TestFramework" Version="3.8.3"/>
-        <PackageReference Update="MSTest.TestAdapter" Version="3.8.3"/>
     </ItemGroup>
 
     <ItemGroup>

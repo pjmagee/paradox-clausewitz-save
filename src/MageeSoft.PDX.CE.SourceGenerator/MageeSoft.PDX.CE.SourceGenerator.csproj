@@ -18,19 +18,23 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\MageeSoft.PDX.CE\MageeSoft.PDX.CE.csproj"/>
+        <ProjectReference Include="..\MageeSoft.PDX.CE\MageeSoft.PDX.CE.csproj"
+                          OutputItemType="Analyzer"
+                          ReferenceOutputAssembly="false" />
+                          
+        <ProjectReference Include="..\MageeSoft.PDX.CE\MageeSoft.PDX.CE.csproj" />
     </ItemGroup>
 
-    <PropertyGroup>
-        <GetTargetPathDependsOn>$(GetTargetPathDependsOn);GetDependencyTargetPaths</GetTargetPathDependsOn>
-    </PropertyGroup>
+<!--    <PropertyGroup>-->
+<!--        <GetTargetPathDependsOn>$(GetTargetPathDependsOn);GetDependencyTargetPaths</GetTargetPathDependsOn>-->
+<!--    </PropertyGroup>-->
 
-    <Target Name="GetDependencyTargetPaths">
-        <ItemGroup>
-            <TargetPathWithTargetPlatformMoniker
-                    Include="..\MageeSoft.PDX.CE\bin\debug\netstandard2.0\MageeSoft.PDX.CE.dll"
-                    IncludeRuntimeDependency="false" />
-        </ItemGroup>
-    </Target>
+<!--    <Target Name="GetDependencyTargetPaths">-->
+<!--        <ItemGroup>-->
+<!--            <TargetPathWithTargetPlatformMoniker-->
+<!--                    Include="..\MageeSoft.PDX.CE\bin\debug\netstandard2.0\MageeSoft.PDX.CE.dll"-->
+<!--                    IncludeRuntimeDependency="false" />-->
+<!--        </ItemGroup>-->
+<!--    </Target>-->
 
 </Project>

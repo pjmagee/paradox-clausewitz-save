@@ -5,6 +5,7 @@ using Microsoft.CodeAnalysis.Diagnostics;
 namespace MageeSoft.PDX.CE.SourceGenerator.Tests;
 
 [TestClass]
+// [Ignore] // Temporarily disabled
 public class ClassGeneratedTests
 {
     readonly static AnalyzerConfigOptions ConfigOptions = new TestAnalyzerConfigOptions(new Dictionary<string, string>(
@@ -59,5 +60,7 @@ public class ClassGeneratedTests
 
         // Act
         driver.RunGeneratorsAndUpdateCompilation(compilation, out var newCompilation, out _);
+        
+        // Assert
     }
 }
