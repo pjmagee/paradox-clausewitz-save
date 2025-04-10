@@ -37,24 +37,34 @@ public class PdxSaveReader
     private static ReadOnlyMemory<char> TrimBomAndWhitespace(ReadOnlyMemory<char> memory)
     {
         var span = memory.Span;
+        
         // Check for UTF-8 BOM (EF BB BF)
+        int start = 0;
         if (span.Length >= 3 && span[0] == 0xEF && span[1] == 0xBB && span[2] == 0xBF)
         {
-            span = span.Slice(3);
+            start = 3;
         }
-        // Trim whitespace (equivalent to string.Trim())
-        int start = 0;
+        
+        // Skip whitespace at the beginning
         while (start < span.Length && char.IsWhiteSpace(span[start]))
         {
             start++;
         }
+        
+        // If we reached the end, the entire content is whitespace
+        if (start >= span.Length)
+        {
+            return ReadOnlyMemory<char>.Empty;
+        }
+        
+        // Skip whitespace at the end
         int end = span.Length - 1;
-        while (end >= start && char.IsWhiteSpace(span[end]))
+        while (end > start && char.IsWhiteSpace(span[end]))
         {
             end--;
         }
-        // Slice the original memory to avoid allocating a new string/array
-        if (start > end) return ReadOnlyMemory<char>.Empty; // All whitespace
+        
+        // Return the trimmed slice
         return memory.Slice(start, end - start + 1);
     }
 
@@ -87,7 +97,8 @@ public class PdxSaveReader
 
             if (_currentToken.Type == PdxTokenType.Identifier)
             {
-                string key = GetCurrentTokenSpan().ToString();
+                // Get the identifier using ReadOnlySpan instead of creating a string immediately
+                ReadOnlySpan<char> keySpan = GetCurrentTokenSpan();
                 ConsumeToken(); // Eat identifier
 
                 SkipWhitespaceAndNewlines();
@@ -98,12 +109,25 @@ public class PdxSaveReader
                 }
 
                 PdxElement value = ParseValue();
-                items.Add(new KeyValuePair<string, PdxElement>(key, value));
+                
+                // Convert span to string only when adding to the final collection
+                items.Add(new KeyValuePair<string, PdxElement>(keySpan.ToString(), value));
             }
             else if (_currentToken.Type == PdxTokenType.StringLiteral)
             {
                 // Handle string literal keys (with quotes)
-                string key = _currentToken.ProcessedString ?? "";
+                string key;
+                if (_currentToken.ValueMemory.HasValue)
+                {
+                    // Use the value memory without allocating a new string if possible
+                    key = _currentToken.ValueMemory.Value.Span.ToString();
+                }
+                else
+                {
+                    // Fallback to using the raw span if needed
+                    key = GetCurrentTokenSpan().ToString();
+                }
+                
                 ConsumeToken(); // Eat quoted key
 
                 SkipWhitespaceAndNewlines();
@@ -146,70 +170,82 @@ public class PdxSaveReader
 
         if (_currentToken.Type == PdxTokenType.StringLiteral)
         {
-            // Get the raw string value without processing
-            string stringValue = _currentToken.ProcessedString ?? GetCurrentTokenSpan().ToString();
+            // Use ValueMemory to avoid creating a string when possible
+            ReadOnlySpan<char> stringSpan;
+            if (_currentToken.ValueMemory.HasValue)
+            {
+                stringSpan = _currentToken.ValueMemory.Value.Span;
+            }
+            else
+            {
+                stringSpan = GetCurrentTokenSpan();
+            }
+            
+            // Store original token to work with after consuming
+            var originalToken = _currentToken;
             ConsumeToken(); // Consume the token
-
-            // Handle special types
-            if (Guid.TryParse(stringValue, out Guid guid))
+            
+            // Try to parse special types using spans to avoid string allocations
+            if (TryParseGuid(stringSpan, out Guid guid))
                 return new PdxScalar<Guid>(guid);
 
-            if (TryParseDate(stringValue, out DateTime date))
+            if (TryParseDate(stringSpan, out DateTime date))
                 return new PdxScalar<DateTime>(date);
 
-            // Default to string
-            return new PdxScalar<string>(stringValue);
+            // Finally convert to string for scalar value
+            return new PdxScalar<string>(stringSpan.ToString());
         }
 
         if (_currentToken.Type == PdxTokenType.NumberLiteral || _currentToken.Type == PdxTokenType.Identifier)
         {
-            string text = GetCurrentTokenSpan().ToString();
+            ReadOnlySpan<char> tokenSpan = GetCurrentTokenSpan();
             PdxTokenType origType = _currentToken.Type;
             ConsumeToken(); // Consume the token
 
             if (origType == PdxTokenType.Identifier)
             {
-                if (string.Equals(text, "yes", StringComparison.OrdinalIgnoreCase))
+                // Check for yes/no boolean values
+                if (tokenSpan.Equals("yes".AsSpan(), StringComparison.OrdinalIgnoreCase))
                     return new PdxScalar<bool>(true);
 
-                if (string.Equals(text, "no", StringComparison.OrdinalIgnoreCase))
+                if (tokenSpan.Equals("no".AsSpan(), StringComparison.OrdinalIgnoreCase))
                     return new PdxScalar<bool>(false);
 
-                return new PdxScalar<string>(text);
+                return new PdxScalar<string>(tokenSpan.ToString());
             }
             else // NumberLiteral
             {
-                if (text.Contains('.'))
+                if (tokenSpan.Contains('.'))
                 {
-                    if (float.TryParse(text, NumberStyles.Any, CultureInfo.InvariantCulture, out float f))
+                    if (float.TryParse(tokenSpan, NumberStyles.Any, CultureInfo.InvariantCulture, out float f))
                         return new PdxScalar<float>(f);
                     
-                    return new PdxScalar<string>(text);
+                    return new PdxScalar<string>(tokenSpan.ToString());
                 }
                 else
                 {
-                    if (int.TryParse(text, NumberStyles.Any, CultureInfo.InvariantCulture, out int i32))
+                    if (int.TryParse(tokenSpan, NumberStyles.Any, CultureInfo.InvariantCulture, out int i32))
                         return new PdxScalar<int>(i32);
 
-                    if (long.TryParse(text, NumberStyles.Any, CultureInfo.InvariantCulture, out long i64))
+                    if (long.TryParse(tokenSpan, NumberStyles.Any, CultureInfo.InvariantCulture, out long i64))
                         return new PdxScalar<long>(i64);
 
-                    return new PdxScalar<string>(text);
+                    return new PdxScalar<string>(tokenSpan.ToString());
                 }
             }
         }
         else if (_currentToken.Type == PdxTokenType.Equals)
         {
             // Handle equals as a value (just like Parser.cs does)
-            string text = GetCurrentTokenSpan().ToString();
+            ReadOnlySpan<char> tokenSpan = GetCurrentTokenSpan();
             ConsumeToken();
-            return new PdxScalar<string>(text);
+            return new PdxScalar<string>(tokenSpan.ToString());
         }
 
         // Default fallback for unrecognized token types - skip and return empty string
-        string defaultText = GetCurrentTokenSpan().ToString();
+        ReadOnlySpan<char> defaultSpan = GetCurrentTokenSpan();
         ConsumeToken();
-        return new PdxScalar<string>(defaultText);
+        return new PdxScalar<string>(defaultSpan.ToString());
     }
 
     // Parses a block delimited by '{' and '}'. Determines if it's an Object or Array.
@@ -270,17 +306,21 @@ public class PdxSaveReader
             if (isProperty)
             {
                 // Handle property (key=value)
-                string key;
-                if (_currentToken.Type == PdxTokenType.StringLiteral)
+                ReadOnlySpan<char> keySpan;
+                
+                if (_currentToken.Type == PdxTokenType.StringLiteral && _currentToken.ValueMemory.HasValue)
                 {
-                    // Use the processed string for quoted keys
-                    key = _currentToken.ProcessedString ?? "";
+                    // Use the processed memory for quoted keys
+                    keySpan = _currentToken.ValueMemory.Value.Span;
                 }
                 else
                 {
                     // Use the span directly for regular keys
-                    key = GetCurrentTokenSpan().ToString();
+                    keySpan = GetCurrentTokenSpan();
                 }
+                
+                // Store token information to create the string key later
+                var tokenType = _currentToken.Type;
                 
                 ConsumeToken(); // Eat key
                 
@@ -292,6 +332,9 @@ public class PdxSaveReader
                 SkipWhitespaceAndNewlines();
                 
                 PdxElement val = ParseValue();
+                
+                // Convert span to string only when adding to the collection
+                string key = keySpan.ToString();
                 properties.Add(new KeyValuePair<string, PdxElement>(key, val));
             }
             else
@@ -329,12 +372,25 @@ public class PdxSaveReader
         }
     }
 
-    // Helper for parsing multiple date formats efficiently
-    private static bool TryParseDate(string s, out DateTime date)
+    // Helper for parsing GUID using span to avoid string allocation
+    private static bool TryParseGuid(ReadOnlySpan<char> span, out Guid result)
     {
-        // List common formats used in Paradox saves
-        string[] formats = { "yyyy.M.d", "yyyy.MM.dd", "yyyy.MM.d", "yyyy.M.dd" };
-        // Use InvariantCulture to ensure consistent parsing regardless of system locale
-        return DateTime.TryParseExact(s, formats, CultureInfo.InvariantCulture, DateTimeStyles.None, out date);
+        return Guid.TryParse(span, out result);
+    }
+
+    // Helper for parsing multiple date formats efficiently using spans
+    private static bool TryParseDate(ReadOnlySpan<char> span, out DateTime date)
+    {
+        // Try common formats used in Paradox saves
+        if (DateTime.TryParseExact(span, "yyyy.M.d", CultureInfo.InvariantCulture, DateTimeStyles.None, out date) ||
+            DateTime.TryParseExact(span, "yyyy.MM.dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out date) ||
+            DateTime.TryParseExact(span, "yyyy.MM.d", CultureInfo.InvariantCulture, DateTimeStyles.None, out date) ||
+            DateTime.TryParseExact(span, "yyyy.M.dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
+        {
+            return true;
+        }
+        
+        date = default;
+        return false;
     }
 } 

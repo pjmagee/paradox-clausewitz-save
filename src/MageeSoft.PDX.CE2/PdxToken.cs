@@ -8,13 +8,16 @@ internal readonly struct PdxToken
     public PdxTokenType Type { get; }
     public int Start { get; }
     public int Length { get; }
-    public string? ProcessedString { get; }
+    
+    // Memory range for storing string literal content without quotes/escapes
+    // This is null for non-string tokens
+    public ReadOnlyMemory<char>? ValueMemory { get; }
 
-    public PdxToken(PdxTokenType type, int start, int length, string? processedString = null)
+    public PdxToken(PdxTokenType type, int start, int length, ReadOnlyMemory<char>? valueMemory = null)
     {
         Type = type;
         Start = start;
         Length = length;
-        ProcessedString = processedString;
+        ValueMemory = valueMemory;
     }
 }

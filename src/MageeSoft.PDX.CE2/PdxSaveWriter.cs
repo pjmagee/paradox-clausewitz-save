@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.Text;
 
 namespace MageeSoft.PDX.CE2;
@@ -10,6 +11,11 @@ public class PdxSaveWriter
     private readonly StringBuilder _builder = new();
     private int _indentLevel = 0;
     private const string IndentString = "\t";
+    
+    // Pre-allocated common strings to avoid allocations
+    private static readonly string[] _numericStrings = Enumerable.Range(0, 1000)
+        .Select(i => i.ToString())
+        .ToArray();
     
     /// <summary>
     /// Writes a SaveElement to a string in Paradox save file format.
@@ -25,14 +31,34 @@ public class PdxSaveWriter
     }
 
     /// <summary>
-    /// Writes a SaveElement to a file in Paradox save file format.
+    /// Writes a SaveElement directly to the specified file in Paradox save file format.
     /// </summary>
     /// <param name="element">The element to write.</param>
     /// <param name="filePath">The path of the file to write to.</param>
     public void WriteToFile(PdxElement element, string filePath)
     {
-        var content = Write(element);
-        File.WriteAllText(filePath, content + "\n");
+        // First write to a string builder
+        _builder.Clear();
+        _indentLevel = 0;
+        SerializeElement(element);
+        
+        // Then write directly to the file using a char buffer for better performance
+        using var writer = new StreamWriter(filePath, false, Encoding.UTF8);
+        writer.Write(_builder);
+        writer.WriteLine(); // Add trailing newline
+    }
+    
+    /// <summary>
+    /// Writes a SaveElement directly to a TextWriter in Paradox save file format.
+    /// </summary>
+    /// <param name="element">The element to write.</param>
+    /// <param name="writer">The TextWriter to write to.</param>
+    public void WriteTo(PdxElement element, TextWriter writer)
+    {
+        _builder.Clear();
+        _indentLevel = 0;
+        SerializeElement(element);
+        writer.Write(_builder);
     }
 
     private void SerializeElement(PdxElement element, string? key = null)
@@ -59,7 +85,9 @@ public class PdxSaveWriter
                 break;
                 
             case PdxScalar<string> str when str.Type == PdxType.String:
-                _builder.Append($"\"{str.Value}\"");
+                _builder.Append('"');
+                _builder.Append(str.Value);
+                _builder.Append('"');
                 break;
                 
             case PdxScalar<string> str when str.Type == PdxType.Identifier:
@@ -67,7 +95,11 @@ public class PdxSaveWriter
                 break;
                 
             case PdxScalar<int> i:
-                _builder.Append(i.Value);
+                // Use pre-allocated string if available
+                if (i.Value >= 0 && i.Value < _numericStrings.Length)
+                    _builder.Append(_numericStrings[i.Value]);
+                else
+                    _builder.Append(i.Value);
                 break;
                 
             case PdxScalar<long> l:
@@ -85,11 +117,15 @@ public class PdxSaveWriter
                 
             case PdxScalar<DateTime> d:
                 // Format according to Paradox format
-                _builder.Append($"\"{d.Value:yyyy.M.d}\"");
+                _builder.Append('"');
+                _builder.Append(d.Value.ToString("yyyy.M.d", System.Globalization.CultureInfo.InvariantCulture));
+                _builder.Append('"');
                 break;
                 
             case PdxScalar<Guid> g:
-                _builder.Append($"\"{g.Value}\"");
+                _builder.Append('"');
+                _builder.Append(g.Value.ToString());
+                _builder.Append('"');
                 break;
                 
             default:
@@ -143,14 +179,7 @@ public class PdxSaveWriter
         {
             if (!isFirst)
             {
-                if (!(item is PdxObject || item is PdxArray))
-                {
-                    _builder.AppendLine();
-                }
-                else
-                {
-                    _builder.AppendLine();
-                }
+                _builder.AppendLine();
             }
             
             SerializeElement(item);

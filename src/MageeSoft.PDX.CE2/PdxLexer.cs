@@ -90,8 +90,8 @@ internal struct PdxLexer
                 Advance();
             }
             
-            // Extract string content (without quotes)
-            string processedString = _inputMemory.Span.Slice(start, _position - start).ToString();
+            // Create memory slice for the string content (without quotes)
+            var valueMemory = _inputMemory.Slice(start, _position - start);
             
             // Skip closing quote if present
             if (_position < _inputMemory.Length && Current == '"')
@@ -99,7 +99,7 @@ internal struct PdxLexer
                 Advance();
             }
             
-            return new PdxToken(PdxTokenType.StringLiteral, textOffset, _position - textOffset, processedString);
+            return new PdxToken(PdxTokenType.StringLiteral, textOffset, _position - textOffset, valueMemory);
         }
 
         // Handle operators

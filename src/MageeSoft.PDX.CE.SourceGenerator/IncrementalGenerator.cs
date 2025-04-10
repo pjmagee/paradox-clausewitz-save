@@ -548,8 +548,8 @@ public class IncrementalGenerator : IIncrementalGenerator
                 property.Type = "string";
                 property.SaveDataType = SaveDataType.Unknown; // Indicate we couldn't infer precisely
                 property.IsNullable = true;
-                break;
-        }
+                    break;
+                }
 
         // Most scalar types from Paradox files are nullable
         if (property.SaveDataType != SaveDataType.Object && property.SaveDataType != SaveDataType.Array)
@@ -876,8 +876,8 @@ public class IncrementalGenerator : IIncrementalGenerator
                     isb.AppendLine($"{propertiesVar}.Add(new KeyValuePair<string, SaveElement>({keyNameLiteral}, new Scalar<{typeArg}>({scalarValueAccess})));");
                     isb.CloseBrace();
                 }
-                else
-                {
+        else
+        {
                     isb.AppendLine($"{propertiesVar}.Add(new KeyValuePair<string, SaveElement>({keyNameLiteral}, new Scalar<{typeArg}>({scalarValueAccess})));");
                 }
 
