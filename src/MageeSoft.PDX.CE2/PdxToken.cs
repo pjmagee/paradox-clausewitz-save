@@ -2,22 +2,31 @@ namespace MageeSoft.PDX.CE2;
 
 /// <summary>
 /// Token structure for the PdxSaveReader.
+/// Reverted to known-good state.
 /// </summary>
 internal readonly struct PdxToken
 {
     public PdxTokenType Type { get; }
     public int Start { get; }
     public int Length { get; }
-    
-    // Memory range for storing string literal content without quotes/escapes
-    // This is null for non-string tokens
-    public ReadOnlyMemory<char>? ValueMemory { get; }
+    // String value, processed (e.g., unescaped) for string literals
+    public string? ProcessedString { get; }
 
-    public PdxToken(PdxTokenType type, int start, int length, ReadOnlyMemory<char>? valueMemory = null)
+    // Constructor for non-string tokens or when processed string isn't needed initially
+    public PdxToken(PdxTokenType type, int start, int length)
     {
         Type = type;
         Start = start;
         Length = length;
-        ValueMemory = valueMemory;
+        ProcessedString = null; 
+    }
+    
+    // Constructor specifically for string literals with processed content
+    public PdxToken(PdxTokenType type, int start, int length, string processedString)
+    {
+        Type = type;
+        Start = start;
+        Length = length;
+        ProcessedString = processedString;
     }
 }

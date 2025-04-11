@@ -23,6 +23,19 @@ public class PdxObject : PdxElement, IEquatable<PdxObject>
     {
         Properties = properties;
     }
+    
+    // Internal constructor used by the reader to create the object efficiently,
+    // converting keys from ReadOnlyMemory<char> to string only at the end.
+    internal PdxObject(List<(ReadOnlyMemory<char> Key, PdxElement Value)> memoryProperties)
+    {
+        // Allocate the final list with the correct capacity
+        Properties = new List<KeyValuePair<string, PdxElement>>(memoryProperties.Count);
+        // Convert ReadOnlyMemory keys to strings only upon final object creation
+        foreach (var kvp in memoryProperties)
+        {
+            Properties.Add(new KeyValuePair<string, PdxElement>(kvp.Key.ToString(), kvp.Value));
+        }
+    }
 
     /// <summary>
     /// Determines whether the specified object is equal to the current object.

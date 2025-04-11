@@ -75,6 +75,6 @@ public class Scalar<T> : SaveElement, IEquatable<Scalar<T>>
 
     public override int GetHashCode()
     {
-        return RawText.GetHashCode() ^ Value.GetHashCode();
+        return RawText.GetHashCode() ^ (Value != null ? Value.GetHashCode() : 0);
     }
 }
