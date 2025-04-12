@@ -1,65 +1,57 @@
+using System.Runtime.CompilerServices;
+
 namespace MageeSoft.PDX.CE2;
 
 /// <summary>
-/// Extension methods for working with SaveElement objects.
+/// Extension methods for working with Paradox save elements.
 /// </summary>
 public static class PdxExtensions
 {
-    public static bool TryGet<T>(this PdxObject pdxObject, string key, out T? value) where T : notnull
-    {
-        foreach (var property in pdxObject.Properties)
-        {
-            if (property.Key == key)
-            {
-                if(property.Value is T t)
-                {
-                    value = t;
-                    return true;
-                }
-            }
-        }
+    /// <summary>
+    /// Creates a new PdxObject from a collection of key-value pairs.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static PdxObject ToPdxObject(this IEnumerable<KeyValuePair<PdxString, IPdxElement>> properties) => 
+        new(properties);
         
-        value = default;
-        return false;
+    /// <summary>
+    /// Creates a new PdxObject from a collection of string key-value pairs.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static PdxObject ToPdxObject(this IEnumerable<KeyValuePair<string, IPdxElement>> properties) => 
+        new(properties.Select(p => new KeyValuePair<PdxString, IPdxElement>(new PdxString(p.Key), p.Value)));
+        
+    /// <summary>
+    /// Creates a new PdxArray from a collection of elements.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static PdxArray ToPdxArray(this IEnumerable<IPdxElement> items) => 
+        new(items);
+        
+    /// <summary>
+    /// Convenience method for reading a save file from a file path.
+    /// </summary>
+    public static PdxObject ReadFile(string filePath)
+    {
+        return PdxSaveReader.Read(File.ReadAllText(filePath));
     }
     
     /// <summary>
-    /// Try to get a value from a SaveObject by key.
+    /// Converts a primitive value to a PDX scalar.
     /// </summary>
-    /// <param name="pdxObject">The SaveObject to search in.</param>
-    /// <param name="key">The key to look for.</param>
-    /// <param name="value">The found value, if any.</param>
-    /// <returns>True if the key was found and the value could be retrieved, otherwise false.</returns>
-    public static bool TryGetValue(this PdxObject pdxObject, string key, out PdxElement? value)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static IPdxElement ToPdxScalar<T>(this T value) where T : notnull
     {
-        value = null;
-        foreach (var property in pdxObject.Properties)
+        return value switch
         {
-            if (property.Key == key)
-            {
-                value = property.Value;
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /// <summary>
-    /// Try to get a scalar value from a SaveObject by key.
-    /// </summary>
-    /// <typeparam name="T">The type of the scalar value.</typeparam>
-    /// <param name="pdxObject">The SaveObject to search in.</param>
-    /// <param name="key">The key to look for.</param>
-    /// <param name="value">The found scalar value, if any.</param>
-    /// <returns>True if the key was found and the value could be retrieved as the specified type, otherwise false.</returns>
-    public static bool TryGetScalar<T>(this PdxObject pdxObject, string key, out T? value) where T : notnull
-    {
-        value = default;
-        if (pdxObject.TryGetValue(key, out var element) && element is PdxScalar<T> scalar)
-        {
-            value = scalar.Value;
-            return true;
-        }
-        return false;
+            string s => new PdxString(s),
+            bool b => new PdxBool(b),
+            int i => new PdxInt(i),
+            long l => new PdxLong(l),
+            float f => new PdxFloat(f),
+            DateTime d => new PdxDate(d),
+            Guid g => new PdxGuid(g),
+            _ => new PdxString(value.ToString() ?? string.Empty)
+        };
     }
 } 

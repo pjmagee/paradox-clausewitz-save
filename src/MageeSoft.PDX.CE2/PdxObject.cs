@@ -1,78 +1,204 @@
+using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
+
 namespace MageeSoft.PDX.CE2;
 
 /// <summary>
-/// Represents a key-value object in a Paradox save file (V2).
+/// Represents an object in a Paradox save file (V2).
 /// </summary>
-public class PdxObject : PdxElement, IEquatable<PdxObject>
+public sealed class PdxObject : IPdxElement, IEquatable<PdxObject>
 {
     /// <summary>
-    /// Gets the properties (key-value pairs) of this object.
+    /// Gets the properties in the object.
     /// </summary>
-    public List<KeyValuePair<string, PdxElement>> Properties { get; }
+    public ImmutableArray<KeyValuePair<PdxString, IPdxElement>> Properties { get; }
     
     /// <summary>
-    /// Gets the type of this save element.
+    /// Gets the object's type.
     /// </summary>
-    public override PdxType Type => PdxType.Object;
-
+    public PdxType Type => PdxType.Object;
+    
     /// <summary>
-    /// Initializes a new instance of the <see cref="PdxObject"/> class.
+    /// Creates a new object with the specified properties.
     /// </summary>
-    /// <param name="properties">The properties to initialize with.</param>
-    public PdxObject(List<KeyValuePair<string, PdxElement>> properties)
+    public PdxObject(IEnumerable<KeyValuePair<PdxString, IPdxElement>> properties)
     {
-        Properties = properties;
+        Properties = properties != null 
+            ? ImmutableArray.CreateRange(properties) 
+            : ImmutableArray<KeyValuePair<PdxString, IPdxElement>>.Empty;
     }
     
-    // Internal constructor used by the reader to create the object efficiently,
-    // converting keys from ReadOnlyMemory<char> to string only at the end.
-    internal PdxObject(List<(ReadOnlyMemory<char> Key, PdxElement Value)> memoryProperties)
+    /// <summary>
+    /// Creates a new empty object.
+    /// </summary>
+    public PdxObject() : this(Array.Empty<KeyValuePair<PdxString, IPdxElement>>()) { }
+    
+    /// <summary>
+    /// Tries to get a property value by key.
+    /// </summary>
+    public bool TryGetValue(string key, [NotNullWhen(true)] out IPdxElement? value)
     {
-        // Allocate the final list with the correct capacity
-        Properties = new List<KeyValuePair<string, PdxElement>>(memoryProperties.Count);
-        // Convert ReadOnlyMemory keys to strings only upon final object creation
-        foreach (var kvp in memoryProperties)
+        foreach (var prop in Properties)
         {
-            Properties.Add(new KeyValuePair<string, PdxElement>(kvp.Key.ToString(), kvp.Value));
+            if (string.Equals(prop.Key.Value, key, StringComparison.Ordinal))
+            {
+                value = prop.Value;
+                return true;
+            }
         }
+        
+        value = null;
+        return false;
     }
-
+    
     /// <summary>
-    /// Determines whether the specified object is equal to the current object.
+    /// Tries to get a property value by key and type.
+    /// </summary>
+    public bool TryGet<T>(string key, [NotNullWhen(true)] out T? value) where T : class, IPdxElement
+    {
+        if (TryGetValue(key, out var element) && element is T typedValue)
+        {
+            value = typedValue;
+            return true;
+        }
+        
+        value = null;
+        return false;
+    }
+    
+    /// <summary>
+    /// Tries to get a string value directly.
+    /// </summary>
+    public bool TryGetString(string key, out string? value)
+    {
+        if (TryGetValue(key, out var element) && element is PdxString str)
+        {
+            value = str.Value;
+            return true;
+        }
+        
+        value = null;
+        return false;
+    }
+    
+    /// <summary>
+    /// Tries to get a boolean value directly.
+    /// </summary>
+    public bool TryGetBool(string key, out bool value)
+    {
+        if (TryGetValue(key, out var element) && element is PdxBool b)
+        {
+            value = b.Value;
+            return true;
+        }
+        
+        value = default;
+        return false;
+    }
+    
+    /// <summary>
+    /// Tries to get an integer value directly.
+    /// </summary>
+    public bool TryGetInt(string key, out int value)
+    {
+        if (TryGetValue(key, out var element) && element is PdxInt i)
+        {
+            value = i.Value;
+            return true;
+        }
+        
+        value = default;
+        return false;
+    }
+    
+    /// <summary>
+    /// Tries to get a long value directly.
+    /// </summary>
+    public bool TryGetLong(string key, out long value)
+    {
+        if (TryGetValue(key, out var element) && element is PdxLong l)
+        {
+            value = l.Value;
+            return true;
+        }
+        
+        value = default;
+        return false;
+    }
+    
+    /// <summary>
+    /// Tries to get a float value directly.
+    /// </summary>
+    public bool TryGetFloat(string key, out float value)
+    {
+        if (TryGetValue(key, out var element) && element is PdxFloat f)
+        {
+            value = f.Value;
+            return true;
+        }
+        
+        value = default;
+        return false;
+    }
+    
+    /// <summary>
+    /// Tries to get a date value directly.
+    /// </summary>
+    public bool TryGetDate(string key, out DateTime value)
+    {
+        if (TryGetValue(key, out var element) && element is PdxDate d)
+        {
+            value = d.Value;
+            return true;
+        }
+        
+        value = default;
+        return false;
+    }
+    
+    /// <summary>
+    /// Tries to get a guid value directly.
+    /// </summary>
+    public bool TryGetGuid(string key, out Guid value)
+    {
+        if (TryGetValue(key, out var element) && element is PdxGuid g)
+        {
+            value = g.Value;
+            return true;
+        }
+        
+        value = default;
+        return false;
+    }
+    
+    /// <summary>
+    /// Compares this object to another object for equality.
     /// </summary>
     public bool Equals(PdxObject? other)
     {
         if (other is null) return false;
         if (ReferenceEquals(this, other)) return true;
-
-        if (Properties.Count != other.Properties.Count)
-            return false;
-
-        // Compare properties in order
-        for (int i = 0; i < Properties.Count; i++)
+        if (Properties.Length != other.Properties.Length) return false;
+        
+        for (int i = 0; i < Properties.Length; i++)
         {
             var thisKvp = Properties[i];
             var otherKvp = other.Properties[i];
-
-            if (thisKvp.Key != otherKvp.Key)
-                return false;
-
-            // Use custom element comparison helper
-            if (!PdxElementComparer.Equals(thisKvp.Value, otherKvp.Value))
-                return false;
+            
+            if (!thisKvp.Key.Equals(otherKvp.Key)) return false;
+            if (!PdxElementEqualityComparer.Equals(thisKvp.Value, otherKvp.Value)) return false;
         }
-
+        
         return true;
     }
-
+    
     /// <summary>
-    /// Determines whether the specified object is equal to the current object.
+    /// Compares this object to another object for equality.
     /// </summary>
-    public override bool Equals(object? obj) => 
-        obj is PdxObject other && Equals(other);
-
+    public override bool Equals(object? obj) => obj is PdxObject other && Equals(other);
+    
     /// <summary>
-    /// Returns a hash code for this object.
+    /// Gets a hash code for this object.
     /// </summary>
     public override int GetHashCode()
     {
@@ -84,10 +210,4 @@ public class PdxObject : PdxElement, IEquatable<PdxObject>
         }
         return hash.ToHashCode();
     }
-
-    public static bool operator ==(PdxObject? left, PdxObject? right) =>
-        left is null ? right is null : left.Equals(right);
-
-    public static bool operator !=(PdxObject? left, PdxObject? right) =>
-        !(left == right);
 } 

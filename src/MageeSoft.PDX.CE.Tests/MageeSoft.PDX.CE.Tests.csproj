@@ -21,12 +21,9 @@
     </ItemGroup>
 
     <ItemGroup>
-      <None Update="Stellaris\TestData\gamestate">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </None>
-      <None Update="Stellaris\TestData\meta">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </None>
+        <None Include="Stellaris\**\*">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
     </ItemGroup>
 
 </Project>

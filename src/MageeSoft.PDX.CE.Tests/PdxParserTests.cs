@@ -1,4 +1,5 @@
 using MageeSoft.PDX.CE2;
+using System.Linq;
 
 namespace MageeSoft.PDX.CE.Tests;
 
@@ -6,6 +7,17 @@ namespace MageeSoft.PDX.CE.Tests;
 public class PdxParserTests
 {
     public TestContext TestContext { get; set; } = null!;
+
+    // Helper method to find a property by key
+    private KeyValuePair<PdxString, IPdxElement> FindProperty(IEnumerable<KeyValuePair<PdxString, IPdxElement>> properties, string key)
+    {
+        foreach (var prop in properties)
+        {
+            if (prop.Key.Value == key)
+                return prop;
+        }
+        throw new InvalidOperationException($"Property '{key}' not found");
+    }
 
     [TestMethod]
     public void Parse_List_StringKeysPdxScalarValues()
@@ -23,30 +35,30 @@ ship_names=
         var root = PdxSaveReader.Read(input.AsMemory());
         
         Assert.IsInstanceOfType(root, typeof(PdxObject));
-        Assert.AreEqual(1, root.Properties.Count, "Root should have exactly one property");
+        Assert.AreEqual(1, root.Properties.Length, "Root should have exactly one property");
         
         var shipNamesProp = root.Properties[0];
-        Assert.AreEqual("ship_names", shipNamesProp.Key, "Property key should be 'ship_names'");
+        Assert.AreEqual("ship_names", shipNamesProp.Key.Value, "Property key should be 'ship_names'");
         Assert.IsInstanceOfType(shipNamesProp.Value, typeof(PdxObject));
         
         var shipNames = (PdxObject)shipNamesProp.Value;
-        Assert.AreEqual(3, shipNames.Properties.Count, "Ship names should have 3 properties");
-        Assert.IsInstanceOfType(shipNames.Properties[0].Value, typeof(PdxScalar<int>));
+        Assert.AreEqual(3, shipNames.Properties.Length, "Ship names should have 3 properties");
+        Assert.IsInstanceOfType(shipNames.Properties[0].Value, typeof(PdxInt));
         
         var firstShipName = shipNames.Properties[0];
-        Assert.AreEqual("REP3_SHIP_Erid-Sur", firstShipName.Key, "First ship name key should be 'REP3_SHIP_Erid-Sur'");
-        Assert.AreEqual(1, ((PdxScalar<int>)firstShipName.Value).Value, "First ship name value should be 1");
-        Assert.IsInstanceOfType(shipNames.Properties[1].Value, typeof(PdxScalar<int>));
+        Assert.AreEqual("REP3_SHIP_Erid-Sur", firstShipName.Key.Value, "First ship name key should be 'REP3_SHIP_Erid-Sur'");
+        Assert.AreEqual(1, ((PdxInt)firstShipName.Value).Value, "First ship name value should be 1");
+        Assert.IsInstanceOfType(shipNames.Properties[1].Value, typeof(PdxInt));
         
         var secondShipName = shipNames.Properties[1];
-        Assert.AreEqual("%SEQ%", secondShipName.Key, "Second ship name key should be '%SEQ%'");
-        Assert.AreEqual(14, ((PdxScalar<int>)secondShipName.Value).Value, "Second ship name value should be 14");
-        Assert.IsInstanceOfType(shipNames.Properties[2].Value, typeof(PdxScalar<int>));
+        Assert.AreEqual("%SEQ%", secondShipName.Key.Value, "Second ship name key should be '%SEQ%'");
+        Assert.AreEqual(14, ((PdxInt)secondShipName.Value).Value, "Second ship name value should be 14");
+        Assert.IsInstanceOfType(shipNames.Properties[2].Value, typeof(PdxInt));
         
         var thirdShipName = shipNames.Properties[2];
-        Assert.AreEqual("REP3_SHIP_Lorod-Gexad", thirdShipName.Key, "Third ship name key should be 'REP3_SHIP_Lorod-Gexad'");
-        Assert.AreEqual(1, ((PdxScalar<int>)thirdShipName.Value).Value, "Third ship name value should be 1");
-        Assert.IsInstanceOfType(shipNames.Properties[2].Value, typeof(PdxScalar<int>));
+        Assert.AreEqual("REP3_SHIP_Lorod-Gexad", thirdShipName.Key.Value, "Third ship name key should be 'REP3_SHIP_Lorod-Gexad'");
+        Assert.AreEqual(1, ((PdxInt)thirdShipName.Value).Value, "Third ship name value should be 1");
+        Assert.IsInstanceOfType(shipNames.Properties[2].Value, typeof(PdxInt));
     }
     
     [TestMethod]
@@ -62,20 +74,20 @@ ship_names=
         // Assert
         Assert.IsInstanceOfType(root, typeof(PdxObject));        
         
-        Assert.AreEqual(1, root.Properties.Count, "Root should have exactly one property");
+        Assert.AreEqual(1, root.Properties.Length, "Root should have exactly one property");
         var testProp = root.Properties[0];
-        Assert.AreEqual("test", testProp.Key, "Property key should be 'test'");
+        Assert.AreEqual("test", testProp.Key.Value, "Property key should be 'test'");
         
         Assert.IsInstanceOfType(testProp.Value, typeof(PdxArray));
         var array = (PdxArray)testProp.Value;
         
-        Assert.AreEqual(expectedValues.Length, array.Items.Count, "Array should have same number of items");
+        Assert.AreEqual(expectedValues.Length, array.Items.Length, "Array should have same number of items");
        
         for (int i = 0; i < expectedValues.Length; i++)
         {
-            Assert.IsInstanceOfType(array.Items[i], typeof(PdxScalar<int>));
-            var PdxScalar = (PdxScalar<int>)array.Items[i];
-            Assert.AreEqual(expectedValues[i], PdxScalar.Value, $"Item {i} should have value {i + 1}");
+            Assert.IsInstanceOfType(array.Items[i], typeof(PdxInt));
+            var pdxInt = (PdxInt)array.Items[i];
+            Assert.AreEqual(expectedValues[i], pdxInt.Value, $"Item {i} should have value {expectedValues[i]}");
         }
     }
 
@@ -99,40 +111,40 @@ ship_names=
         // Assert
         Assert.IsInstanceOfType(root, typeof(PdxObject));
                 
-        Assert.AreEqual(1, root.Properties.Count, "Root should have exactly one property");
+        Assert.AreEqual(1, root.Properties.Length, "Root should have exactly one property");
         var countryProp = root.Properties[0];
-        Assert.AreEqual("country", countryProp.Key, "Property key should be 'country'");
+        Assert.AreEqual("country", countryProp.Key.Value, "Property key should be 'country'");
         
         Assert.IsInstanceOfType(countryProp.Value, typeof(PdxObject));
         var country = (PdxObject)countryProp.Value;
         
         // Check country properties
-        Assert.AreEqual(3, country.Properties.Count, "Country should have 3 properties");
+        Assert.AreEqual(3, country.Properties.Length, "Country should have 3 properties");
         
         // Check name
-        var nameProp = country.Properties.First(p => p.Key == "name");
-        Assert.IsInstanceOfType(nameProp.Value, typeof(PdxScalar<string>));
-        Assert.AreEqual("Test Empire", ((PdxScalar<string>)nameProp.Value).Value);
+        var nameProp = FindProperty(country.Properties, "name");
+        Assert.IsInstanceOfType(nameProp.Value, typeof(PdxString));
+        Assert.AreEqual("Test Empire", ((PdxString)nameProp.Value).Value);
         
         // Check capital
-        var capitalProp = country.Properties.First(p => p.Key == "capital");
-        Assert.IsInstanceOfType(capitalProp.Value, typeof(PdxScalar<int>));
-        Assert.AreEqual(5, ((PdxScalar<int>)capitalProp.Value).Value);
+        var capitalProp = FindProperty(country.Properties, "capital");
+        Assert.IsInstanceOfType(capitalProp.Value, typeof(PdxInt));
+        Assert.AreEqual(5, ((PdxInt)capitalProp.Value).Value);
         
         // Check resources
-        var resourcesProp = country.Properties.First(p => p.Key == "resources");
+        var resourcesProp = FindProperty(country.Properties, "resources");
         Assert.IsInstanceOfType(resourcesProp.Value, typeof(PdxObject));
         var resources = (PdxObject)resourcesProp.Value;
         
         // Check energy
-        var energyProp = resources.Properties.First(p => p.Key == "energy");
-        Assert.IsInstanceOfType(energyProp.Value, typeof(PdxScalar<int>));
-        Assert.AreEqual(100, ((PdxScalar<int>)energyProp.Value).Value);
+        var energyProp = FindProperty(resources.Properties, "energy");
+        Assert.IsInstanceOfType(energyProp.Value, typeof(PdxInt));
+        Assert.AreEqual(100, ((PdxInt)energyProp.Value).Value);
         
         // Check minerals
-        var mineralsProp = resources.Properties.First(p => p.Key == "minerals");
-        Assert.IsInstanceOfType(mineralsProp.Value, typeof(PdxScalar<int>));
-        Assert.AreEqual(200, ((PdxScalar<int>)mineralsProp.Value).Value);
+        var mineralsProp = FindProperty(resources.Properties, "minerals");
+        Assert.IsInstanceOfType(mineralsProp.Value, typeof(PdxInt));
+        Assert.AreEqual(200, ((PdxInt)mineralsProp.Value).Value);
     }
 
     [TestMethod]
@@ -151,22 +163,22 @@ ship_names=
         // Assert
         Assert.IsInstanceOfType(root, typeof(PdxObject));        
         
-        Assert.AreEqual(1, root.Properties.Count, "Root should have exactly one property");
+        Assert.AreEqual(1, root.Properties.Length, "Root should have exactly one property");
         var settingsProp = root.Properties[0];
-        Assert.AreEqual("settings", settingsProp.Key, "Property key should be 'settings'");
+        Assert.AreEqual("settings", settingsProp.Key.Value, "Property key should be 'settings'");
         
         Assert.IsInstanceOfType(settingsProp.Value, typeof(PdxObject));
         var settings = (PdxObject)settingsProp.Value;
         
         // Check ironman (yes)
-        var ironmanProp = settings.Properties.First(p => p.Key == "ironman");
-        Assert.IsInstanceOfType(ironmanProp.Value, typeof(PdxScalar<bool>));
-        Assert.IsTrue(((PdxScalar<bool>)ironmanProp.Value).Value);
+        var ironmanProp = FindProperty(settings.Properties, "ironman");
+        Assert.IsInstanceOfType(ironmanProp.Value, typeof(PdxBool));
+        Assert.IsTrue(((PdxBool)ironmanProp.Value).Value);
         
         // Check multiplayer (no)
-        var multiplayerProp = settings.Properties.First(p => p.Key == "multiplayer");
-        Assert.IsInstanceOfType(multiplayerProp.Value, typeof(PdxScalar<bool>));
-        Assert.IsFalse(((PdxScalar<bool>)multiplayerProp.Value).Value);
+        var multiplayerProp = FindProperty(settings.Properties, "multiplayer");
+        Assert.IsInstanceOfType(multiplayerProp.Value, typeof(PdxBool));
+        Assert.IsFalse(((PdxBool)multiplayerProp.Value).Value);
     }
 
     [TestMethod]
@@ -185,22 +197,22 @@ ship_names=
         // Assert
         Assert.IsInstanceOfType(root, typeof(PdxObject));        
         
-        Assert.AreEqual(1, root.Properties.Count, "Root should have exactly one property");
+        Assert.AreEqual(1, root.Properties.Length, "Root should have exactly one property");
         var gameProp = root.Properties[0];
-        Assert.AreEqual("game", gameProp.Key, "Property key should be 'game'");
+        Assert.AreEqual("game", gameProp.Key.Value, "Property key should be 'game'");
         
         Assert.IsInstanceOfType(gameProp.Value, typeof(PdxObject));
         var game = (PdxObject)gameProp.Value;
         
         // Check start_date
-        var startDateProp = game.Properties.First(p => p.Key == "start_date");
-        Assert.IsInstanceOfType(startDateProp.Value, typeof(PdxScalar<DateTime>));
-        Assert.AreEqual(new DateTime(2200, 1, 1), ((PdxScalar<DateTime>)startDateProp.Value).Value);
+        var startDateProp = FindProperty(game.Properties, "start_date");
+        Assert.IsInstanceOfType(startDateProp.Value, typeof(PdxDate));
+        Assert.AreEqual(new DateTime(2200, 1, 1), ((PdxDate)startDateProp.Value).Value);
         
         // Check current_date
-        var currentDateProp = game.Properties.First(p => p.Key == "current_date");
-        Assert.IsInstanceOfType(currentDateProp.Value, typeof(PdxScalar<DateTime>));
-        Assert.AreEqual(new DateTime(2250, 5, 12), ((PdxScalar<DateTime>)currentDateProp.Value).Value);
+        var currentDateProp = FindProperty(game.Properties, "current_date");
+        Assert.IsInstanceOfType(currentDateProp.Value, typeof(PdxDate));
+        Assert.AreEqual(new DateTime(2250, 5, 12), ((PdxDate)currentDateProp.Value).Value);
     }
 
     [TestMethod]
@@ -215,31 +227,31 @@ ship_names=
         }";
         
         // Act
-        var root = PdxSaveReader.Read(input.AsMemory());
+        var root = PdxSaveReader.Read(input.AsSpan());
 
         // Assert
         Assert.IsInstanceOfType(root, typeof(PdxObject));
         
-        Assert.AreEqual(1, root.Properties.Count, "Root should have exactly one property");
+        Assert.AreEqual(1, root.Properties.Length, "Root should have exactly one property");
         var arrayProp = root.Properties[0];
-        Assert.AreEqual("mixed_array", arrayProp.Key, "Property key should be 'mixed_array'");
+        Assert.AreEqual("mixed_array", arrayProp.Key.Value, "Property key should be 'mixed_array'");
         
         Assert.IsInstanceOfType(arrayProp.Value, typeof(PdxArray));
         var mixedArray = (PdxArray)arrayProp.Value;
         
-        Assert.AreEqual(3, mixedArray.Items.Count, "Array should have exactly three values");
+        Assert.AreEqual(3, mixedArray.Items.Length, "Array should have exactly three values");
         
         // Check integer value
-        Assert.IsInstanceOfType(mixedArray.Items[0], typeof(PdxScalar<int>));
-        Assert.AreEqual(42, ((PdxScalar<int>)mixedArray.Items[0]).Value);
+        Assert.IsInstanceOfType(mixedArray.Items[0], typeof(PdxInt));
+        Assert.AreEqual(42, ((PdxInt)mixedArray.Items[0]).Value);
         
         // Check long value
-        Assert.IsInstanceOfType(mixedArray.Items[1], typeof(PdxScalar<long>));
-        Assert.AreEqual(9223372036854775807, ((PdxScalar<long>)mixedArray.Items[1]).Value);
+        Assert.IsInstanceOfType(mixedArray.Items[1], typeof(PdxLong));
+        Assert.AreEqual(9223372036854775807, ((PdxLong)mixedArray.Items[1]).Value);
         
         // Check float value
-        Assert.IsInstanceOfType(mixedArray.Items[2], typeof(PdxScalar<float>));
-        Assert.AreEqual(3.14f, ((PdxScalar<float>)mixedArray.Items[2]).Value, 0.0001f);
+        Assert.IsInstanceOfType(mixedArray.Items[2], typeof(PdxFloat));
+        Assert.AreEqual(3.14f, ((PdxFloat)mixedArray.Items[2]).Value, 0.0001f);
     }
 
     [TestMethod]
@@ -254,32 +266,32 @@ ship_names=
         }";
         
         // Act
-        var root = PdxSaveReader.Read(input.AsMemory());
+        var root = PdxSaveReader.Read(input.AsSpan());
 
         // Assert
         Assert.IsInstanceOfType(root, typeof(PdxObject));
         
-        Assert.AreEqual(1, root.Properties.Count, "Root should have exactly one property");
+        Assert.AreEqual(1, root.Properties.Length, "Root should have exactly one property");
         var valuesProp = root.Properties[0];
-        Assert.AreEqual("values", valuesProp.Key, "Property key should be 'values'");
+        Assert.AreEqual("values", valuesProp.Key.Value, "Property key should be 'values'");
         
         Assert.IsInstanceOfType(valuesProp.Value, typeof(PdxObject));
         var values = (PdxObject)valuesProp.Value;
         
         // Check integer
-        var integerProp = values.Properties.First(p => p.Key == "integer");
-        Assert.IsInstanceOfType(integerProp.Value, typeof(PdxScalar<int>));
-        Assert.AreEqual(42, ((PdxScalar<int>)integerProp.Value).Value);
+        var integerProp = FindProperty(values.Properties, "integer");
+        Assert.IsInstanceOfType(integerProp.Value, typeof(PdxInt));
+        Assert.AreEqual(42, ((PdxInt)integerProp.Value).Value);
         
         // Check float
-        var floatProp = values.Properties.First(p => p.Key == "float");
-        Assert.IsInstanceOfType(floatProp.Value, typeof(PdxScalar<float>));
-        Assert.AreEqual(3.14f, ((PdxScalar<float>)floatProp.Value).Value, 0.0001f);
+        var floatProp = FindProperty(values.Properties, "float");
+        Assert.IsInstanceOfType(floatProp.Value, typeof(PdxFloat));
+        Assert.AreEqual(3.14f, ((PdxFloat)floatProp.Value).Value, 0.0001f);
         
         // Check large integer
-        var largeIntegerProp = values.Properties.First(p => p.Key == "large_integer");
-        Assert.IsInstanceOfType(largeIntegerProp.Value, typeof(PdxScalar<long>));
-        Assert.AreEqual(9223372036854775807, ((PdxScalar<long>)largeIntegerProp.Value).Value);
+        var largeIntegerProp = FindProperty(values.Properties, "large_integer");
+        Assert.IsInstanceOfType(largeIntegerProp.Value, typeof(PdxLong));
+        Assert.AreEqual(9223372036854775807, ((PdxLong)largeIntegerProp.Value).Value);
     }
 
     [TestMethod]
@@ -289,19 +301,19 @@ ship_names=
         string input = "empty={}";
         
         // Act
-        var root = PdxSaveReader.Read(input.AsMemory());
+        var root = PdxSaveReader.Read(input.AsSpan());
 
         // Assert
         Assert.IsInstanceOfType(root, typeof(PdxObject));
         
-        Assert.AreEqual(1, root.Properties.Count, "Root should have exactly one property");
+        Assert.AreEqual(1, root.Properties.Length, "Root should have exactly one property");
         var emptyProp = root.Properties[0];
-        Assert.AreEqual("empty", emptyProp.Key, "Property key should be 'empty'");
+        Assert.AreEqual("empty", emptyProp.Key.Value, "Property key should be 'empty'");
         
         Assert.IsInstanceOfType(emptyProp.Value, typeof(PdxObject));
         var empty = (PdxObject)emptyProp.Value;
         
-        Assert.AreEqual(0, empty.Properties.Count, "Empty object should have 0 properties");
+        Assert.AreEqual(0, empty.Properties.Length, "Empty object should have 0 properties");
     }
     
     [TestMethod]
@@ -315,27 +327,27 @@ ship_names=
         }";
         
         // Act
-        var root = PdxSaveReader.Read(input.AsMemory());
+        var root = PdxSaveReader.Read(input.AsSpan());
 
         // Assert
         Assert.IsInstanceOfType(root, typeof(PdxObject));        
         
-        Assert.AreEqual(1, root.Properties.Count, "Root should have exactly one property");
+        Assert.AreEqual(1, root.Properties.Length, "Root should have exactly one property");
         var guidsProp = root.Properties[0];
-        Assert.AreEqual("guids", guidsProp.Key, "Property key should be 'guids'");
+        Assert.AreEqual("guids", guidsProp.Key.Value, "Property key should be 'guids'");
         
         Assert.IsInstanceOfType(guidsProp.Value, typeof(PdxObject));
         var guids = (PdxObject)guidsProp.Value;
         
         // Check empty GUID
-        var idProp = guids.Properties.First(p => p.Key == "id");
-        Assert.IsInstanceOfType(idProp.Value, typeof(PdxScalar<Guid>));
-        Assert.AreEqual(Guid.Empty, ((PdxScalar<Guid>)idProp.Value).Value);
+        var idProp = FindProperty(guids.Properties, "id");
+        Assert.IsInstanceOfType(idProp.Value, typeof(PdxGuid));
+        Assert.AreEqual(Guid.Empty, ((PdxGuid)idProp.Value).Value);
         
         // Check random GUID
-        var randomIdProp = guids.Properties.First(p => p.Key == "random_id");
-        Assert.IsInstanceOfType(randomIdProp.Value, typeof(PdxScalar<Guid>));
-        Assert.AreEqual(new Guid("12345678-1234-5678-1234-567812345678"), ((PdxScalar<Guid>)randomIdProp.Value).Value);
+        var randomIdProp = FindProperty(guids.Properties, "random_id");
+        Assert.IsInstanceOfType(randomIdProp.Value, typeof(PdxGuid));
+        Assert.AreEqual(new Guid("12345678-1234-5678-1234-567812345678"), ((PdxGuid)randomIdProp.Value).Value);
     }
     
     [TestMethod]
@@ -352,60 +364,60 @@ ship_names=
         }";
         
         // Act
-        var root = PdxSaveReader.Read(input.AsMemory());
+        var root = PdxSaveReader.Read(input.AsSpan());
 
         // Assert
         Assert.IsInstanceOfType(root, typeof(PdxObject));        
         
-        Assert.AreEqual(1, root.Properties.Count, "Root should have exactly one property");
+        Assert.AreEqual(1, root.Properties.Length, "Root should have exactly one property");
         var nestedArraysProp = root.Properties[0];
-        Assert.AreEqual("nested_arrays", nestedArraysProp.Key, "Property key should be 'nested_arrays'");
+        Assert.AreEqual("nested_arrays", nestedArraysProp.Key.Value, "Property key should be 'nested_arrays'");
         
         Assert.IsInstanceOfType(nestedArraysProp.Value, typeof(PdxObject));
         var nestedArrays = (PdxObject)nestedArraysProp.Value;
         
         // Check simple array
-        var simpleArrayProp = nestedArrays.Properties.First(p => p.Key == "simple_array");
+        var simpleArrayProp = FindProperty(nestedArrays.Properties, "simple_array");
         Assert.IsInstanceOfType(simpleArrayProp.Value, typeof(PdxArray));
         var simpleArray = (PdxArray)simpleArrayProp.Value;
         
-        Assert.AreEqual(3, simpleArray.Items.Count, "Simple array should have 3 items");
+        Assert.AreEqual(3, simpleArray.Items.Length, "Simple array should have 3 items");
         for (int i = 0; i < 3; i++)
         {
-            Assert.IsInstanceOfType(simpleArray.Items[i], typeof(PdxScalar<int>));
-            Assert.AreEqual(i + 1, ((PdxScalar<int>)simpleArray.Items[i]).Value);
+            Assert.IsInstanceOfType(simpleArray.Items[i], typeof(PdxInt));
+            Assert.AreEqual(i + 1, ((PdxInt)simpleArray.Items[i]).Value);
         }
         
         // Check complex array
-        var complexArrayProp = nestedArrays.Properties.First(p => p.Key == "complex_array");
+        var complexArrayProp = FindProperty(nestedArrays.Properties, "complex_array");
         Assert.IsInstanceOfType(complexArrayProp.Value, typeof(PdxArray));
         var complexArray = (PdxArray)complexArrayProp.Value;
         
-        Assert.AreEqual(2, complexArray.Items.Count, "Complex array should have 2 items");
+        Assert.AreEqual(2, complexArray.Items.Length, "Complex array should have 2 items");
         
         // Check first item
         Assert.IsInstanceOfType(complexArray.Items[0], typeof(PdxObject));
         var item1 = (PdxObject)complexArray.Items[0];
         
-        var item1NameProp = item1.Properties.First(p => p.Key == "name");
-        Assert.IsInstanceOfType(item1NameProp.Value, typeof(PdxScalar<string>));
-        Assert.AreEqual("Item 1", ((PdxScalar<string>)item1NameProp.Value).Value);
+        var item1NameProp = FindProperty(item1.Properties, "name");
+        Assert.IsInstanceOfType(item1NameProp.Value, typeof(PdxString));
+        Assert.AreEqual("Item 1", ((PdxString)item1NameProp.Value).Value);
         
-        var item1ValueProp = item1.Properties.First(p => p.Key == "value");
-        Assert.IsInstanceOfType(item1ValueProp.Value, typeof(PdxScalar<int>));
-        Assert.AreEqual(10, ((PdxScalar<int>)item1ValueProp.Value).Value);
+        var item1ValueProp = FindProperty(item1.Properties, "value");
+        Assert.IsInstanceOfType(item1ValueProp.Value, typeof(PdxInt));
+        Assert.AreEqual(10, ((PdxInt)item1ValueProp.Value).Value);
         
         // Check second item
         Assert.IsInstanceOfType(complexArray.Items[1], typeof(PdxObject));
         var item2 = (PdxObject)complexArray.Items[1];
         
-        var item2NameProp = item2.Properties.First(p => p.Key == "name");
-        Assert.IsInstanceOfType(item2NameProp.Value, typeof(PdxScalar<string>));
-        Assert.AreEqual("Item 2", ((PdxScalar<string>)item2NameProp.Value).Value);
+        var item2NameProp = FindProperty(item2.Properties, "name");
+        Assert.IsInstanceOfType(item2NameProp.Value, typeof(PdxString));
+        Assert.AreEqual("Item 2", ((PdxString)item2NameProp.Value).Value);
         
-        var item2ValueProp = item2.Properties.First(p => p.Key == "value");
-        Assert.IsInstanceOfType(item2ValueProp.Value, typeof(PdxScalar<int>));
-        Assert.AreEqual(20, ((PdxScalar<int>)item2ValueProp.Value).Value);
+        var item2ValueProp = FindProperty(item2.Properties, "value");
+        Assert.IsInstanceOfType(item2ValueProp.Value, typeof(PdxInt));
+        Assert.AreEqual(20, ((PdxInt)item2ValueProp.Value).Value);
     }
     
     [TestMethod]
@@ -433,83 +445,81 @@ ship_names=
         }";
         
         // Act
-        var root = PdxSaveReader.Read(input.AsMemory());
+        var root = PdxSaveReader.Read(input.AsSpan());
 
         // Assert
         Assert.IsInstanceOfType(root, typeof(PdxObject));
         
         
         // Check galaxy
-        Assert.AreEqual(1, root.Properties.Count, "Root should have exactly one property");
+        Assert.AreEqual(1, root.Properties.Length, "Root should have exactly one property");
         var galaxyProp = root.Properties[0];
-        Assert.AreEqual("galaxy", galaxyProp.Key, "Property key should be 'galaxy'");
+        Assert.AreEqual("galaxy", galaxyProp.Key.Value, "Property key should be 'galaxy'");
         Assert.IsInstanceOfType(galaxyProp.Value, typeof(PdxObject));
         var galaxy = (PdxObject)galaxyProp.Value;
         
         // Check planets
-        var planetsProp = galaxy.Properties.First(p => p.Key == "planets");
+        var planetsProp = FindProperty(galaxy.Properties, "planets");
         Assert.IsInstanceOfType(planetsProp.Value, typeof(PdxObject));
         var planets = (PdxObject)planetsProp.Value;
         
         // Check planet 1
-        var planet1Prop = planets.Properties.First(p => p.Key == "1");
+        var planet1Prop = planets.Properties.First(p => p.Key.Value == "1");
         Assert.IsInstanceOfType(planet1Prop.Value, typeof(PdxObject));
         var planet1 = (PdxObject)planet1Prop.Value;
         
-        // Check planet name
-        var planetNameProp = planet1.Properties.First(p => p.Key == "name");
-        Assert.IsInstanceOfType(planetNameProp.Value, typeof(PdxScalar<string>));
-        Assert.AreEqual("Earth", ((PdxScalar<string>)planetNameProp.Value).Value);
+        var planet1NameProp = planet1.Properties.First(p => p.Key.Value == "name");
+        Assert.IsInstanceOfType(planet1NameProp.Value, typeof(PdxString));
+        Assert.AreEqual("Earth", ((PdxString)planet1NameProp.Value).Value);
         
-        // Check planet size
-        var planetSizeProp = planet1.Properties.First(p => p.Key == "size");
-        Assert.IsInstanceOfType(planetSizeProp.Value, typeof(PdxScalar<int>));
-        Assert.AreEqual(10, ((PdxScalar<int>)planetSizeProp.Value).Value);
+        var planet1SizeProp = planet1.Properties.First(p => p.Key.Value == "size");
+        Assert.IsInstanceOfType(planet1SizeProp.Value, typeof(PdxInt));
+        Assert.AreEqual(10, ((PdxInt)planet1SizeProp.Value).Value);
         
         // Check moons
-        var moonsProp = planet1.Properties.First(p => p.Key == "moons");
+        var moonsProp = FindProperty(planet1.Properties, "moons");
         Assert.IsInstanceOfType(moonsProp.Value, typeof(PdxObject));
         var moons = (PdxObject)moonsProp.Value;
         
         // Check moon 1
-        var moon1Prop = moons.Properties.First(p => p.Key == "1");
+        var moon1Prop = FindProperty(moons.Properties, "1");
         Assert.IsInstanceOfType(moon1Prop.Value, typeof(PdxObject));
         var moon1 = (PdxObject)moon1Prop.Value;
         
         // Check moon name
-        var moonNameProp = moon1.Properties.First(p => p.Key == "name");
-        Assert.IsInstanceOfType(moonNameProp.Value, typeof(PdxScalar<string>));
-        Assert.AreEqual("Moon", ((PdxScalar<string>)moonNameProp.Value).Value);
+        var moonNameProp = FindProperty(moon1.Properties, "name");
+        Assert.IsInstanceOfType(moonNameProp.Value, typeof(PdxString));
+        Assert.AreEqual("Moon", ((PdxString)moonNameProp.Value).Value);
         
         // Check moon size
-        var moonSizeProp = moon1.Properties.First(p => p.Key == "size");
-        Assert.IsInstanceOfType(moonSizeProp.Value, typeof(PdxScalar<int>));
-        Assert.AreEqual(2, ((PdxScalar<int>)moonSizeProp.Value).Value);
+        var moonSizeProp = FindProperty(moon1.Properties, "size");
+        Assert.IsInstanceOfType(moonSizeProp.Value, typeof(PdxInt));
+        Assert.AreEqual(2, ((PdxInt)moonSizeProp.Value).Value);
         
         // Check resources
-        var resourcesProp = planet1.Properties.First(p => p.Key == "resources");
+        var resourcesProp = FindProperty(planet1.Properties, "resources");
         Assert.IsInstanceOfType(resourcesProp.Value, typeof(PdxObject));
         var resources = (PdxObject)resourcesProp.Value;
         
         // Check energy
-        var energyProp = resources.Properties.First(p => p.Key == "energy");
-        Assert.IsInstanceOfType(energyProp.Value, typeof(PdxScalar<int>));
-        Assert.AreEqual(100, ((PdxScalar<int>)energyProp.Value).Value);
+        var energyProp = FindProperty(resources.Properties, "energy");
+        Assert.IsInstanceOfType(energyProp.Value, typeof(PdxInt));
+        Assert.AreEqual(100, ((PdxInt)energyProp.Value).Value);
         
         // Check minerals
-        var mineralsProp = resources.Properties.First(p => p.Key == "minerals");
+        var mineralsProp = FindProperty(resources.Properties, "minerals");
         Assert.IsInstanceOfType(mineralsProp.Value, typeof(PdxObject));
         var minerals = (PdxObject)mineralsProp.Value;
         
         // Check minerals base
-        var mineralsBaseProp = minerals.Properties.First(p => p.Key == "base");
-        Assert.IsInstanceOfType(mineralsBaseProp.Value, typeof(PdxScalar<int>));
-        Assert.AreEqual(50, ((PdxScalar<int>)mineralsBaseProp.Value).Value);
+        var mineralsBaseProp = FindProperty(minerals.Properties, "base");
+        Assert.IsInstanceOfType(mineralsBaseProp.Value, typeof(PdxInt));
+        Assert.AreEqual(50, ((PdxInt)mineralsBaseProp.Value).Value);
         
         // Check minerals bonus
-        var mineralsBonusProp = minerals.Properties.First(p => p.Key == "bonus");
-        Assert.IsInstanceOfType(mineralsBonusProp.Value, typeof(PdxScalar<int>));
-        Assert.AreEqual(25, ((PdxScalar<int>)mineralsBonusProp.Value).Value);
+        var mineralsBonusProp = FindProperty(minerals.Properties, "bonus");
+        Assert.IsInstanceOfType(mineralsBonusProp.Value, typeof(PdxInt));
+        Assert.AreEqual(25, ((PdxInt)mineralsBonusProp.Value).Value);
     }
     
     [TestMethod]
@@ -524,48 +534,48 @@ ship_names=
         ";
         
         // Act
-        var root = PdxSaveReader.Read(input.AsMemory());
+        var root = PdxSaveReader.Read(input.AsSpan());
 
         // Assert
         Assert.IsInstanceOfType(root, typeof(PdxObject));
                 
-        Assert.AreEqual(4, root.Properties.Count, "Root should have 4 properties");
+        Assert.AreEqual(4, root.Properties.Length, "Root should have 4 properties");
         
         // Check name
-        var nameProp = root.Properties.First(p => p.Key == "name");
-        Assert.IsInstanceOfType(nameProp.Value, typeof(PdxScalar<string>));
-        Assert.AreEqual("Test Empire", ((PdxScalar<string>)nameProp.Value).Value);
+        var nameProp = FindProperty(root.Properties, "name");
+        Assert.IsInstanceOfType(nameProp.Value, typeof(PdxString));
+        Assert.AreEqual("Test Empire", ((PdxString)nameProp.Value).Value);
         
         // Check capital
-        var capitalProp = root.Properties.First(p => p.Key == "capital");
-        Assert.IsInstanceOfType(capitalProp.Value, typeof(PdxScalar<int>));
-        Assert.AreEqual(5, ((PdxScalar<int>)capitalProp.Value).Value);
+        var capitalProp = FindProperty(root.Properties, "capital");
+        Assert.IsInstanceOfType(capitalProp.Value, typeof(PdxInt));
+        Assert.AreEqual(5, ((PdxInt)capitalProp.Value).Value);
         
         // Check resources
-        var resourcesProp = root.Properties.First(p => p.Key == "resources");
+        var resourcesProp = FindProperty(root.Properties, "resources");
         Assert.IsInstanceOfType(resourcesProp.Value, typeof(PdxObject));
         var resources = (PdxObject)resourcesProp.Value;
         
-        var energyProp = resources.Properties.First(p => p.Key == "energy");
-        Assert.IsInstanceOfType(energyProp.Value, typeof(PdxScalar<int>));
-        Assert.AreEqual(100, ((PdxScalar<int>)energyProp.Value).Value);
+        var energyProp = FindProperty(resources.Properties, "energy");
+        Assert.IsInstanceOfType(energyProp.Value, typeof(PdxInt));
+        Assert.AreEqual(100, ((PdxInt)energyProp.Value).Value);
         
-        var mineralsProp = resources.Properties.First(p => p.Key == "minerals");
-        Assert.IsInstanceOfType(mineralsProp.Value, typeof(PdxScalar<int>));
-        Assert.AreEqual(200, ((PdxScalar<int>)mineralsProp.Value).Value);
+        var mineralsProp = FindProperty(resources.Properties, "minerals");
+        Assert.IsInstanceOfType(mineralsProp.Value, typeof(PdxInt));
+        Assert.AreEqual(200, ((PdxInt)mineralsProp.Value).Value);
         
         // Check flags
-        var flagsProp = root.Properties.First(p => p.Key == "flags");
+        var flagsProp = FindProperty(root.Properties, "flags");
         Assert.IsInstanceOfType(flagsProp.Value, typeof(PdxObject));
         var flags = (PdxObject)flagsProp.Value;
         
-        var xenophileProp = flags.Properties.First(p => p.Key == "is_xenophile");
-        Assert.IsInstanceOfType(xenophileProp.Value, typeof(PdxScalar<bool>));
-        Assert.IsTrue(((PdxScalar<bool>)xenophileProp.Value).Value);
+        var xenophileProp = FindProperty(flags.Properties, "is_xenophile");
+        Assert.IsInstanceOfType(xenophileProp.Value, typeof(PdxBool));
+        Assert.IsTrue(((PdxBool)xenophileProp.Value).Value);
         
-        var pacifistProp = flags.Properties.First(p => p.Key == "is_pacifist");
-        Assert.IsInstanceOfType(pacifistProp.Value, typeof(PdxScalar<bool>));
-        Assert.IsFalse(((PdxScalar<bool>)pacifistProp.Value).Value);
+        var pacifistProp = FindProperty(flags.Properties, "is_pacifist");
+        Assert.IsInstanceOfType(pacifistProp.Value, typeof(PdxBool));
+        Assert.IsFalse(((PdxBool)pacifistProp.Value).Value);
     }
 
     [TestMethod]
@@ -585,46 +595,46 @@ ship_names=
         }";
         
         // Act
-        var root = PdxSaveReader.Read(input.AsMemory());
+        var root = PdxSaveReader.Read(input.AsSpan());
 
         // Assert
         Assert.IsInstanceOfType(root, typeof(PdxObject));
         
-        Assert.AreEqual(1, root.Properties.Count, "Root should have exactly one property");
+        Assert.AreEqual(1, root.Properties.Length, "Root should have exactly one property");
         var planetsProp = root.Properties[0];
-        Assert.AreEqual("planets", planetsProp.Key, "Property key should be 'planets'");
+        Assert.AreEqual<string>("planets", planetsProp.Key.Value);
         
         Assert.IsInstanceOfType(planetsProp.Value, typeof(PdxObject));
         var planets = (PdxObject)planetsProp.Value;
         
         // Should have 2 planets with numeric keys
-        Assert.AreEqual(2, planets.Properties.Count, "Planets should have 2 properties");
+        Assert.AreEqual(2, planets.Properties.Length, "Planets should have 2 properties");
         
         // Check planet 1
-        var planet1Prop = planets.Properties.First(p => p.Key == "1");
+        var planet1Prop = planets.Properties.First(p => p.Key.Value == "1");
         Assert.IsInstanceOfType(planet1Prop.Value, typeof(PdxObject));
         var planet1 = (PdxObject)planet1Prop.Value;
         
-        var planet1NameProp = planet1.Properties.First(p => p.Key == "name");
-        Assert.IsInstanceOfType(planet1NameProp.Value, typeof(PdxScalar<string>));
-        Assert.AreEqual("Earth", ((PdxScalar<string>)planet1NameProp.Value).Value);
+        var planet1NameProp = planet1.Properties.First(p => p.Key.Value == "name");
+        Assert.IsInstanceOfType(planet1NameProp.Value, typeof(PdxString));
+        Assert.AreEqual("Earth", ((PdxString)planet1NameProp.Value).Value);
         
-        var planet1SizeProp = planet1.Properties.First(p => p.Key == "size");
-        Assert.IsInstanceOfType(planet1SizeProp.Value, typeof(PdxScalar<int>));
-        Assert.AreEqual(10, ((PdxScalar<int>)planet1SizeProp.Value).Value);
+        var planet1SizeProp = planet1.Properties.First(p => p.Key.Value == "size");
+        Assert.IsInstanceOfType(planet1SizeProp.Value, typeof(PdxInt));
+        Assert.AreEqual(10, ((PdxInt)planet1SizeProp.Value).Value);
         
         // Check planet 2
-        var planet2Prop = planets.Properties.First(p => p.Key == "2");
+        var planet2Prop = planets.Properties.First(p => p.Key.Value == "2");
         Assert.IsInstanceOfType(planet2Prop.Value, typeof(PdxObject));
         var planet2 = (PdxObject)planet2Prop.Value;
         
-        var planet2NameProp = planet2.Properties.First(p => p.Key == "name");
-        Assert.IsInstanceOfType(planet2NameProp.Value, typeof(PdxScalar<string>));
-        Assert.AreEqual("Mars", ((PdxScalar<string>)planet2NameProp.Value).Value);
+        var planet2NameProp = planet2.Properties.First(p => p.Key.Value == "name");
+        Assert.IsInstanceOfType(planet2NameProp.Value, typeof(PdxString));
+        Assert.AreEqual("Mars", ((PdxString)planet2NameProp.Value).Value);
         
-        var planet2SizeProp = planet2.Properties.First(p => p.Key == "size");
-        Assert.IsInstanceOfType(planet2SizeProp.Value, typeof(PdxScalar<int>));
-        Assert.AreEqual(8, ((PdxScalar<int>)planet2SizeProp.Value).Value);
+        var planet2SizeProp = planet2.Properties.First(p => p.Key.Value == "size");
+        Assert.IsInstanceOfType(planet2SizeProp.Value, typeof(PdxInt));
+        Assert.AreEqual(8, ((PdxInt)planet2SizeProp.Value).Value);
     }
 
     [TestMethod]
@@ -658,20 +668,20 @@ ship_names=
         """;
         
         // Act
-        var root = PdxSaveReader.Read(input.AsMemory());
+        var root = PdxSaveReader.Read(input.AsSpan());
 
         // Assert        
         Assert.IsInstanceOfType(root, typeof(PdxObject));
         
         
-        Assert.AreEqual(1, root.Properties.Count, "Root should have 1 properties");
+        Assert.AreEqual(1, root.Properties.Length, "Root should have 1 properties");
         var repeatingKeyObject = root.Properties[0];
-        Assert.AreEqual("object_with_repeating_keys", repeatingKeyObject.Key, "Property key should be 'object_with_repeating_keys'");
+        Assert.AreEqual<string>("object_with_repeating_keys", repeatingKeyObject.Key.Value);
         
         Assert.IsInstanceOfType(repeatingKeyObject.Value, typeof(PdxObject));
         var repeatingKeyObjectValue = (PdxObject)repeatingKeyObject.Value;
         
-        Assert.AreEqual(3, repeatingKeyObjectValue.Properties.Count, "Repeating key object should have 3 properties");
+        Assert.AreEqual(3, repeatingKeyObjectValue.Properties.Length, "Repeating key object should have 3 properties");
     }
 
     [TestMethod]
@@ -691,71 +701,71 @@ ship_names=
         }";
 
         // Act
-        var root = PdxSaveReader.Read(input.AsMemory());
+        var root = PdxSaveReader.Read(input.AsSpan());
 
         // Assert
         Assert.IsInstanceOfType(root, typeof(PdxObject));
         
-        Assert.AreEqual(1, root.Properties.Count);
+        Assert.AreEqual(1, root.Properties.Length);
         var termsProp = root.Properties[0];
-        Assert.AreEqual("terms", termsProp.Key);
+        Assert.AreEqual<string>("terms", termsProp.Key.Value);
         
         Assert.IsInstanceOfType(termsProp.Value, typeof(PdxObject));
         var terms = (PdxObject)termsProp.Value;
         
         // Check discrete terms
-        var discreteTermsProp = terms.Properties.First(p => p.Key == "discrete_terms");
+        var discreteTermsProp = FindProperty(terms.Properties, "discrete_terms");
         Assert.IsInstanceOfType(discreteTermsProp.Value, typeof(PdxArray));
         var discreteTerms = (PdxArray)discreteTermsProp.Value;
         
-        Assert.AreEqual(2, discreteTerms.Items.Count);
+        Assert.AreEqual(2, discreteTerms.Items.Length);
         
         // Check first discrete term
         var firstTermObj = (PdxObject)discreteTerms.Items[0];
-        var firstTermKey = firstTermObj.Properties.First(p => p.Key == "key");
-        Assert.IsInstanceOfType(firstTermKey.Value, typeof(PdxScalar<string>));
-        Assert.AreEqual("specialist_type", ((PdxScalar<string>)firstTermKey.Value).Value);
+        var firstTermKey = FindProperty(firstTermObj.Properties, "key");
+        Assert.IsInstanceOfType(firstTermKey.Value, typeof(PdxString));
+        Assert.AreEqual("specialist_type", ((PdxString)firstTermKey.Value).Value);
         
-        var firstTermValue = firstTermObj.Properties.First(p => p.Key == "value");
-        Assert.IsInstanceOfType(firstTermValue.Value, typeof(PdxScalar<string>));
-        Assert.AreEqual("specialist_none", ((PdxScalar<string>)firstTermValue.Value).Value);
+        var firstTermValue = FindProperty(firstTermObj.Properties, "value");
+        Assert.IsInstanceOfType(firstTermValue.Value, typeof(PdxString));
+        Assert.AreEqual("specialist_none", ((PdxString)firstTermValue.Value).Value);
         
         // Check second discrete term
         var secondTermObj = (PdxObject)discreteTerms.Items[1];
-        var secondTermKey = secondTermObj.Properties.First(p => p.Key == "key");
-        Assert.IsInstanceOfType(secondTermKey.Value, typeof(PdxScalar<string>));
-        Assert.AreEqual("subject_integration", ((PdxScalar<string>)secondTermKey.Value).Value);
+        var secondTermKey = FindProperty(secondTermObj.Properties, "key");
+        Assert.IsInstanceOfType(secondTermKey.Value, typeof(PdxString));
+        Assert.AreEqual("subject_integration", ((PdxString)secondTermKey.Value).Value);
         
-        var secondTermValue = secondTermObj.Properties.First(p => p.Key == "value");
-        Assert.IsInstanceOfType(secondTermValue.Value, typeof(PdxScalar<string>));
-        Assert.AreEqual("subject_can_not_be_integrated", ((PdxScalar<string>)secondTermValue.Value).Value);
+        var secondTermValue = FindProperty(secondTermObj.Properties, "value");
+        Assert.IsInstanceOfType(secondTermValue.Value, typeof(PdxString));
+        Assert.AreEqual("subject_can_not_be_integrated", ((PdxString)secondTermValue.Value).Value);
         
         // Check resource terms
-        var resourceTermsProp = terms.Properties.First(p => p.Key == "resource_terms");
+        var resourceTermsProp = FindProperty(terms.Properties, "resource_terms");
         Assert.IsInstanceOfType(resourceTermsProp.Value, typeof(PdxArray));
         var resourceTerms = (PdxArray)resourceTermsProp.Value;
         
-        Assert.AreEqual(2, resourceTerms.Items.Count);
+        Assert.AreEqual(2, resourceTerms.Items.Length);
         
         // Check first resource term
         var firstResourceObj = (PdxObject)resourceTerms.Items[0];
-        var firstResourceKey = firstResourceObj.Properties.First(p => p.Key == "key");
-        Assert.IsInstanceOfType(firstResourceKey.Value, typeof(PdxScalar<string>));
-        Assert.AreEqual("resource_subsidies_basic", ((PdxScalar<string>)firstResourceKey.Value).Value);
+        var firstResourceKey = FindProperty(firstResourceObj.Properties, "key");
+        Assert.IsInstanceOfType(firstResourceKey.Value, typeof(PdxString));
+        Assert.AreEqual("resource_subsidies_basic", ((PdxString)firstResourceKey.Value).Value);
         
-        var firstResourceValue = firstResourceObj.Properties.First(p => p.Key == "value");
-        Assert.IsInstanceOfType(firstResourceValue.Value, typeof(PdxScalar<float>));
-        Assert.AreEqual(0.0f, ((PdxScalar<float>)firstResourceValue.Value).Value);
+        var firstResourceValue = FindProperty(firstResourceObj.Properties, "value");
+        Assert.IsInstanceOfType(firstResourceValue.Value, typeof(PdxFloat));
+        Assert.AreEqual(0.0f, ((PdxFloat)firstResourceValue.Value).Value);
         
         // Check second resource term
         var secondResourceObj = (PdxObject)resourceTerms.Items[1];
-        var secondResourceKey = secondResourceObj.Properties.First(p => p.Key == "key");
-        Assert.IsInstanceOfType(secondResourceKey.Value, typeof(PdxScalar<string>));
-        Assert.AreEqual("resource_subsidies_advanced", ((PdxScalar<string>)secondResourceKey.Value).Value);
+        var secondResourceKey = FindProperty(secondResourceObj.Properties, "key");
+        Assert.IsInstanceOfType(secondResourceKey.Value, typeof(PdxString));
+        Assert.AreEqual("resource_subsidies_advanced", ((PdxString)secondResourceKey.Value).Value);
         
-        var secondResourceValue = secondResourceObj.Properties.First(p => p.Key == "value");
-        Assert.IsInstanceOfType(secondResourceValue.Value, typeof(PdxScalar<float>));
-        Assert.AreEqual(25.5f, ((PdxScalar<float>)secondResourceValue.Value).Value);
+        var secondResourceValue = FindProperty(secondResourceObj.Properties, "value");
+        Assert.IsInstanceOfType(secondResourceValue.Value, typeof(PdxFloat));
+        Assert.AreEqual(25.5f, ((PdxFloat)secondResourceValue.Value).Value);
     }
     
     [TestMethod]
@@ -772,25 +782,25 @@ ship_names=
                        """;
         
         // Act
-        var root = PdxSaveReader.Read(input.AsMemory());
+        var root = PdxSaveReader.Read(input.AsSpan());
 
         // Assert
         Assert.IsInstanceOfType(root, typeof(PdxObject));
         
-        Assert.AreEqual(1, root.Properties.Count);
+        Assert.AreEqual(1, root.Properties.Length);
         var cullingValueProp = root.Properties[0];
         
-        Assert.AreEqual("culling_value", cullingValueProp.Key);
+        Assert.AreEqual<string>("culling_value", cullingValueProp.Key.Value);
         Assert.IsInstanceOfType(cullingValueProp.Value, typeof(PdxArray));
         var cullingValueArray = (PdxArray)cullingValueProp.Value;
-        Assert.AreEqual(3, cullingValueArray.Items.Count);
+        Assert.AreEqual(3, cullingValueArray.Items.Length);
         
         // Check each item in the array
         foreach (var item in cullingValueArray.Items)
         {
             Assert.IsInstanceOfType(item, typeof(PdxObject));
             var itemObj = (PdxObject)item;
-            Assert.AreEqual(0, itemObj.Properties.Count, "Each item should be an empty object");
+            Assert.AreEqual(0, itemObj.Properties.Length, "Each item should be an empty object");
         }
     }
 
@@ -833,70 +843,72 @@ ship_names=
         """;
 
         // Act
-        var root = PdxSaveReader.Read(input.AsMemory());
+        var root = PdxSaveReader.Read(input.AsSpan());
 
         // Assert
         Assert.IsInstanceOfType(root, typeof(PdxObject));
         
-        Assert.AreEqual(1, root.Properties.Count);
+        Assert.AreEqual(1, root.Properties.Length);
         var intelManagerProp = root.Properties[0];
-        Assert.AreEqual("intel_manager", intelManagerProp.Key);
+        Assert.AreEqual<string>("intel_manager", intelManagerProp.Key.Value);
         
         Assert.IsInstanceOfType(intelManagerProp.Value, typeof(PdxObject));
         var intelManager = (PdxObject)intelManagerProp.Value;
         
-        Assert.AreEqual(1, intelManager.Properties.Count);
+        Assert.AreEqual(1, intelManager.Properties.Length);
         var intelProp = intelManager.Properties[0];
-        Assert.AreEqual("intel", intelProp.Key);
+        Assert.AreEqual<string>("intel", intelProp.Key.Value);
         
         Assert.IsInstanceOfType(intelProp.Value, typeof(PdxArray));
         var intelArray = (PdxArray)intelProp.Value;
         
-        Assert.AreEqual(2, intelArray.Items.Count);
+        Assert.AreEqual(2, intelArray.Items.Length);
 
         // Each item in the 'intel' array is itself an array [ID, DataObject]
         
         // Check first item
         Assert.IsInstanceOfType(intelArray.Items[0], typeof(PdxArray)); 
         var firstItemArray = (PdxArray)intelArray.Items[0];
-        Assert.AreEqual(2, firstItemArray.Items.Count);
+        Assert.AreEqual(2, firstItemArray.Items.Length);
 
         // the first item in the array is an ID
-        Assert.IsInstanceOfType(firstItemArray.Items[0], typeof(PdxScalar<int>));
-        Assert.AreEqual(67108916, ((PdxScalar<int>)firstItemArray.Items[0]).Value);
+        Assert.IsInstanceOfType(firstItemArray.Items[0], typeof(PdxInt));
+        Assert.AreEqual(67108916, ((PdxInt)firstItemArray.Items[0]).Value);
         
         // the second item in the array is a data object
         Assert.IsInstanceOfType(firstItemArray.Items[1], typeof(PdxObject));
         
         var firstDataObject = (PdxObject)firstItemArray.Items[1];
-        Assert.AreEqual(2, firstDataObject.Properties.Count); // intel and stale_intel
+        Assert.AreEqual(2, firstDataObject.Properties.Length); // intel and stale_intel
         
-        var firstIntelValueProp = firstDataObject.Properties.First(p => p.Key == "intel");
-        Assert.IsInstanceOfType(firstIntelValueProp.Value, typeof(PdxScalar<int>));
-        Assert.AreEqual(10, ((PdxScalar<int>)firstIntelValueProp.Value).Value);
+        var firstIntelValueProp = FindProperty(firstDataObject.Properties, "intel");
+        Assert.IsInstanceOfType(firstIntelValueProp.Value, typeof(PdxInt));
+        Assert.AreEqual(10, ((PdxInt)firstIntelValueProp.Value).Value);
         
-        var firstStaleIntelProp = firstDataObject.Properties.First(p => p.Key == "stale_intel");
+        var firstStaleIntelProp = FindProperty(firstDataObject.Properties, "stale_intel");
         Assert.IsInstanceOfType(firstStaleIntelProp.Value, typeof(PdxObject));
-        Assert.AreEqual(0, ((PdxObject)firstStaleIntelProp.Value).Properties.Count);
+        Assert.AreEqual(0, ((PdxObject)firstStaleIntelProp.Value).Properties.Length);
 
         
         // Check second item
         Assert.IsInstanceOfType(intelArray.Items[1], typeof(PdxArray)); // Second item is also an array [ID, DataObject]
         var secondItemArray = (PdxArray)intelArray.Items[1];
-        Assert.AreEqual(2, secondItemArray.Items.Count); // Should contain ID and DataObject
+        Assert.AreEqual(2, secondItemArray.Items.Length); // Should contain ID and DataObject
 
-        Assert.IsInstanceOfType(secondItemArray.Items[0], typeof(PdxScalar<int>));
-        Assert.AreEqual(218103860, ((PdxScalar<int>)secondItemArray.Items[0]).Value);
+        Assert.IsInstanceOfType(secondItemArray.Items[0], typeof(PdxInt));
+        Assert.AreEqual(218103860, ((PdxInt)secondItemArray.Items[0]).Value);
 
         Assert.IsInstanceOfType(secondItemArray.Items[1], typeof(PdxObject));
         var secondDataObject = (PdxObject)secondItemArray.Items[1];
-        Assert.AreEqual(2, secondDataObject.Properties.Count); // intel and stale_intel
-        var secondIntelValueProp = secondDataObject.Properties.First(p => p.Key == "intel");
-        Assert.IsInstanceOfType(secondIntelValueProp.Value, typeof(PdxScalar<int>));
-        Assert.AreEqual(10, ((PdxScalar<int>)secondIntelValueProp.Value).Value);
-        var secondStaleIntelProp = secondDataObject.Properties.First(p => p.Key == "stale_intel");
+        Assert.AreEqual(2, secondDataObject.Properties.Length); // intel and stale_intel
+        
+        var secondIntelValueProp = FindProperty(secondDataObject.Properties, "intel");
+        Assert.IsInstanceOfType(secondIntelValueProp.Value, typeof(PdxInt));
+        Assert.AreEqual(10, ((PdxInt)secondIntelValueProp.Value).Value);
+        
+        var secondStaleIntelProp = FindProperty(secondDataObject.Properties, "stale_intel");
         Assert.IsInstanceOfType(secondStaleIntelProp.Value, typeof(PdxObject));
-        Assert.AreEqual(0, ((PdxObject)secondStaleIntelProp.Value).Properties.Count);
+        Assert.AreEqual(0, ((PdxObject)secondStaleIntelProp.Value).Properties.Length);
     }
 
     [TestMethod]
@@ -914,27 +926,71 @@ ship_names=
         """;
         
         // Act
-        var root = PdxSaveReader.Read(input.AsMemory());
+        var root = PdxSaveReader.Read(input.AsSpan());
         
         // Check the property values in the original PdxObject
         Assert.IsInstanceOfType(root, typeof(PdxObject));
-        Assert.AreEqual(1, root.Properties.Count);
+        Assert.AreEqual(1, root.Properties.Length);
 
         Assert.IsTrue(root.TryGet<PdxObject>("test_record", out var testRecord));
-        Assert.AreEqual(6, testRecord!.Properties.Count);
+        Assert.AreEqual(6, testRecord!.Properties.Length);
         
         // Verify we have 4 asteroid_postfix properties, each with array values
-        var asteroidProps = testRecord.Properties
-            .Where(p => p.Key == "asteroid_postfix")
-            .ToList();
+        var asteroidProps = new List<KeyValuePair<PdxString, IPdxElement>>();
+        foreach (var prop in testRecord.Properties)
+        {
+            if (prop.Key.Value == "asteroid_postfix")
+            {
+                asteroidProps.Add(prop);
+            }
+        }
         
         Assert.AreEqual(4, asteroidProps.Count, "Should have 4 asteroid_postfix properties");
         
         // Check the first asteroid_postfix property
         Assert.IsInstanceOfType(asteroidProps[0].Value, typeof(PdxArray));
         var firstArray = (PdxArray)asteroidProps[0].Value;
-        Assert.AreEqual(2, firstArray.Items.Count);
-        Assert.AreEqual("413", ((PdxScalar<string>)firstArray.Items[0]).Value);
-        Assert.AreEqual("3254", ((PdxScalar<string>)firstArray.Items[1]).Value);
+        Assert.AreEqual(2, firstArray.Items.Length);
+        Assert.AreEqual("413", ((PdxString)firstArray.Items[0]).Value);
+        Assert.AreEqual("3254", ((PdxString)firstArray.Items[1]).Value);
+    }
+
+    [TestMethod]
+    public void Parse_StringLiterals_TracksWasQuoted()
+    {
+        // Arrange
+        string input = @"
+        values={
+            quoted=""Hello World""
+            unquoted=Hello_World
+        }";
+        
+        // Act
+        var root = PdxSaveReader.Read(input.AsMemory());
+
+        // Assert
+        Assert.IsInstanceOfType(root, typeof(PdxObject));
+        Assert.AreEqual(1, root.Properties.Length);
+        
+        var valuesProp = root.Properties[0];
+        Assert.AreEqual<string>("values", valuesProp.Key.Value);
+        Assert.IsInstanceOfType(valuesProp.Value, typeof(PdxObject));
+        
+        var values = (PdxObject)valuesProp.Value;
+        Assert.AreEqual(2, values.Properties.Length);
+        
+        // Check quoted string
+        var quotedProp = FindProperty(values.Properties, "quoted");
+        Assert.IsInstanceOfType(quotedProp.Value, typeof(PdxString));
+        var quotedStr = (PdxString)quotedProp.Value;
+        Assert.AreEqual("Hello World", quotedStr.Value);
+        Assert.IsTrue(quotedStr.WasQuoted, "String should track that it was quoted");
+        
+        // Check unquoted string
+        var unquotedProp = FindProperty(values.Properties, "unquoted");
+        Assert.IsInstanceOfType(unquotedProp.Value, typeof(PdxString));
+        var unquotedStr = (PdxString)unquotedProp.Value;
+        Assert.AreEqual("Hello_World", unquotedStr.Value);
+        Assert.IsFalse(unquotedStr.WasQuoted, "String should track that it was not quoted");
     }
 }

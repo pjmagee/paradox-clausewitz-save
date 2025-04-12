@@ -1,32 +1,43 @@
 namespace MageeSoft.PDX.CE2;
 
 /// <summary>
-/// Token structure for the PdxSaveReader.
-/// Reverted to known-good state.
+/// Token types for the Paradox save parser.
 /// </summary>
-internal readonly struct PdxToken
+public enum PdxTokenType
 {
-    public PdxTokenType Type { get; }
-    public int Start { get; }
-    public int Length { get; }
-    // String value, processed (e.g., unescaped) for string literals
-    public string? ProcessedString { get; }
+    Identifier,   // Unquoted strings, keywords like yes/no
+    NumberLiteral, // Numeric values
+    StringLiteral, // Quoted string values
+    CurlyOpen,    // { character
+    CurlyClose,   // } character
+    Equals,       // = character
+    Whitespace,   // Space, tab
+    NewLine,      // CR, LF, CRLF
+    EndOfFile,    // End of input
+    Unknown       // Unexpected character
+}
 
-    // Constructor for non-string tokens or when processed string isn't needed initially
+/// <summary>
+/// Represents a token in a Paradox save file. Stack-allocated for maximum performance.
+/// </summary>
+public readonly ref struct PdxToken
+{
+    /// <summary>The type of token.</summary>
+    public readonly PdxTokenType Type;
+    
+    /// <summary>Start index in the source text.</summary>
+    public readonly int Start;
+    
+    /// <summary>Length of the token.</summary>
+    public readonly int Length;
+    
+    /// <summary>
+    /// Creates a new token.
+    /// </summary>
     public PdxToken(PdxTokenType type, int start, int length)
     {
         Type = type;
         Start = start;
         Length = length;
-        ProcessedString = null; 
     }
-    
-    // Constructor specifically for string literals with processed content
-    public PdxToken(PdxTokenType type, int start, int length, string processedString)
-    {
-        Type = type;
-        Start = start;
-        Length = length;
-        ProcessedString = processedString;
-    }
-}
+} 

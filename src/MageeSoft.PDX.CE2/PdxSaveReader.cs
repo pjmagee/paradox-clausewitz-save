@@ -1,339 +1,449 @@
 using System.Globalization;
-using System.Text; // Potentially needed if creating strings from spans
+using System.Runtime.CompilerServices;
 
 namespace MageeSoft.PDX.CE2;
 
 /// <summary>
-/// Reads Paradox Clausewitz Engine save file data using high-performance zero-allocation techniques.
+/// High-performance reader for Paradox save files.
 /// </summary>
-public class PdxSaveReader
+public static class PdxSaveReader
 {
-    private readonly ReadOnlyMemory<char> _inputMemory;
-    private PdxLexer _lexer; 
-    private PdxToken _currentToken;
-
-    private PdxSaveReader(ReadOnlyMemory<char> inputMemory)
-    {
-        _inputMemory = inputMemory;
-        _lexer = new PdxLexer(inputMemory);
-        _currentToken = _lexer.NextToken(); // Initialize _currentToken
-    }
-
     /// <summary>
-    /// Reads the input memory representing Paradox save data and converts it to a SaveObject.
+    /// Parses a save file from string.
     /// </summary>
-    /// <param name="inputMemory">The save file content as ReadOnlyMemory</param>
-    /// <returns>A SaveObject representing the parsed save data</returns>
-    /// <exception cref="FormatException">Thrown if parsing fails due to invalid format.</exception>
-    public static PdxObject Read(ReadOnlyMemory<char> inputMemory)
+    public static PdxObject Read(string text)
     {
-        if (inputMemory.IsEmpty) return new PdxObject(new List<KeyValuePair<string, PdxElement>>());
-        var trimmedMemory = TrimBomAndWhitespace(inputMemory);
-        if (trimmedMemory.IsEmpty) return new PdxObject(new List<KeyValuePair<string, PdxElement>>());
-        return new PdxSaveReader(trimmedMemory).ParseInternal();
-    }
-
-    // Handles UTF-8 BOM and trims whitespace
-    private static ReadOnlyMemory<char> TrimBomAndWhitespace(ReadOnlyMemory<char> memory)
-    {
-        var span = memory.Span;
-        
-        // Check for UTF-8 BOM (EF BB BF)
-        int start = 0;
-        if (span.Length >= 3 && span[0] == 0xEF && span[1] == 0xBB && span[2] == 0xBF)
-        {
-            start = 3;
-        }
-        
-        // Skip whitespace at the beginning
-        while (start < span.Length && char.IsWhiteSpace(span[start]))
-        {
-            start++;
-        }
-        
-        // If we reached the end, the entire content is whitespace
-        if (start >= span.Length)
-        {
-            return ReadOnlyMemory<char>.Empty;
-        }
-        
-        // Skip whitespace at the end
-        int end = span.Length - 1;
-        while (end > start && char.IsWhiteSpace(span[end]))
-        {
-            end--;
-        }
-        
-        // Return the trimmed slice
-        return memory.Slice(start, end - start + 1);
-    }
-
-    private void ConsumeToken()
-    {
-        _currentToken = _lexer.NextToken();
-    }
-
-    private void SkipWhitespaceAndNewlines()
-    {
-        while (_currentToken.Type == PdxTokenType.Whitespace || _currentToken.Type == PdxTokenType.NewLine)
-        {
-            ConsumeToken();
-        }
-    }
-
-    private ReadOnlySpan<char> GetCurrentTokenSpan() => _inputMemory.Span.Slice(_currentToken.Start, _currentToken.Length);
-
-    // Helper to get the ReadOnlyMemory<char> corresponding to the current token's span
-    private ReadOnlyMemory<char> GetCurrentTokenMemory() => _inputMemory.Slice(_currentToken.Start, _currentToken.Length);
-
-    // Helper to get the string representation of the current token's span
-    private string GetCurrentTokenText() => _inputMemory.Span.Slice(_currentToken.Start, _currentToken.Length).ToString();
-
-    // Top-level parse: a series of key=value pairs.
-    private PdxObject ParseInternal()
-    {
-        List<(ReadOnlyMemory<char> Key, PdxElement Value)> tempItems = new();
-
-        while (_currentToken.Type != PdxTokenType.EndOfFile)
-        {
-            SkipWhitespaceAndNewlines();
-            if (_currentToken.Type == PdxTokenType.EndOfFile) break;
-
-            ReadOnlyMemory<char> keyMemory;
-            if (_currentToken.Type == PdxTokenType.Identifier)
-            {
-                keyMemory = GetCurrentTokenMemory();
-                ConsumeToken(); 
-            }
-            else if (_currentToken.Type == PdxTokenType.StringLiteral)
-            {
-                // Use ProcessedString for the key content, but store as memory
-                string keyString = _currentToken.ProcessedString ?? GetCurrentTokenText();
-                keyMemory = keyString.AsMemory(); 
-                ConsumeToken(); 
-            }
-            else
-            {
-                ConsumeToken(); continue; 
-            }
-
-            SkipWhitespaceAndNewlines();
-            if (_currentToken.Type == PdxTokenType.Equals) ConsumeToken(); 
-            else throw new FormatException($"Expected '=' after key \"{keyMemory.ToString()}\" at position {_currentToken.Start}");
-
-            PdxElement value = ParseValue();
-            tempItems.Add((keyMemory, value)); 
-        }
-        // Use internal constructor
-        return new PdxObject(tempItems);
-    }
-
-    // Parses a value (block or primitive) and infers its type.
-    private PdxElement ParseValue()
-    {
-        SkipWhitespaceAndNewlines();
-        if (_currentToken.Type == PdxTokenType.EndOfFile) return new PdxScalar<string>("");
-        if (_currentToken.Type == PdxTokenType.CurlyOpen) return ParseBlock();
-        if (_currentToken.Type == PdxTokenType.CurlyClose) return new PdxObject(new List<KeyValuePair<string, PdxElement>>());
-
-        if (_currentToken.Type == PdxTokenType.StringLiteral)
-        {
-            string stringValue = _currentToken.ProcessedString ?? GetCurrentTokenText();
-            ConsumeToken(); 
-            SkipWhitespaceAndNewlines();
-            if (Guid.TryParse(stringValue, out Guid guid)) return new PdxScalar<Guid>(guid);
-            if (TryParseDate(stringValue, out DateTime date)) return new PdxScalar<DateTime>(date);
-            return new PdxScalar<string>(stringValue);
-        }
-
-        if (_currentToken.Type == PdxTokenType.NumberLiteral || _currentToken.Type == PdxTokenType.Identifier)
-        {
-            // Use span directly for number/identifier parsing
-            ReadOnlySpan<char> tokenSpan = _inputMemory.Span.Slice(_currentToken.Start, _currentToken.Length);
-            PdxTokenType origType = _currentToken.Type;
-            ConsumeToken(); 
-            SkipWhitespaceAndNewlines(); 
-
-            if (origType == PdxTokenType.Identifier)
-            {
-                if (tokenSpan.Equals("yes".AsSpan(), StringComparison.OrdinalIgnoreCase)) return new PdxScalar<bool>(true);
-                if (tokenSpan.Equals("no".AsSpan(), StringComparison.OrdinalIgnoreCase)) return new PdxScalar<bool>(false);
-                return new PdxScalar<string>(tokenSpan.ToString());
-            }
-            else // NumberLiteral
-            {
-                if (tokenSpan.Contains('.') || tokenSpan.Contains('e') || tokenSpan.Contains('E')) 
-                {
-                    if (float.TryParse(tokenSpan, NumberStyles.Any, CultureInfo.InvariantCulture, out float f)) return new PdxScalar<float>(f);
-                }
-                else 
-                {
-                    if (int.TryParse(tokenSpan, NumberStyles.Any, CultureInfo.InvariantCulture, out int i32)) return new PdxScalar<int>(i32);
-                    if (long.TryParse(tokenSpan, NumberStyles.Any, CultureInfo.InvariantCulture, out long i64)) return new PdxScalar<long>(i64);
-                }
-                return new PdxScalar<string>(tokenSpan.ToString()); // Fallback if parsing fails
-            }
-        }
-        else if (_currentToken.Type == PdxTokenType.Equals)
-        {
-            ReadOnlySpan<char> tokenSpan = GetCurrentTokenSpan(); // Use span
-            ConsumeToken();
-            SkipWhitespaceAndNewlines(); 
-            return new PdxScalar<string>(tokenSpan.ToString()); // Convert only for scalar
-        }
-
-        // Default fallback
-        ReadOnlySpan<char> defaultSpan = GetCurrentTokenSpan(); // Use span
-        ConsumeToken();
-        SkipWhitespaceAndNewlines(); 
-        return new PdxScalar<string>(defaultSpan.ToString()); // Convert only for scalar
-    }
-
-    // Parses a block delimited by '{' and '}'. Determines if it's an Object or Array.
-    private PdxElement ParseBlock()
-    {
-        ConsumeToken(); // Eat '{'
-        SkipWhitespaceAndNewlines();
-        if (_currentToken.Type == PdxTokenType.CurlyClose) { ConsumeToken(); return new PdxObject(new List<KeyValuePair<string, PdxElement>>()); } 
-
-        bool isProperty = false;
-        if (_currentToken.Type == PdxTokenType.Identifier || _currentToken.Type == PdxTokenType.NumberLiteral || _currentToken.Type == PdxTokenType.StringLiteral)
-        {
-            int savedPosition = _lexer.CurrentPosition;
-            PdxToken savedToken = _currentToken;
-            PdxToken next = _lexer.NextToken(); 
-            while (next.Type == PdxTokenType.Whitespace || next.Type == PdxTokenType.NewLine) next = _lexer.NextToken(); 
-            if (next.Type == PdxTokenType.Equals) isProperty = true;
-            _lexer.SetPosition(savedPosition);
-            _currentToken = savedToken;
-        }
-
-        var tempProperties = new List<(ReadOnlyMemory<char> Key, PdxElement Value)>();
-        var values = new List<PdxElement>();
-
-        if (isProperty)
-        {
-            while (_currentToken.Type != PdxTokenType.CurlyClose && _currentToken.Type != PdxTokenType.EndOfFile)
-            {
-                SkipWhitespaceAndNewlines();
-                if (_currentToken.Type == PdxTokenType.CurlyClose || _currentToken.Type == PdxTokenType.EndOfFile) break;
-
-                ReadOnlyMemory<char> keyMemory;
-                if (_currentToken.Type == PdxTokenType.Identifier || _currentToken.Type == PdxTokenType.NumberLiteral)
-                {
-                    keyMemory = GetCurrentTokenMemory();
-                    ConsumeToken();
-                }
-                else if (_currentToken.Type == PdxTokenType.StringLiteral)
-                {
-                    // Use ProcessedString, store as memory
-                    string keyString = _currentToken.ProcessedString ?? GetCurrentTokenText();
-                    keyMemory = keyString.AsMemory();
-                    ConsumeToken();
-                }
-                else throw new FormatException($"Unexpected token type for key: {_currentToken.Type} at position {_currentToken.Start}");
-
-                SkipWhitespaceAndNewlines();
-                if (_currentToken.Type != PdxTokenType.Equals) throw new FormatException($"Expected '=' after key \"{keyMemory.ToString()}\" inside block at position {_currentToken.Start}");
-                ConsumeToken(); // Consume '='
-                
-                PdxElement value = ParseValue();
-                tempProperties.Add((keyMemory, value)); 
-            }
-        }
-        else
-        {
-            while (_currentToken.Type != PdxTokenType.CurlyClose && _currentToken.Type != PdxTokenType.EndOfFile)
-            {
-                values.Add(ParseValue());
-                SkipWhitespaceAndNewlines(); 
-            }
-        }
-        
-        if (_currentToken.Type == PdxTokenType.CurlyClose) ConsumeToken(); 
-
-        if (tempProperties.Count > 0 && values.Count > 0)
-        {
-            for (int i = 0; i < values.Count; i++)
-            {
-                tempProperties.Add((new ReadOnlyMemory<char>(new[] { (char)('0' + i) }), values[i]));
-            }
-            return new PdxObject(tempProperties); // Use internal constructor
-        }
-        else if (tempProperties.Count > 0)
-        {
-            return new PdxObject(tempProperties); // Use internal constructor
-        }
-        else 
-        {
-            return new PdxArray(values);
-        }
-    }
-
-    // Helper to reconstruct escaped string if ValueMemory wasn't usable
-    private string ReconstructEscapedString(ReadOnlySpan<char> rawSpanWithQuotes)
-    {
-        // Basic validation: must start and end with quotes for StringLiteral span
-        if (rawSpanWithQuotes.Length < 2 || rawSpanWithQuotes[0] != '"' || rawSpanWithQuotes[^1] != '"')
-        {
-             // This case shouldn't typically be hit if the input is from a StringLiteral token span
-             return rawSpanWithQuotes.ToString(); 
-        }
-        
-        // Get the content span excluding the quotes
-        var contentSpan = rawSpanWithQuotes[1..^1];
-        
-        // Optimization: If no backslash exists, no escapes are present
-        if (!contentSpan.Contains('\\')) return contentSpan.ToString();
-
-        // Allocate StringBuilder only if escapes are confirmed
-        StringBuilder sb = new StringBuilder(contentSpan.Length); // Initial capacity
-        for(int i = 0; i < contentSpan.Length; i++)
-        {
-            if (contentSpan[i] == '\\' && i + 1 < contentSpan.Length)
-            {
-                i++; // Move to the escaped character
-                // Handle specific escapes recognised by Paradox format
-                if (contentSpan[i] == '"') sb.Append('"');       // Escaped quote
-                else if (contentSpan[i] == '\\') sb.Append('\\');   // Escaped backslash
-                // else if (contentSpan[i] == 'n') sb.Append('\n'); // Example: Add newline if needed
-                // else if (contentSpan[i] == 't') sb.Append('\t'); // Example: Add tab if needed
-                else sb.Append(contentSpan[i]); // Treat other escaped chars literally for now
-            }
-            else
-            {
-                sb.Append(contentSpan[i]); // Append non-escaped character
-            }
-        }
-        return sb.ToString();
-    }
-
-    // Helper for parsing GUID using span to avoid string allocation
-    private static bool TryParseGuid(ReadOnlySpan<char> span, out Guid result)
-    {
-        // Guid.TryParse supports ReadOnlySpan<char>
-        return Guid.TryParse(span, out result);
-    }
-
-    // Helper for parsing multiple date formats efficiently using spans
-    private static bool TryParseDate(ReadOnlySpan<char> span, out DateTime date)
-    {
-        // Use InvariantCulture to ensure consistent parsing regardless of system locale
-        string[] formats = { "yyyy.M.d", "yyyy.MM.dd", "yyyy.MM.d", "yyyy.M.dd" };
-        // DateTime.TryParseExact supports ReadOnlySpan<char>
-        foreach (var format in formats)
-        {
-            if (DateTime.TryParseExact(span, format, CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
-                return true;
-        }
-        date = default;
-        return false;
+        if (string.IsNullOrEmpty(text))
+            return new PdxObject();
+            
+        return Read(text.AsSpan());
     }
     
-    // Overload for string parsing needed for reconstructed escaped strings
-    private static bool TryParseDate(string s, out DateTime date)
+    /// <summary>
+    /// Parses a save file from memory.
+    /// </summary>
+    public static PdxObject Read(ReadOnlyMemory<char> memory)
     {
-        string[] formats = { "yyyy.M.d", "yyyy.MM.dd", "yyyy.MM.d", "yyyy.M.dd" };
-        return DateTime.TryParseExact(s, formats, CultureInfo.InvariantCulture, DateTimeStyles.None, out date);
+        return Read(memory.Span);
+    }
+    
+    /// <summary>
+    /// Parses a save file from span.
+    /// </summary>
+    public static PdxObject Read(ReadOnlySpan<char> span)
+    {
+        if (span.IsEmpty)
+            return new PdxObject();
+            
+        // Trim BOM and whitespace
+        span = TrimBomAndWhitespace(span);
+        
+        if (span.IsEmpty)
+            return new PdxObject();
+            
+        var parser = new Parser(span);
+        return parser.ParseRoot();
+    }
+    
+    /// <summary>
+    /// Trims the BOM and whitespace from a span.
+    /// </summary>
+    private static ReadOnlySpan<char> TrimBomAndWhitespace(ReadOnlySpan<char> span)
+    {
+        // Skip BOM if present
+        int start = 0;
+        if (span.Length >= 3 && span[0] == 0xEF && span[1] == 0xBB && span[2] == 0xBF)
+            start = 3;
+            
+        // Skip leading whitespace
+        while (start < span.Length && char.IsWhiteSpace(span[start]))
+            start++;
+            
+        if (start >= span.Length)
+            return ReadOnlySpan<char>.Empty;
+            
+        // Skip trailing whitespace
+        int end = span.Length - 1;
+        while (end > start && char.IsWhiteSpace(span[end]))
+            end--;
+            
+        return span.Slice(start, end - start + 1);
+    }
+    
+    /// <summary>
+    /// Internal ref struct parser that works on spans.
+    /// </summary>
+    private ref struct Parser
+    {
+        readonly static ReadOnlyMemory<char> YesBool = "yes".AsMemory();
+        readonly static ReadOnlyMemory<char> NoBool = "no".AsMemory();
+        
+        private readonly ReadOnlySpan<char> _inputSpan;
+        private PdxLexer _lexer;
+        private PdxToken _currentToken;
+        
+        public Parser(ReadOnlySpan<char> inputSpan)
+        {
+            _inputSpan = inputSpan;
+            _lexer = new PdxLexer(inputSpan);
+            _currentToken = _lexer.NextToken();
+        }
+        
+        /// <summary>
+        /// Advances to the next token.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void ConsumeToken()
+        {
+            _currentToken = _lexer.NextToken();
+        }
+        
+        /// <summary>
+        /// Skips whitespace and newline tokens.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void SkipWhitespaceAndNewlines()
+        {
+            while (_currentToken.Type is PdxTokenType.Whitespace or PdxTokenType.NewLine)
+                ConsumeToken();
+        }
+        
+        /// <summary>
+        /// Gets the span for the current token.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private ReadOnlySpan<char> GetCurrentTokenSpan()
+        {
+            return _inputSpan.Slice(_currentToken.Start, _currentToken.Length);
+        }
+
+        /// <summary>
+        /// Parses the root object.
+        /// </summary>
+        public PdxObject ParseRoot()
+        {
+            var properties = new List<KeyValuePair<PdxString, IPdxElement>>();
+            
+            while (_currentToken.Type != PdxTokenType.EndOfFile)
+            {
+                SkipWhitespaceAndNewlines();
+                
+                if (_currentToken.Type == PdxTokenType.EndOfFile)
+                    break;
+                    
+                if (_currentToken.Type is PdxTokenType.Identifier or PdxTokenType.StringLiteral)
+                {
+                    // Get the key with proper quoting information
+                    bool wasQuoted = _currentToken.Type == PdxTokenType.StringLiteral;
+                    ReadOnlySpan<char> keySpan;
+                    
+                    if (wasQuoted)
+                    {
+                        // Handle quoted keys - remove the quotes
+                        var span = GetCurrentTokenSpan();
+                        
+                        // Remove quotes from string literals
+                        if (span.Length >= 2 && span[0] == '"' && span[^1] == '"')
+                            keySpan = span.Slice(1, span.Length - 2);
+                        else
+                            keySpan = span;
+                    }
+                    else
+                    {
+                        // Regular identifier
+                        keySpan = GetCurrentTokenSpan();
+                    }
+                    
+                    // Create a PdxString for the key
+                    var key = new PdxString(keySpan, wasQuoted);
+                    
+                    ConsumeToken();
+                    
+                    SkipWhitespaceAndNewlines();
+                    
+                    // Skip equals sign if present
+                    if (_currentToken.Type == PdxTokenType.Equals)
+                        ConsumeToken();
+                        
+                    // Parse the value
+                    var value = ParseValue();
+                    properties.Add(new KeyValuePair<PdxString, IPdxElement>(key, value));
+                }
+                else
+                {
+                    // Skip unexpected tokens
+                    ConsumeToken();
+                }
+            }
+            
+            return new PdxObject(properties);
+        }
+        
+        /// <summary>
+        /// Parses a value.
+        /// </summary>
+        private IPdxElement ParseValue()
+        {
+            SkipWhitespaceAndNewlines();
+            
+            switch (_currentToken.Type)
+            {
+                case PdxTokenType.EndOfFile:
+                    return new PdxString(string.Empty);
+                    
+                case PdxTokenType.CurlyOpen:
+                    return ParseBlock();
+                    
+                case PdxTokenType.StringLiteral:
+                    {
+                        ReadOnlySpan<char> span = GetCurrentTokenSpan();
+                        ConsumeToken();
+                        
+                        // Handle quoted string
+                        //string str = span.ToString();
+                        bool wasQuoted = true;
+                        
+                        // Remove quotes
+                        if (span.Length >= 2 && span[0] == '"' && span[span.Length - 1] == '"')
+                            span = span.Slice(1, span.Length - 2);
+                            
+                        // Try parsing as specialized types
+                        if (Guid.TryParse(span, out var guid))
+                            return new PdxGuid(guid);
+                            
+                        if (TryParseDate(span, out var date))
+                            return new PdxDate(date);
+                            
+                        return new PdxString(span, wasQuoted);
+                    }
+                    
+                case PdxTokenType.Identifier:
+                    {
+                        var span = GetCurrentTokenSpan();
+                        ConsumeToken();
+                        
+                        // Handle yes/no values
+                        if (span.Equals(YesBool.Span, StringComparison.OrdinalIgnoreCase))
+                            return new PdxBool(true);
+                            
+                        if (span.Equals(NoBool.Span, StringComparison.OrdinalIgnoreCase))
+                            return new PdxBool(false);
+                            
+                        // identifiers = not quoted
+                        return new PdxString(span, wasQuoted: false);
+                    }
+                    
+                case PdxTokenType.NumberLiteral:
+                    {
+                        var span = GetCurrentTokenSpan();
+                        ConsumeToken();
+                        
+                        // Check if it contains decimal point or exponent
+                        bool hasDecimal = false;
+                        bool hasExponent = false;
+                        
+                        for (int i = 0; i < span.Length; i++)
+                        {
+                            if (span[i] == '.')
+                                hasDecimal = true;
+                            else if (span[i] == 'e' || span[i] == 'E')
+                                hasExponent = true;
+                        }
+                        
+                        // Parse as appropriate numeric type
+                        if (hasDecimal || hasExponent)
+                        {
+                            if (float.TryParse(span, NumberStyles.Float, CultureInfo.InvariantCulture, out var f))
+                                return new PdxFloat(f);
+                        }
+                        else
+                        {
+                            if (int.TryParse(span, NumberStyles.Integer, CultureInfo.InvariantCulture, out var i))
+                                return new PdxInt(i);
+                                
+                            if (long.TryParse(span, NumberStyles.Integer, CultureInfo.InvariantCulture, out var l))
+                                return new PdxLong(l);
+                        }
+                        
+                        // Fallback to string if parsing fails
+                        return new PdxString(span, wasQuoted: false);
+                    }
+                    
+                default:
+                    // Handle unexpected tokens
+                    var defaultSpan = GetCurrentTokenSpan();
+                    ConsumeToken();
+                    return new PdxString(defaultSpan, wasQuoted: false);
+            }
+        }
+        
+        /// <summary>
+        /// Parses a block (object or array).
+        /// </summary>
+        private IPdxElement ParseBlock()
+        {
+            ConsumeToken(); // Skip opening brace
+            SkipWhitespaceAndNewlines();
+            
+            // Handle empty block
+            if (_currentToken.Type == PdxTokenType.CurlyClose)
+            {
+                ConsumeToken(); // Skip closing brace
+                return new PdxObject();
+            }
+            
+            var properties = new List<KeyValuePair<PdxString, IPdxElement>>();
+            var items = new List<IPdxElement>();
+            bool isObject = false;
+            bool isArray = false;
+            
+            while (_currentToken.Type != PdxTokenType.CurlyClose && _currentToken.Type != PdxTokenType.EndOfFile)
+            {
+                SkipWhitespaceAndNewlines();
+                
+                if (_currentToken.Type == PdxTokenType.CurlyClose || _currentToken.Type == PdxTokenType.EndOfFile)
+                    break;
+                    
+                // Look ahead to see if we have a property (key=value) or a simple value
+                bool hasEquals = PeekForEquals();
+                
+                if (hasEquals)
+                {
+                    // This is a property
+                    isObject = true;
+                    
+                    // Get the key with proper quoting information
+                    bool wasQuoted = _currentToken.Type == PdxTokenType.StringLiteral;
+                    ReadOnlySpan<char> keySpan;
+                    
+                    if (wasQuoted)
+                    {
+                        // Handle quoted keys - remove the quotes
+                        var span = GetCurrentTokenSpan();
+                        
+                        // Remove quotes from string literals
+                        if (span.Length >= 2 && span[0] == '"' && span[^1] == '"')
+                            keySpan = span.Slice(1, span.Length - 2);
+                        else
+                            keySpan = span;
+                    }
+                    else
+                    {
+                        // Regular identifier
+                        keySpan = GetCurrentTokenSpan();
+                    }
+                    
+                    // Create a PdxString for the key
+                    var key = new PdxString(keySpan, wasQuoted);
+                    
+                    ConsumeToken();
+                    
+                    SkipWhitespaceAndNewlines();
+                    
+                    // Skip equals sign
+                    ConsumeToken();
+                    
+                    // Parse the value
+                    var value = ParseValue();
+                    properties.Add(new KeyValuePair<PdxString, IPdxElement>(key, value));
+                }
+                else
+                {
+                    // This is a simple value
+                    isArray = true;
+                    
+                    // Parse the value
+                    var value = ParseValue();
+                    items.Add(value);
+                }
+            }
+            
+            // Skip closing brace
+            if (_currentToken.Type == PdxTokenType.CurlyClose)
+                ConsumeToken();
+                
+            // Handle mixed content
+            if (isObject && isArray)
+            {
+                // If we have both properties and items, add the items as indexed properties
+                for (int i = 0; i < items.Count; i++)
+                {
+                    // Use a PdxString for the index
+                    var indexKey = new PdxString(i.ToString(), false);
+                    properties.Add(new KeyValuePair<PdxString, IPdxElement>(indexKey, items[i]));
+                }
+                return new PdxObject(properties);
+            }
+            else if (isObject)
+            {
+                // If we have only properties, return an object
+                return new PdxObject(properties);
+            }
+            else
+            {
+                // If we have only items, return an array
+                return new PdxArray(items);
+            }
+        }
+        
+        /// <summary>
+        /// Looks ahead to see if the current token is followed by an equals sign.
+        /// </summary>
+        private bool PeekForEquals()
+        {
+            if (_currentToken.Type is not (PdxTokenType.Identifier or PdxTokenType.StringLiteral or PdxTokenType.NumberLiteral))
+                return false;
+                
+            // Save current state
+            int savedPosition = _lexer.Position;
+            PdxToken savedToken = _currentToken;
+            
+            // Skip current token
+            ConsumeToken();
+            
+            // Skip whitespace and newlines
+            SkipWhitespaceAndNewlines();
+            
+            // Check if we have an equals sign
+            bool hasEquals = _currentToken.Type == PdxTokenType.Equals;
+            
+            // Restore state
+            _lexer.SetPosition(savedPosition);
+            _currentToken = savedToken;
+            
+            return hasEquals;
+        }
+    }
+
+    readonly static string[] Formats = ["yyyy.M.d", "yyyy.MM.dd", "yyyy.MM.d", "yyyy.M.dd"];
+    
+    /// <summary>
+    /// Tries to parse a date from a string.
+    /// </summary>
+    private static bool TryParseDate(ReadOnlySpan<char> span, out DateTime date)
+    {
+        try
+        {
+            // Try to parse YYYY.MM.DD format
+            if (span.Length >= 10 && span[4] == '.' && span[7] == '.')
+            {
+                if (int.TryParse(span.Slice(0, 4), out int year) &&
+                    int.TryParse(span.Slice(5, 2), out int month) &&
+                    int.TryParse(span.Slice(8, 2), out int day) &&
+                    year > 0 && month > 0 && month <= 12 && day > 0 && day <= DateTime.DaysInMonth(year, month))
+                {
+                    date = new DateTime(year, month, day);
+                    return true;
+                }
+            }
+            
+            // Try to parse YYYY.M.D format with standard formats
+            return DateTime.TryParseExact(span, Formats, CultureInfo.InvariantCulture, DateTimeStyles.None, out date);
+        }
+        catch
+        {
+            date = DateTime.MinValue;
+            return false;
+        }
     }
 } 

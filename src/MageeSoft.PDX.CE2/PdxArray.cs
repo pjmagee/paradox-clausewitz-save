@@ -1,58 +1,62 @@
+using System.Collections.Immutable;
+
 namespace MageeSoft.PDX.CE2;
 
 /// <summary>
 /// Represents an array in a Paradox save file (V2).
 /// </summary>
-public class PdxArray : PdxElement, IEquatable<PdxArray>
+public sealed class PdxArray : IPdxElement, IEquatable<PdxArray>
 {
     /// <summary>
-    /// Gets the items in this array.
+    /// Gets the items in the array.
     /// </summary>
-    public List<PdxElement> Items { get; }
+    public ImmutableArray<IPdxElement> Items { get; }
     
     /// <summary>
-    /// Gets the type of this save element.
+    /// Gets the array's type.
     /// </summary>
-    public override PdxType Type => PdxType.Array;
-
+    public PdxType Type => PdxType.Array;
+    
     /// <summary>
-    /// Initializes a new instance of the <see cref="PdxArray"/> class.
+    /// Creates a new array with the specified items.
     /// </summary>
-    /// <param name="items">The items to initialize with.</param>
-    public PdxArray(List<PdxElement> items)
+    public PdxArray(IEnumerable<IPdxElement> items)
     {
-        Items = items;
+        Items = items != null 
+            ? ImmutableArray.CreateRange(items) 
+            : ImmutableArray<IPdxElement>.Empty;
     }
-
+    
     /// <summary>
-    /// Determines whether the specified object is equal to the current object.
+    /// Creates a new empty array.
+    /// </summary>
+    public PdxArray() : this(Array.Empty<IPdxElement>()) { }
+    
+    /// <summary>
+    /// Compares this array to another array for equality.
     /// </summary>
     public bool Equals(PdxArray? other)
     {
         if (other is null) return false;
         if (ReferenceEquals(this, other)) return true;
-
-        if (Items.Count != other.Items.Count)
-            return false;
-
-        // Compare array items in order
-        for (int i = 0; i < Items.Count; i++)
+        if (Items.Length != other.Items.Length) return false;
+        
+        for (int i = 0; i < Items.Length; i++)
         {
-            if (!PdxElementComparer.Equals(Items[i], other.Items[i]))
+            if (!PdxElementEqualityComparer.Equals(Items[i], other.Items[i]))
                 return false;
         }
-
+        
         return true;
     }
-
+    
     /// <summary>
-    /// Determines whether the specified object is equal to the current object.
+    /// Compares this array to another object for equality.
     /// </summary>
-    public override bool Equals(object? obj) => 
-        obj is PdxArray other && Equals(other);
-
+    public override bool Equals(object? obj) => obj is PdxArray array && Equals(array);
+    
     /// <summary>
-    /// Returns a hash code for this object.
+    /// Gets a hash code for this array.
     /// </summary>
     public override int GetHashCode()
     {
@@ -63,9 +67,4 @@ public class PdxArray : PdxElement, IEquatable<PdxArray>
         }
         return hash.ToHashCode();
     }
-
-    public static bool operator ==(PdxArray? left, PdxArray? right) =>
-        left?.Equals(right) ?? right is null;
-
-    public static bool operator !=(PdxArray? left, PdxArray? right) => !(left == right);
 } 
