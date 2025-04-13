@@ -1,5 +1,6 @@
 using System.IO.Compression;
 using MageeSoft.PDX.CE.Reader.Games.Stellaris;
+using MageeSoft.PDX.CE;
 
 namespace MageeSoft.PDX.CE.Reader.Tests;
 
@@ -60,10 +61,10 @@ public class GameSaveZipTests
                 var gameState = documents.GameStateDocument.Root;
                 Assert.IsNotNull(gameState);
             
-                gameState.TryGetSaveObject("galaxy", out var galaxyObj);
+                gameState.TryGet<PdxObject>("galaxy", out var galaxyObj);
                 Assert.IsNotNull(galaxyObj);
             
-                galaxyObj.TryGetSaveObject("name", out var name);
+                galaxyObj.TryGet<PdxObject>("name", out var name);
                 Assert.IsNotNull(name);
             
                 name.TryGetString("key", out var galaxyName);

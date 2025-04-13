@@ -145,7 +145,7 @@ public class KeyValueScalarTests
             default: methodName = $"TryGet{expectedTryGetGenericType}"; break;
         }
         
-        string expectedConditionPattern = $"saveObject.{methodName}(@\"{keyName}\", out var {expectedOutVarName})";
+        string expectedConditionPattern = $"PdxObject.{methodName}(@\"{keyName}\", out var {expectedOutVarName})";
 
         foreach (var statement in loadMethod.Body.Statements.OfType<IfStatementSyntax>())
         {
@@ -156,7 +156,7 @@ public class KeyValueScalarTests
 
             // Check if the condition matches our pattern
             if (normalizedCondition.Contains(normalizedExpected) || 
-                normalizedCondition.Contains($"saveObject.{methodName}(\"{keyName}\""))
+                normalizedCondition.Contains($"PdxObject.{methodName}(\"{keyName}\""))
             {
                 ifStatement = statement;
                 break;

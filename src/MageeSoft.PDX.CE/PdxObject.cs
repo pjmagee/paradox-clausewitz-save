@@ -1,7 +1,7 @@
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 
-namespace MageeSoft.PDX.CE2;
+namespace MageeSoft.PDX.CE;
 
 /// <summary>
 /// Represents an object in a Paradox save file (V2).
@@ -12,27 +12,33 @@ public sealed class PdxObject : IPdxElement, IEquatable<PdxObject>
     /// Gets the properties in the object.
     /// </summary>
     public ImmutableArray<KeyValuePair<PdxString, IPdxElement>> Properties { get; }
-    
+
     /// <summary>
     /// Gets the object's type.
     /// </summary>
     public PdxType Type => PdxType.Object;
-    
+
     /// <summary>
     /// Creates a new object with the specified properties.
     /// </summary>
-    public PdxObject(IEnumerable<KeyValuePair<PdxString, IPdxElement>> properties)
+    public PdxObject(ImmutableArray<KeyValuePair<PdxString, IPdxElement>> properties)
     {
-        Properties = properties != null 
-            ? ImmutableArray.CreateRange(properties) 
-            : ImmutableArray<KeyValuePair<PdxString, IPdxElement>>.Empty;
+        Properties = properties;
     }
-    
+
     /// <summary>
     /// Creates a new empty object.
     /// </summary>
-    public PdxObject() : this(Array.Empty<KeyValuePair<PdxString, IPdxElement>>()) { }
-    
+    public PdxObject() : this(ImmutableArray<KeyValuePair<PdxString, IPdxElement>>.Empty)
+    {
+
+    }
+
+    public string? ToSaveString()
+    {
+        return new PdxSaveWriter().Write(this);
+    }
+
     /// <summary>
     /// Tries to get a property value by key.
     /// </summary>
@@ -46,11 +52,11 @@ public sealed class PdxObject : IPdxElement, IEquatable<PdxObject>
                 return true;
             }
         }
-        
+
         value = null;
         return false;
     }
-    
+
     /// <summary>
     /// Tries to get a property value by key and type.
     /// </summary>
@@ -61,11 +67,11 @@ public sealed class PdxObject : IPdxElement, IEquatable<PdxObject>
             value = typedValue;
             return true;
         }
-        
+
         value = null;
         return false;
     }
-    
+
     /// <summary>
     /// Tries to get a string value directly.
     /// </summary>
@@ -76,11 +82,11 @@ public sealed class PdxObject : IPdxElement, IEquatable<PdxObject>
             value = str.Value;
             return true;
         }
-        
+
         value = null;
         return false;
     }
-    
+
     /// <summary>
     /// Tries to get a boolean value directly.
     /// </summary>
@@ -91,11 +97,11 @@ public sealed class PdxObject : IPdxElement, IEquatable<PdxObject>
             value = b.Value;
             return true;
         }
-        
+
         value = default;
         return false;
     }
-    
+
     /// <summary>
     /// Tries to get an integer value directly.
     /// </summary>
@@ -106,11 +112,11 @@ public sealed class PdxObject : IPdxElement, IEquatable<PdxObject>
             value = i.Value;
             return true;
         }
-        
+
         value = default;
         return false;
     }
-    
+
     /// <summary>
     /// Tries to get a long value directly.
     /// </summary>
@@ -121,11 +127,11 @@ public sealed class PdxObject : IPdxElement, IEquatable<PdxObject>
             value = l.Value;
             return true;
         }
-        
+
         value = default;
         return false;
     }
-    
+
     /// <summary>
     /// Tries to get a float value directly.
     /// </summary>
@@ -136,11 +142,11 @@ public sealed class PdxObject : IPdxElement, IEquatable<PdxObject>
             value = f.Value;
             return true;
         }
-        
+
         value = default;
         return false;
     }
-    
+
     /// <summary>
     /// Tries to get a date value directly.
     /// </summary>
@@ -151,11 +157,11 @@ public sealed class PdxObject : IPdxElement, IEquatable<PdxObject>
             value = d.Value;
             return true;
         }
-        
+
         value = default;
         return false;
     }
-    
+
     /// <summary>
     /// Tries to get a guid value directly.
     /// </summary>
@@ -166,11 +172,11 @@ public sealed class PdxObject : IPdxElement, IEquatable<PdxObject>
             value = g.Value;
             return true;
         }
-        
+
         value = default;
         return false;
     }
-    
+
     /// <summary>
     /// Compares this object to another object for equality.
     /// </summary>
@@ -179,35 +185,37 @@ public sealed class PdxObject : IPdxElement, IEquatable<PdxObject>
         if (other is null) return false;
         if (ReferenceEquals(this, other)) return true;
         if (Properties.Length != other.Properties.Length) return false;
-        
+
         for (int i = 0; i < Properties.Length; i++)
         {
             var thisKvp = Properties[i];
             var otherKvp = other.Properties[i];
-            
+
             if (!thisKvp.Key.Equals(otherKvp.Key)) return false;
             if (!PdxElementEqualityComparer.Equals(thisKvp.Value, otherKvp.Value)) return false;
         }
-        
+
         return true;
     }
-    
+
     /// <summary>
     /// Compares this object to another object for equality.
     /// </summary>
     public override bool Equals(object? obj) => obj is PdxObject other && Equals(other);
-    
+
     /// <summary>
     /// Gets a hash code for this object.
     /// </summary>
     public override int GetHashCode()
     {
         HashCode hash = new();
+
         foreach (var kvp in Properties)
         {
             hash.Add(kvp.Key);
             hash.Add(kvp.Value);
         }
+
         return hash.ToHashCode();
     }
-} 
+}

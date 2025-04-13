@@ -13,7 +13,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\MageeSoft.PDX.CE\MageeSoft.PDX.CE.csproj" />
-    <ProjectReference Include="..\MageeSoft.PDX.CE2\MageeSoft.PDX.CE2.csproj" />
   </ItemGroup>
 
   <ItemGroup>

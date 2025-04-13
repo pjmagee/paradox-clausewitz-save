@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Text;
 
-namespace MageeSoft.PDX.CE2;
+namespace MageeSoft.PDX.CE;
 
 /// <summary>
 /// Writes Paradox save elements to text.

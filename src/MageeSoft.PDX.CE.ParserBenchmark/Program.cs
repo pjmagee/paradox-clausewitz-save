@@ -1,6 +1,5 @@
 ﻿using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
-using MageeSoft.PDX.CE2;
 using MageeSoft.PDX.CE;
 
 BenchmarkRunner.Run<ParserBenchmarks>(args: args);
@@ -27,15 +26,9 @@ public class ParserBenchmarks
         Console.WriteLine($"Test file size: {_gameStateContent.Length:N0} bytes");
     }
     
-    [Benchmark(Baseline = true, Description = "V1 Parser (string)")]
-    public SaveObject ParserV1()
-    {
-        return Parser.Parse(_gameStateContent);
-    }
-    
     [Benchmark(Description = "V2 Parser (ReadOnlyMemory)")]
-    public PdxObject ParserV2()
+    public void ParserV2()
     {
-        return PdxSaveReader.Read(_gameStateMemory);
+        _ = PdxSaveReader.Read(_gameStateMemory);
     }
 }

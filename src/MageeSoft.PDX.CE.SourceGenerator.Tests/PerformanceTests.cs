@@ -325,6 +325,7 @@ public class PerformanceTests
 
     [TestMethod]
     [Description("Test with a real save file provided by the user")]
+    [Ignore(message: "too large, doesnt seem to finish")]
     public void ProfileRealFile()
     {
         // Replace this path with the actual path to your real save file

@@ -12,6 +12,10 @@
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
+        <PackageReference Update="Microsoft.NET.Test.Sdk" Version="17.14.0-preview-25107-01" />
+        <PackageReference Update="Microsoft.Testing.Extensions.TrxReport" Version="1.7.0-preview.25167.10" />
+        <PackageReference Update="MSTest.TestAdapter" Version="3.9.0-preview.25167.10" />
+        <PackageReference Update="MSTest.TestFramework" Version="3.9.0-preview.25167.10" />
     </ItemGroup>
     
     <ItemGroup>

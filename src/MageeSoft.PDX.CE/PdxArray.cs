@@ -1,6 +1,6 @@
 using System.Collections.Immutable;
 
-namespace MageeSoft.PDX.CE2;
+namespace MageeSoft.PDX.CE;
 
 /// <summary>
 /// Represents an array in a Paradox save file (V2).
@@ -20,17 +20,18 @@ public sealed class PdxArray : IPdxElement, IEquatable<PdxArray>
     /// <summary>
     /// Creates a new array with the specified items.
     /// </summary>
-    public PdxArray(IEnumerable<IPdxElement> items)
+    public PdxArray(ImmutableArray<IPdxElement> items)
     {
-        Items = items != null 
-            ? ImmutableArray.CreateRange(items) 
-            : ImmutableArray<IPdxElement>.Empty;
+        Items = items;
     }
-    
+
     /// <summary>
     /// Creates a new empty array.
     /// </summary>
-    public PdxArray() : this(Array.Empty<IPdxElement>()) { }
+    public PdxArray() : this(ImmutableArray<IPdxElement>.Empty)
+    {
+        
+    }
     
     /// <summary>
     /// Compares this array to another array for equality.

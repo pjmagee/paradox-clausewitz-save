@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 
-namespace MageeSoft.PDX.CE2;
+namespace MageeSoft.PDX.CE;
 
 /// <summary>
 /// Static helper class for comparing PDX elements.

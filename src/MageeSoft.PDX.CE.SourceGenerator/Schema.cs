@@ -109,7 +109,6 @@ namespace MageeSoft.PDX.CE.SourceGenerator
         /// <summary>Represents an array/list structure (key = { value1 value2 ... }).</summary>
         Array,
         /// <summary>Represents a dictionary-like object where keys are integers (key = { 1 = ... 2 = ... }).</summary>
-        DictionaryIntKey,
         /// <summary>Represents a dictionary-like object where keys are numeric (int or long) (key = { 123 = ... 987 = ... }).</summary>
         DictionaryNumericKey, // Potentially merge with IntKey if longs aren't needed as keys
         /// <summary>Represents a standard dictionary-like object with string keys (key = { subkey1 = ... subkey2 = ... }).</summary>
@@ -123,6 +122,10 @@ namespace MageeSoft.PDX.CE.SourceGenerator
         /// <summary>Represents repeated keys mapped to a list of objects (key = { ... } key = { ... } ...).</summary>
         FlatRepeatedObjectList, // e.g., pop = {..} pop = {..} -> List<Pop>
         /// <summary>Represents repeated keys mapped to a list of arrays/lists (key = { a b } key = { c d } ...).</summary>
-        RepeatedArrayList // e.g., list = { a b } list = { c d } -> List<List<string>>
+        RepeatedArrayList,
+        /// <summary>Represents a dictionary with integer keys.</summary>
+        DictionaryIntKey,
+        /// <summary>Represents a dictionary with long keys.</summary>
+        DictionaryLongKey
     }
 } 

@@ -1,3 +1,5 @@
+using MageeSoft.PDX.CE;
+
 namespace MageeSoft.PDX.CE.Tests;
 
 [TestClass]
@@ -15,11 +17,11 @@ public class ModelSerializerTests
             var originalContent = NormalizeLineEndings(ReadTestFile(filename));
             
             // Act
-            SaveObject element = Parser.Parse(originalContent);
-            string serialized = NormalizeLineEndings(element.ToSaveString());
+            var element = PdxSaveReader.Read(originalContent);
+            string serialized = NormalizeLineEndings(element.ToString()!);
             
-            SaveObject reparsed = Parser.Parse(serialized);
-            string reserialized = NormalizeLineEndings(reparsed.ToSaveString());
+            var reparsed = PdxSaveReader.Read(serialized);
+            string reserialized = NormalizeLineEndings(reparsed.ToString()!);
 
             try
             {

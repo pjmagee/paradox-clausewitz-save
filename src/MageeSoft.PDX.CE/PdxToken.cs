@@ -1,21 +1,4 @@
-namespace MageeSoft.PDX.CE2;
-
-/// <summary>
-/// Token types for the Paradox save parser.
-/// </summary>
-public enum PdxTokenType
-{
-    Identifier,   // Unquoted strings, keywords like yes/no
-    NumberLiteral, // Numeric values
-    StringLiteral, // Quoted string values
-    CurlyOpen,    // { character
-    CurlyClose,   // } character
-    Equals,       // = character
-    Whitespace,   // Space, tab
-    NewLine,      // CR, LF, CRLF
-    EndOfFile,    // End of input
-    Unknown       // Unexpected character
-}
+namespace MageeSoft.PDX.CE;
 
 /// <summary>
 /// Represents a token in a Paradox save file. Stack-allocated for maximum performance.

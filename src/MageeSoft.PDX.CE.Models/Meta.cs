@@ -11,5 +11,4 @@ namespace MageeSoft.PDX.CE.Models;
 [GameStateDocument("meta.csf")]
 public partial class Meta
 {
-
 }

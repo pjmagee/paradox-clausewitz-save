@@ -1,4 +1,5 @@
 using MageeSoft.PDX.CE.Reader.Games.Stellaris;
+using MageeSoft.PDX.CE;
 
 namespace MageeSoft.PDX.CE.Reader;
 
@@ -11,7 +12,7 @@ public class GameStateDocument
     ///  The root object of the parsed document.
     ///  This is the top-level object that contains all other properties
     /// </summary>
-    public SaveObject Root { get; }
+    public PdxObject Root { get; }
     
     /// <summary>
     ///  Creates a new instance of the GameStateDocument class with the specified root object.
@@ -22,7 +23,7 @@ public class GameStateDocument
     /// <exception cref="ArgumentException">
     ///  Thrown when the root object is null.
     /// </exception>
-    private GameStateDocument(SaveObject root)
+    private GameStateDocument(PdxObject root)
     {
         Root = root ?? throw new ArgumentException("Root object cannot be null", nameof(root));
     }
@@ -32,7 +33,7 @@ public class GameStateDocument
         if (string.IsNullOrWhiteSpace(input))
             throw new ArgumentException("Input cannot be null or empty", nameof(input));
         
-        return new GameStateDocument(Parser.Parse(input));
+        return new GameStateDocument(PdxSaveReader.Read(input));
     }
 
     /// <summary>
