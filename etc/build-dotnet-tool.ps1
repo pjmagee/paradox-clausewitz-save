@@ -6,9 +6,9 @@ param (
 # Use Join-Path for cross-platform path handling
 $RootDir = Join-Path -Path (Get-Location) -ChildPath ".."
 $SrcDir = Join-Path -Path $RootDir -ChildPath "src"
-$SolutionPath = Join-Path -Path $SrcDir -ChildPath "MageeSoft.Paradox.Clausewitz.Save.slnx"
-$ProjectPath = Join-Path -Path $SrcDir -ChildPath "MageeSoft.Paradox.Clausewitz.Save.Cli"
-$CsprojPath = Join-Path -Path $ProjectPath -ChildPath "MageeSoft.Paradox.Clausewitz.Save.Cli.csproj"
+$SolutionPath = Join-Path -Path $SrcDir -ChildPath "MageeSoft.PDX.CE.slnx"
+$ProjectPath = Join-Path -Path $SrcDir -ChildPath "MageeSoft.PDX.CE.Cli"
+$CsprojPath = Join-Path -Path $ProjectPath -ChildPath "MageeSoft.PDX.CE.Cli.csproj"
 
 # Check if GitVersion.Tool is installed
 if (-not (dotnet tool list --global | Select-String -Pattern "gitversion")) {
@@ -49,10 +49,10 @@ if ($LASTEXITCODE -eq 0) {
             
             # Show installation instructions
             Write-Host "`nTo install the tool globally:" -ForegroundColor Yellow
-            Write-Host "dotnet tool install --global --add-source $NupkgDir MageeSoft.Paradox.Clausewitz.Save.Cli" -ForegroundColor Yellow
+            Write-Host "dotnet tool install --global --add-source $NupkgDir MageeSoft.PDX.CE.Cli" -ForegroundColor Yellow
             
             Write-Host "`nTo update the tool if already installed:" -ForegroundColor Yellow
-            Write-Host "dotnet tool update --global --add-source $NupkgDir MageeSoft.Paradox.Clausewitz.Save.Cli" -ForegroundColor Yellow
+            Write-Host "dotnet tool update --global --add-source $NupkgDir MageeSoft.PDX.CE.Cli" -ForegroundColor Yellow
         } else {
             Write-Host "Build completed but no packages found in $NupkgDir" -ForegroundColor Yellow
         }

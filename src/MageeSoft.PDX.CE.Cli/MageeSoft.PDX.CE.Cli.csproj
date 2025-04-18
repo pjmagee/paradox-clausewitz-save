@@ -11,7 +11,7 @@
     <AssemblyName>mageesoft-pdx-ce-sav</AssemblyName>
 
     <!-- Common settings -->
-    <Authors>pjmagee</Authors>
+    <Authors>Patrick Magee</Authors>
     <Description>A command-line tool for parsing and analyzing paradox clausewitz engine game save files.</Description>
 
      <!-- Version Information - Using GitVersion -->
@@ -26,8 +26,7 @@
 
   <PropertyGroup Condition="'$(Configuration)'=='Release' And '$(PackAsTool)'=='true'">
     <PackAsTool>true</PackAsTool>
-    <ToolCommandName>mageesoft-pdx-ce-sav</ToolCommandName>
-    <PackageTags>stellaris ck3 hoi4 paradox clausewitz engine game save parser</PackageTags>
+    <PackageTags>stellaris ck3 hoi4 vic3 eu4 paradox clausewitz engine game save parser</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageProjectUrl>https://github.com/pjmagee/paradox-clausewitz-sav</PackageProjectUrl>
@@ -51,22 +50,17 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\MageeSoft.PDX.CE\MageeSoft.PDX.CE.csproj" />
+    <ProjectReference Include="..\MageeSoft.PDX.CE.Save\MageeSoft.PDX.CE.Save.csproj" />
+  </ItemGroup>
+  
+  <ItemGroup>
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
     <PackageReference Include="System.CommandLine.Hosting" Version="0.4.0-alpha.22272.1" />
-    <PackageReference Include="GitVersion.MsBuild" Version="6.0.5">
+    <PackageReference Include="GitVersion.MsBuild" Version="6.2.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\MageeSoft.PDX.CE\MageeSoft.PDX.CE.csproj" />
-    <ProjectReference Include="..\MageeSoft.PDX.CE.Reader\MageeSoft.PDX.CE.Reader.csproj" />
-    <ProjectReference Include="..\MageeSoft.PDX.CE.Save\MageeSoft.PDX.CE.Save.csproj" />
   </ItemGroup>
 
   <!-- Trimming settings -->

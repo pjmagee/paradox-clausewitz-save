@@ -1,8 +1,14 @@
 {
   "name": "paradox-clausewitz-sav",
-  "engineVersion": "v0.17.0",
+  "engineVersion": "v0.18.2",
   "sdk": {
     "source": "go"
   },
+  "dependencies": [
+    {
+      "name": "agent-workspace",
+      "source": "agent-workspace"
+    }
+  ],
   "source": ".dagger"
 }

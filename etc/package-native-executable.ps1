@@ -39,7 +39,7 @@ $gitVersionInfo = dotnet gitversion /output json | ConvertFrom-Json
 $versionString = "$($gitVersionInfo.MajorMinorPatch)"
 
 # Set up file paths and names
-$baseFileName = "paradox-clausewitz-sav_${versionString}_${Platform}_${Architecture}"
+$baseFileName = "mageesoft-pdx-ce-sav_${versionString}_${Platform}_${Architecture}"
 $packageExtension = if ($Platform -eq "windows") { ".zip" } else { ".tar.gz" }
 $outputFileName = "$baseFileName$packageExtension"
 $outputPath = Join-Path -Path $OutputDir -ChildPath $outputFileName
@@ -50,7 +50,7 @@ $tempDir = Join-Path -Path $tempRoot -ChildPath ([guid]::NewGuid().ToString())
 New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
 
 # Copy the binary to the temporary directory with the desired name
-$targetFileName = if ($Platform -eq "windows") { "paradox-clausewitz-sav.exe" } else { "paradox-clausewitz-sav" }
+$targetFileName = if ($Platform -eq "windows") { "mageesoft-pdx-ce-sav.exe" } else { "mageesoft-pdx-ce-sav" }
 $targetPath = Join-Path -Path $tempDir -ChildPath $targetFileName
 Copy-Item -Path $InputFile -Destination $targetPath -Force
 

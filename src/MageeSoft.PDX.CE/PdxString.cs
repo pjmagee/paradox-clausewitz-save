@@ -1,5 +1,3 @@
-using System.Runtime.CompilerServices;
-
 namespace MageeSoft.PDX.CE;
 
 /// <summary>
@@ -59,7 +57,7 @@ public readonly struct PdxString : IPdxScalar, IEquatable<PdxString>
     /// <summary>
     /// Gets a string representation of this string.
     /// </summary>
-    public override string ToString() => Value;
+    public override string ToString() => WasQuoted ? $"\"{Value}\"" : Value;
     
     /// <summary>
     /// Implicitly converts a PdxString to a string.
@@ -70,4 +68,10 @@ public readonly struct PdxString : IPdxScalar, IEquatable<PdxString>
     /// Implicitly converts a string to a PdxString.
     /// </summary>
     public static implicit operator PdxString(string str) => new PdxString(str);
+    
+    public static bool operator ==(string left, PdxString right) => left.Equals(right.Value);
+    public static bool operator !=(string left, PdxString right) => !left.Equals(right.Value);
+    
+    public static bool operator ==(PdxString left, string right) => left.Value.Equals(right);
+    public static bool operator !=(PdxString left, string right) => !left.Value.Equals(right);
 }

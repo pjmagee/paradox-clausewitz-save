@@ -8,9 +8,9 @@ param (
 )
 
 $RootDir = Join-Path -Path $SrcDir -ChildPath ".."
-$SolutionPath = Join-Path -Path $SrcDir -ChildPath "MageeSoft.Paradox.Clausewitz.Save.slnx"
-$ProjectPath = Join-Path -Path $SrcDir -ChildPath "MageeSoft.Paradox.Clausewitz.Save.Cli"
-$CsprojPath = Join-Path -Path $ProjectPath -ChildPath "MageeSoft.Paradox.Clausewitz.Save.Cli.csproj"
+$SolutionPath = Join-Path -Path $SrcDir -ChildPath "MageeSoft.PDX.CE.slnx"
+$ProjectPath = Join-Path -Path $SrcDir -ChildPath "MageeSoft.PDX.CE.Cli"
+$CsprojPath = Join-Path -Path $ProjectPath -ChildPath "MageeSoft.PDX.CE.Cli.csproj"
 $BinDir = Join-Path -Path $RootDir -ChildPath "bin"
 $AotOutputDir = Join-Path -Path $BinDir -ChildPath "aot-$RuntimeIdentifier"
 
@@ -52,9 +52,9 @@ dotnet publish $CsprojPath -c $Configuration -r $RuntimeIdentifier -o $AotOutput
 
 if ($LASTEXITCODE -eq 0) {
     $ExeName = if ($RuntimeIdentifier.StartsWith("win")) { 
-        "paradox-clausewitz-sav.exe" 
+        "mageesoft-pdx-ce-sav.exe" 
     } else { 
-        "paradox-clausewitz-sav" 
+        "mageesoft-pdx-ce-sav" 
     }
 
     $ExePath = Join-Path -Path $AotOutputDir -ChildPath $ExeName

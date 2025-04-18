@@ -1,5 +1,4 @@
-using MageeSoft.PDX.CE.Reader.Games.Stellaris;
-using MageeSoft.PDX.CE.Models;
+using MageeSoft.PDX.CE.Save.Games.Stellaris;
 
 namespace MageeSoft.PDX.CE.Save;
 
@@ -11,12 +10,12 @@ public class StellarisSave
     /// <summary>
     /// The meta information of the save file.
     /// </summary>
-    public Meta Meta { get; private set; } = null!;
+    public PdxObject Meta { get; private set; } = null!;
     
     /// <summary>
     ///  The gamestate information of the save file.
     /// </summary>
-    public Gamestate GameState { get; private set; } = null!;
+    public PdxObject GameState { get; private set; } = null!;
 
     // Private constructor to prevent external instantiation.
     private StellarisSave()
@@ -52,16 +51,16 @@ public class StellarisSave
         
         try 
         {
-            using( var zip = GameSaveZip.Open(saveFile))
+            using ( var zip = GameSaveZip.Open(saveFile))
             {
                 var documents = zip.GetDocuments();
 
-                Meta? meta = null;
-                Gamestate? gameState = null;
+                PdxObject? meta = null;
+                PdxObject? gameState = null;
                     
                 try
                 {
-                    meta = Meta.Load(documents.MetaDocument.Root);
+                    meta = documents.MetaDocument.Root;
                 }
                 catch (Exception ex)
                 {
@@ -70,7 +69,7 @@ public class StellarisSave
                     
                 try
                 {
-                    gameState = Gamestate.Load(documents.GameStateDocument.Root);
+                    gameState = documents.GameStateDocument.Root;
                 }
                 catch (Exception ex)
                 {
@@ -84,5 +83,24 @@ public class StellarisSave
         {
             throw new InvalidDataException("Invalid save file format", ex);
         }
+    }
+
+    public void WriteTo(string path)
+    {
+        using (var fs = new FileStream(path, FileMode.Create, FileAccess.Write))
+        using (var zip = new System.IO.Compression.ZipArchive(fs, System.IO.Compression.ZipArchiveMode.Create))
+        {
+            var metaEntry = zip.CreateEntry("meta");
+            using (var writer = new StreamWriter(metaEntry.Open()))
+                writer.Write(Meta.ToString());
+            var gamestateEntry = zip.CreateEntry("gamestate");
+            using (var writer = new StreamWriter(gamestateEntry.Open()))
+                writer.Write(GameState.ToString());
+        }
+    }
+
+    public void WriteTo(FileInfo file)
+    {
+        WriteTo(file.FullName);
     }
 }

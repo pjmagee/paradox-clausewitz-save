@@ -25,36 +25,35 @@ public class GamePathResolver
         }
         
         paths.AddRange(GetSteamSavePaths(gameName));
-        
         return paths.Where(Directory.Exists).Distinct().ToList();
     }
 
     private static IEnumerable<string> GetWindowsSavePaths(string gameName, string homeDir)
     {
-        var normalizedGameName = NormalizeGameName(gameName);
+        gameName = NormalizeGameName(gameName);
         
         // Standard Paradox save locations
         var paths = new List<string>
         {
             // Regular Documents folder
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Paradox Interactive", normalizedGameName, "save games"),
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Paradox Interactive", gameName, "save games"),
             
             // OneDrive-synced Documents folder
-            Path.Combine(homeDir, "OneDrive", "Documents", "Paradox Interactive", normalizedGameName, "save games"),
+            Path.Combine(homeDir, "OneDrive", "Documents", "Paradox Interactive", gameName, "save games"),
             
             // Alternate OneDrive location
-            Path.Combine(homeDir, "OneDrive\\Documents", "Paradox Interactive", normalizedGameName, "save games"),
+            Path.Combine(homeDir, "OneDrive\\Documents", "Paradox Interactive", gameName, "save games"),
             
             // Legacy Documents path
-            Path.Combine(homeDir, "Documents", "Paradox Interactive", normalizedGameName, "save games"),
+            Path.Combine(homeDir, "Documents", "Paradox Interactive", gameName, "save games"),
             
             // Some Windows 10/11 users have this path
-            Path.Combine(homeDir, "OneDrive - Personal", "Documents", "Paradox Interactive", normalizedGameName, "save games")
+            Path.Combine(homeDir, "OneDrive - Personal", "Documents", "Paradox Interactive", gameName, "save games")
         };
         
         // Check Windows Store installation path
         var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        var windowsStorePath = Path.Combine(localAppData, "Packages", GetMicrosoftStorePackageName(gameName), "LocalCache", "Local", "Paradox Interactive", normalizedGameName, "save games");
+        var windowsStorePath = Path.Combine(localAppData, "Packages", GetMicrosoftStorePackageName(gameName), "LocalCache", "Local", "Paradox Interactive", gameName, "save games");
         paths.Add(windowsStorePath);
 
         return paths;
@@ -90,9 +89,8 @@ public class GamePathResolver
         var steamPaths = new List<string>();
         var gameId = GetSteamGameId(gameName);
         var normalizedGameName = NormalizeGameName(gameName);
-        
-        if (string.IsNullOrEmpty(gameId))
-            return Array.Empty<string>();
+
+        if (string.IsNullOrEmpty(gameId)) return steamPaths;
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {

@@ -12,7 +12,7 @@ namespace MageeSoft.PDX.CE.Cli.Commands;
 /// </summary>
 public class JsonCommand : BaseCommand
 {
-    public JsonCommand() : base("json", "Export a save file as JSON")
+    public JsonCommand() : base("json", "Export a save file summary as JSON")
     {
         AddOption(new GameOption());
         AddOption(new NumberOption());

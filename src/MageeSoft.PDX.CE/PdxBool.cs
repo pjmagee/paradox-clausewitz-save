@@ -15,4 +15,6 @@ public readonly struct PdxBool(bool value) : IPdxScalar, IEquatable<PdxBool>
     
     public static implicit operator bool(PdxBool b) => b.Value;
     public static implicit operator PdxBool(bool b) => new PdxBool(b);
+    
+    public string ToSaveString() => Value ? "yes" : "no";
 }

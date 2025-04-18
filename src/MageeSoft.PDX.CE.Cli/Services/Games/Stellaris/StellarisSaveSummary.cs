@@ -1,5 +1,3 @@
-using MageeSoft.PDX.CE.Models;
-
 namespace MageeSoft.PDX.CE.Cli.Services.Games.Stellaris;
 
 public class StellarisSaveSummary
@@ -10,7 +8,7 @@ public class StellarisSaveSummary
     public DateTime LastModified { get; set; }
     public string Error { get; set; } = string.Empty;
     public bool HasError => !string.IsNullOrEmpty(Error);
-    public Meta? Meta { get; set; }
+    
     public string GetFormattedSize()
     {
         string[] sizes = { "B", "KB", "MB", "GB" };

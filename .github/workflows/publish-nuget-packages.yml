@@ -37,19 +37,16 @@ jobs:
         echo "MajorMinorPatch: ${{ steps.gitversion.outputs.majorMinorPatch }}"
 
     - name: Restore dependencies
-      run: dotnet restore ./src/MageeSoft.Paradox.Clausewitz.Save.slnx
+      run: dotnet restore ./src/MageeSoft.PDX.CE.slnx
 
     - name: Build
-      run: dotnet build ./src/MageeSoft.Paradox.Clausewitz.Save.slnx --configuration Release --no-restore
+      run: dotnet build ./src/MageeSoft.PDX.CE.slnx --configuration Release --no-restore
 
     - name: Test
-      run: dotnet test ./src/MageeSoft.Paradox.Clausewitz.Save.slnx --configuration Release --no-build
+      run: dotnet test ./src/MageeSoft.PDX.CE.slnx --configuration Release --no-build
 
     - name: Pack Parser
-      run: dotnet pack ./src/MageeSoft.Paradox.Clausewitz.Save.Parser/MageeSoft.Paradox.Clausewitz.Save.Parser.csproj --configuration Release --output nupkgs /p:Version=${{ steps.gitversion.outputs.semVer }}
-
-    - name: Pack Reader
-      run: dotnet pack ./src/MageeSoft.Paradox.Clausewitz.Save.Reader/MageeSoft.Paradox.Clausewitz.Save.Reader.csproj --configuration Release --output nupkgs /p:Version=${{ steps.gitversion.outputs.semVer }}
+      run: dotnet pack ./src/MageeSoft.PDX.CE/MageeSoft.PDX.CE.csproj --configuration Release --output nupkgs /p:Version=${{ steps.gitversion.outputs.semVer }}
 
     - name: Setup GitHub NuGet source
       run: |

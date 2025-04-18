@@ -1,27 +1,15 @@
 ﻿<Project Sdk="MSTest.Sdk">
     
     <PropertyGroup>
-        <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <LangVersion>latest</LangVersion>
+        <TargetFramework>net10.0</TargetFramework>
     </PropertyGroup>
     
-    <ItemGroup>
+    <ItemGroup>        
         <ProjectReference Include="..\MageeSoft.PDX.CE\MageeSoft.PDX.CE.csproj"/>
-    </ItemGroup>
-
-    <ItemGroup>
-        <PackageReference Include="coverlet.msbuild" Version="6.0.4">
-            <PrivateAssets>all</PrivateAssets>
-            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        </PackageReference>
-        <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="17.14.2"/>
-        <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="1.7.0-preview.25167.10" />
-        <PackageReference Update="Microsoft.NET.Test.Sdk" Version="17.14.0-preview-25107-01" />
-        <PackageReference Update="Microsoft.Testing.Extensions.TrxReport" Version="1.7.0-preview.25167.10" />
-        <PackageReference Update="MSTest.TestAdapter" Version="3.9.0-preview.25167.10" />
-        <PackageReference Update="MSTest.TestFramework" Version="3.9.0-preview.25167.10" />
+        <ProjectReference Include="..\MageeSoft.PDX.CE.Cli\MageeSoft.PDX.CE.Cli.csproj" />
     </ItemGroup>
 
     <!-- Copy Stellaris test data files to output directory -->
@@ -29,6 +17,11 @@
         <Content Include="Stellaris\**\*">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
+    </ItemGroup>
+    <ItemGroup>
+      <None Update="Stellaris\TestData\ironman.sav">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
     
 </Project>

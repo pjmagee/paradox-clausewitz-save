@@ -15,4 +15,6 @@ public readonly struct PdxGuid(Guid value) : IPdxScalar, IEquatable<PdxGuid>
     
     public static implicit operator Guid(PdxGuid g) => g.Value;
     public static implicit operator PdxGuid(Guid g) => new PdxGuid(g);
+
+    public string ToSaveString() => $"\"{Value}\"";
 }

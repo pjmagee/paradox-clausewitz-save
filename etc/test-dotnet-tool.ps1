@@ -1,5 +1,5 @@
 param(
-    [string]$ProjectPath = (Join-Path -Path ".." -ChildPath "src/MageeSoft.Paradox.Clausewitz.Save.Cli"),
+    [string]$ProjectPath = (Join-Path -Path ".." -ChildPath "src/MageeSoft.PDX.CE.Cli"),
     [switch]$Clean,
     [string]$CommandToTest = "info"
 )
@@ -10,8 +10,8 @@ $OutputDir = Join-Path -Path $ProjectPath -ChildPath "bin"
 $NupkgDir = Join-Path -Path $ProjectPath -ChildPath "nupkg"
 $ToolManifestPath = Join-Path -Path (Get-Location) -ChildPath ".config/dotnet-tools.json"
 $ObjDir = Join-Path -Path $ProjectPath -ChildPath "obj"
-$PackageId = "mageesoft.paradox.clausewitz.save.cli"
-$ToolCommand = "paradox-clausewitz-sav"
+$PackageId = "mageesoft.pdx.ce.cli"
+$ToolCommand = "mageesoft-pdx-ce-sav"
 
 # Show configuration
 Write-Host "Test Tool Configuration:" -ForegroundColor Cyan
@@ -77,7 +77,7 @@ $packageFileName = $packageFile.Name
 Write-Host "`nCreated package: $packageFileName" -ForegroundColor Green
 
 # Extract the exact version from the filename
-$packageNamePattern = "(?i)MageeSoft\.Paradox\.Clausewitz\.Save\.Cli\.(.+?)\.nupkg"
+$packageNamePattern = "(?i)MageeSoft\.PDX\.CE\.Cli\.(.+?)\.nupkg"
 if ($packageFileName -match $packageNamePattern) {
     $actualVersion = $matches[1]
     Write-Host "Extracted version: $actualVersion" -ForegroundColor Yellow

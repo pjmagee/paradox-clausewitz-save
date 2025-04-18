@@ -17,4 +17,5 @@ public readonly struct PdxLong(long value) : IPdxScalar, IEquatable<PdxLong>
     
     public static implicit operator long(PdxLong i) => i.Value;
     public static implicit operator PdxLong(long i) => new PdxLong(i);
+    public string ToSaveString() => Value.ToString(CultureInfo.InvariantCulture);
 }

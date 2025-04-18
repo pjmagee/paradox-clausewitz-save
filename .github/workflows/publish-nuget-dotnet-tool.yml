@@ -32,16 +32,16 @@ jobs:
       uses: gittools/actions/gitversion/execute@v3
         
     - name: Restore dependencies
-      run: dotnet restore ./src/MageeSoft.Paradox.Clausewitz.Save.slnx
+      run: dotnet restore ./src/MageeSoft.PDX.CE.slnx
       
     - name: Build
-      run: dotnet build ./src/MageeSoft.Paradox.Clausewitz.Save.slnx --configuration Release --no-restore
+      run: dotnet build ./src/MageeSoft.PDX.CE.slnx --configuration Release --no-restore
       
     - name: Test
-      run: dotnet test ./src/MageeSoft.Paradox.Clausewitz.Save.slnx --configuration Release --no-build
+      run: dotnet test ./src/MageeSoft.PDX.CE.slnx --configuration Release --no-build
       
     - name: Pack
-      run: dotnet pack ./src/MageeSoft.Paradox.Clausewitz.Save.Cli/MageeSoft.Paradox.Clausewitz.Save.Cli.csproj --configuration Release /p:PackAsTool=true --output ./nupkg /p:Version=${{ steps.gitversion.outputs.semVer }}
+      run: dotnet pack ./src/MageeSoft.PDX.CE.Cli/MageeSoft.PDX.CE.Cli.csproj --configuration Release /p:PackAsTool=true --output ./nupkg /p:Version=${{ steps.gitversion.outputs.semVer }}
             
     - name: Setup GitHub NuGet source
       run: |

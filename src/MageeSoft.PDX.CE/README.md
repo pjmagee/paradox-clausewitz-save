@@ -15,10 +15,10 @@ A high-performance library for parsing Paradox Clausewitz Engine save files.
 ## Usage Example
 
 ```csharp
-using MageeSoft.PDX.CE2;
+using MageeSoft.PDX.CE;
 
 // Read a save file
-string saveContent = File.ReadAllText("game_save.txt");
+string saveContent = File.ReadAllText("gamestate");
 PdxObject saveObject = PdxSaveReader.Read(saveContent.AsMemory());
 
 // Access data

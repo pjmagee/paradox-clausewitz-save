@@ -1,5 +1,3 @@
-using System.Collections.Immutable;
-
 namespace MageeSoft.PDX.CE;
 
 /// <summary>
@@ -10,7 +8,7 @@ public sealed class PdxArray : IPdxElement, IEquatable<PdxArray>
     /// <summary>
     /// Gets the items in the array.
     /// </summary>
-    public ImmutableArray<IPdxElement> Items { get; }
+    public List<IPdxElement> Items { get; }
     
     /// <summary>
     /// Gets the array's type.
@@ -20,7 +18,7 @@ public sealed class PdxArray : IPdxElement, IEquatable<PdxArray>
     /// <summary>
     /// Creates a new array with the specified items.
     /// </summary>
-    public PdxArray(ImmutableArray<IPdxElement> items)
+    public PdxArray(List<IPdxElement> items)
     {
         Items = items;
     }
@@ -28,7 +26,7 @@ public sealed class PdxArray : IPdxElement, IEquatable<PdxArray>
     /// <summary>
     /// Creates a new empty array.
     /// </summary>
-    public PdxArray() : this(ImmutableArray<IPdxElement>.Empty)
+    public PdxArray() : this([])
     {
         
     }
@@ -40,9 +38,9 @@ public sealed class PdxArray : IPdxElement, IEquatable<PdxArray>
     {
         if (other is null) return false;
         if (ReferenceEquals(this, other)) return true;
-        if (Items.Length != other.Items.Length) return false;
+        if (Items.Count != other.Items.Count) return false;
         
-        for (int i = 0; i < Items.Length; i++)
+        for (int i = 0; i < Items.Count; i++)
         {
             if (!PdxElementEqualityComparer.Equals(Items[i], other.Items[i]))
                 return false;
@@ -67,5 +65,10 @@ public sealed class PdxArray : IPdxElement, IEquatable<PdxArray>
             hash.Add(item);
         }
         return hash.ToHashCode();
+    }
+
+    public override string ToString()
+    {
+        return new PdxSaveWriter().Write(this);
     }
 } 

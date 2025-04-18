@@ -1,9 +1,7 @@
-using MageeSoft.PDX.CE;
-
 namespace MageeSoft.PDX.CE.Tests;
 
 [TestClass]
-public class ModelSerializerTests
+public class TestDataTests
 {
     private static string ReadTestFile(string filename) => File.ReadAllText(Path.Combine("Stellaris", "TestData", filename));
     
@@ -26,8 +24,8 @@ public class ModelSerializerTests
             try
             {
                 // Then verify the serialized output is stable
-                var serializedLines = serialized.Split('\n');
-                var reserializedLines = reserialized.Split('\n');
+                var serializedLines = serialized.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+                var reserializedLines = reserialized.Split('\n', StringSplitOptions.RemoveEmptyEntries);
 
                 Assert.AreEqual(serializedLines.Length, reserializedLines.Length,$"Serialized output should have the same number of lines as the original for file {filename}");
 

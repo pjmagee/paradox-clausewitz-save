@@ -17,4 +17,5 @@ public readonly struct PdxInt(int value) : IPdxScalar, IEquatable<PdxInt>
     
     public static implicit operator int(PdxInt i) => i.Value;
     public static implicit operator PdxInt(int i) => new PdxInt(i);
+    public string ToSaveString() => Value.ToString(CultureInfo.InvariantCulture);
 }

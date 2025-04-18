@@ -1,4 +1,3 @@
-using System.Collections.Immutable;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 
@@ -74,7 +73,7 @@ public static class PdxSaveReader
     /// <summary>
     /// Internal ref struct parser that works on spans.
     /// </summary>
-    private ref struct Parser
+    internal ref struct Parser
     {
         readonly static ReadOnlyMemory<char> YesBool = "yes".AsMemory();
         readonly static ReadOnlyMemory<char> NoBool = "no".AsMemory();
@@ -123,7 +122,7 @@ public static class PdxSaveReader
         /// </summary>
         public PdxObject ParseRoot()
         {
-            var propertiesBuilder = ImmutableArray.CreateBuilder<KeyValuePair<PdxString, IPdxElement>>();
+            var properties = new List<KeyValuePair<IPdxScalar, IPdxElement>>();
 
             while (_currentToken.Type != PdxTokenType.EndOfFile)
             {
@@ -132,33 +131,10 @@ public static class PdxSaveReader
                 if (_currentToken.Type == PdxTokenType.EndOfFile)
                     break;
 
-                if (_currentToken.Type is PdxTokenType.Identifier or PdxTokenType.StringLiteral)
+                if (_currentToken.Type is PdxTokenType.Identifier or PdxTokenType.StringLiteral or PdxTokenType.NumberLiteral)
                 {
-                    // Get the key with proper quoting information
-                    bool wasQuoted = _currentToken.Type == PdxTokenType.StringLiteral;
-                    ReadOnlySpan<char> keySpan;
-
-                    if (wasQuoted)
-                    {
-                        // Handle quoted keys - remove the quotes
-                        var span = GetCurrentTokenSpan();
-
-                        // Remove quotes from string literals
-                        if (span.Length >= 2 && span[0] == '"' && span[^1] == '"')
-                            keySpan = span.Slice(1, span.Length - 2);
-                        else
-                            keySpan = span;
-                    }
-                    else
-                    {
-                        // Regular identifier
-                        keySpan = GetCurrentTokenSpan();
-                    }
-
-                    // Create a PdxString for the key
-                    var key = new PdxString(keySpan, wasQuoted);
-
-                    ConsumeToken();
+                    // Parse the key as an appropriate scalar type
+                    IPdxScalar key = ParseKey();
 
                     SkipWhitespaceAndNewlines();
 
@@ -168,7 +144,7 @@ public static class PdxSaveReader
 
                     // Parse the value
                     var value = ParseValue();
-                    propertiesBuilder.Add(new KeyValuePair<PdxString, IPdxElement>(key, value));
+                    properties.Add(new KeyValuePair<IPdxScalar, IPdxElement>(key, value));
                 }
                 else
                 {
@@ -177,13 +153,96 @@ public static class PdxSaveReader
                 }
             }
 
-            return new PdxObject(propertiesBuilder.ToImmutable());
+            return new PdxObject(properties);
+        }
+
+        /// <summary>
+        /// Parses a key as an appropriate scalar type.
+        /// </summary>
+        private IPdxScalar ParseKey()
+        {
+            switch (_currentToken.Type)
+            {
+                case PdxTokenType.StringLiteral:
+                {
+                    ReadOnlySpan<char> span = GetCurrentTokenSpan();
+                    ConsumeToken();
+
+                    // Handle quoted string
+                    bool wasQuoted = true;
+
+                    // Remove quotes
+                    if (span.Length >= 2 && span[0] == '"' && span[span.Length - 1] == '"')
+                        span = span.Slice(1, span.Length - 2);
+
+                    return new PdxString(span, wasQuoted);
+                }
+
+                case PdxTokenType.Identifier:
+                {
+                    var span = GetCurrentTokenSpan();
+                    ConsumeToken();
+
+                    // Check if it could be parsed as a number
+                    if (int.TryParse(span, NumberStyles.Integer, CultureInfo.InvariantCulture, out var intValue))
+                    {
+                        return new PdxInt(intValue);
+                    }
+
+                    if (long.TryParse(span, NumberStyles.Integer, CultureInfo.InvariantCulture, out var longValue))
+                    {
+                        return new PdxLong(longValue);
+                    }
+
+                    // Identifier = not quoted string
+                    return new PdxString(span, wasQuoted: false);
+                }
+
+                case PdxTokenType.NumberLiteral:
+                {
+                    var span = GetCurrentTokenSpan();
+                    ConsumeToken();
+
+                    // Check if it contains decimal point or exponent
+                    bool hasDecimal = false;
+
+                    for (int i = 0; i < span.Length; i++)
+                    {
+                        if (span[i] == '.')
+                            hasDecimal = true;
+                    }
+
+                    // Parse as appropriate numeric type
+                    if (hasDecimal)
+                    {
+                        if (float.TryParse(span, NumberStyles.Float, CultureInfo.InvariantCulture, out var floatValue))
+                            return new PdxFloat(floatValue);
+                    }
+                    else
+                    {
+                        if (int.TryParse(span, NumberStyles.Integer, CultureInfo.InvariantCulture, out var intValue))
+                            return new PdxInt(intValue);
+
+                        if (long.TryParse(span, NumberStyles.Integer, CultureInfo.InvariantCulture, out var longValue))
+                            return new PdxLong(longValue);
+                    }
+
+                    // Fallback to string if parsing fails
+                    return new PdxString(span, wasQuoted: false);
+                }
+
+                default:
+                    // Handle unexpected tokens
+                    var defaultSpan = GetCurrentTokenSpan();
+                    ConsumeToken();
+                    return new PdxString(defaultSpan, wasQuoted: false);
+            }
         }
 
         /// <summary>
         /// Parses a value.
         /// </summary>
-        private IPdxElement ParseValue()
+        public IPdxElement ParseValue()
         {
             SkipWhitespaceAndNewlines();
 
@@ -293,8 +352,8 @@ public static class PdxSaveReader
                 return new PdxObject();
             }
 
-            var propertiesBuilder = ImmutableArray.CreateBuilder<KeyValuePair<PdxString, IPdxElement>>();
-            var itemsBuilder = ImmutableArray.CreateBuilder<IPdxElement>();
+            var properties = new List<KeyValuePair<IPdxScalar, IPdxElement>>();
+            var items = new List<IPdxElement>();
             bool isObject = false;
             bool isArray = false;
 
@@ -313,31 +372,8 @@ public static class PdxSaveReader
                     // This is a property
                     isObject = true;
 
-                    // Get the key with proper quoting information
-                    bool wasQuoted = _currentToken.Type == PdxTokenType.StringLiteral;
-                    ReadOnlySpan<char> keySpan;
-
-                    if (wasQuoted)
-                    {
-                        // Handle quoted keys - remove the quotes
-                        var span = GetCurrentTokenSpan();
-
-                        // Remove quotes from string literals
-                        if (span.Length >= 2 && span[0] == '"' && span[^1] == '"')
-                            keySpan = span.Slice(1, span.Length - 2);
-                        else
-                            keySpan = span;
-                    }
-                    else
-                    {
-                        // Regular identifier
-                        keySpan = GetCurrentTokenSpan();
-                    }
-
-                    // Create a PdxString for the key
-                    var key = new PdxString(keySpan, wasQuoted);
-
-                    ConsumeToken();
+                    // Parse the key as an appropriate scalar type
+                    IPdxScalar key = ParseKey();
 
                     SkipWhitespaceAndNewlines();
 
@@ -346,7 +382,7 @@ public static class PdxSaveReader
 
                     // Parse the value
                     var value = ParseValue();
-                    propertiesBuilder.Add(new KeyValuePair<PdxString, IPdxElement>(key, value));
+                    properties.Add(new KeyValuePair<IPdxScalar, IPdxElement>(key, value));
                 }
                 else
                 {
@@ -355,7 +391,7 @@ public static class PdxSaveReader
 
                     // Parse the value
                     var value = ParseValue();
-                    itemsBuilder.Add(value);
+                    items.Add(value);
                 }
             }
 
@@ -367,24 +403,24 @@ public static class PdxSaveReader
             if (isObject && isArray)
             {
                 // If we have both properties and items, add the items as indexed properties
-                for (int i = 0; i < itemsBuilder.Count; i++)
+                for (int i = 0; i < items.Count; i++)
                 {
                     // Use a PdxString for the index
                     var indexKey = new PdxString(i.ToString(), wasQuoted: false);
-                    propertiesBuilder.Add(new KeyValuePair<PdxString, IPdxElement>(indexKey, itemsBuilder[i]));
+                    properties.Add(new KeyValuePair<IPdxScalar, IPdxElement>(indexKey, items[i]));
                 }
 
-                return new PdxObject(propertiesBuilder.ToImmutable());
+                return new PdxObject(properties);
             }
             else if (isObject)
             {
                 // If we have only properties, return an object
-                return new PdxObject(propertiesBuilder.ToImmutable());
+                return new PdxObject(properties);
             }
             else
             {
                 // If we have only items, return an array
-                return new PdxArray(itemsBuilder.ToImmutable());
+                return new PdxArray(items);
             }
         }
 
@@ -422,30 +458,25 @@ public static class PdxSaveReader
     /// <summary>
     /// Tries to parse a date from a string.
     /// </summary>
-    private static bool TryParseDate(ReadOnlySpan<char> span, out DateTime date)
+    private static bool TryParseDate(ReadOnlySpan<char> span, out DateOnly date)
     {
         try
         {
-            // Try to parse YYYY.MM.DD format
-            if (span.Length >= 10 && span[4] == '.' && span[7] == '.')
-            {
-                if (int.TryParse(span.Slice(0, 4), out int year) &&
-                    int.TryParse(span.Slice(5, 2), out int month) &&
-                    int.TryParse(span.Slice(8, 2), out int day) &&
-                    year > 0 && month > 0 && month <= 12 && day > 0 && day <= DateTime.DaysInMonth(year, month))
-                {
-                    date = new DateTime(year, month, day);
-                    return true;
-                }
-            }
-
-            // Try to parse YYYY.M.D format with standard formats
-            return DateTime.TryParseExact(span, Formats, CultureInfo.InvariantCulture, DateTimeStyles.None, out date);
+            return DateOnly.TryParseExact(span, Formats, CultureInfo.InvariantCulture, DateTimeStyles.None, out date);
         }
         catch
         {
-            date = DateTime.MinValue;
+            date = DateOnly.MinValue;
             return false;
         }
+    }
+    
+    public static IPdxElement ParseValue(string value)
+    {
+        if (string.IsNullOrEmpty(value))
+            return new PdxString(string.Empty);
+
+        var parser = new Parser(value.AsSpan());
+        return parser.ParseValue();
     }
 }

@@ -8,7 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-var parser = new CommandLineBuilder(new ParadoxCliRootCommand())
+var parser = new CommandLineBuilder(new PdxRootCommand())
     .UseHost(_ => Host.CreateDefaultBuilder(), hostBuilder =>
         {
             hostBuilder.ConfigureServices(services =>

@@ -117,7 +117,7 @@ public class ListCommand : BaseCommand
                 
                 foreach (var file in gameGroup)
                 {
-                    console.WriteLine($"  [{file.Number}] {file.Name} - {FormatFileSize(file.Size)} - {file.LastModified}");
+                    console.WriteLine($"  [{file.Number}] {file.Directory}/{file.Name} - {FormatFileSize(file.Size)} - {file.LastModified}");
                 }
             }
         }
@@ -127,7 +127,7 @@ public class ListCommand : BaseCommand
             
             foreach (var file in saveFiles)
             {
-                console.WriteLine($"[{file.Number}] {file.Name} - {FormatFileSize(file.Size)} - {file.LastModified}");
+                console.WriteLine($"[{file.Number}] {file.Directory}/{file.Name} - {FormatFileSize(file.Size)} - {file.LastModified}");
             }
         }
     }

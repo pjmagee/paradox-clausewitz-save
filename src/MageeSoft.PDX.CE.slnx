@@ -4,21 +4,34 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
-  <Project Path="MageeSoft.PDX.CE.Models.Tests/MageeSoft.PDX.CE.Models.Tests.csproj" />
-  <Project Path="MageeSoft.PDX.CE.Models/MageeSoft.PDX.CE.Models.csproj" />
-  <Project Path="MageeSoft.PDX.CE.ParserBenchmark/MageeSoft.PDX.CE.ParserBenchmark.csproj" />
-  <Project Path="MageeSoft.PDX.CE.Reader.Tests/MageeSoft.PDX.CE.Reader.Tests.csproj" />
-  <Project Path="MageeSoft.PDX.CE.Reader/MageeSoft.PDX.CE.Reader.csproj" />
-  <Project Path="MageeSoft.PDX.CE.Save.Tests/MageeSoft.PDX.CE.Save.Tests.csproj" />
-  <Project Path="MageeSoft.PDX.CE.Save/MageeSoft.PDX.CE.Save.csproj" />
-  <Project Path="MageeSoft.PDX.CE.SourceGenerator.Tests/MageeSoft.PDX.CE.SourceGenerator.Tests.csproj" />
-  <Project Path="MageeSoft.PDX.CE.SourceGenerator/MageeSoft.PDX.CE.SourceGenerator.csproj" />
-  <Project Path="MageeSoft.PDX.CE.Tests/MageeSoft.PDX.CE.Tests.csproj" />
-  <Project Path="MageeSoft.PDX.CE.Walker\MageeSoft.PDX.CE.Walker.csproj" Type="Classic C#">
+  <Project Path="MageeSoft.PDX.CE.Benchmark/MageeSoft.PDX.CE.Benchmark.csproj">
     <Configuration Solution="Debug|x64" Project="Debug|Any CPU" />
     <Configuration Solution="Debug|x86" Project="Debug|Any CPU" />
     <Configuration Solution="Release|x64" Project="Release|Any CPU" />
     <Configuration Solution="Release|x86" Project="Release|Any CPU" />
   </Project>
-  <Project Path="MageeSoft.PDX.CE\MageeSoft.PDX.CE.csproj" />
+  <Project Path="MageeSoft.PDX.CE.Cli/MageeSoft.PDX.CE.Cli.csproj">
+    <Configuration Solution="Debug|x64" Project="Debug|Any CPU" />
+    <Configuration Solution="Debug|x86" Project="Debug|Any CPU" />
+    <Configuration Solution="Release|x64" Project="Release|Any CPU" />
+    <Configuration Solution="Release|x86" Project="Release|Any CPU" />
+  </Project>
+  <Project Path="MageeSoft.PDX.CE.Save/MageeSoft.PDX.CE.Save.csproj">
+    <Configuration Solution="Debug|x64" Project="Debug|Any CPU" />
+    <Configuration Solution="Debug|x86" Project="Debug|Any CPU" />
+    <Configuration Solution="Release|x64" Project="Release|Any CPU" />
+    <Configuration Solution="Release|x86" Project="Release|Any CPU" />
+  </Project>
+  <Project Path="MageeSoft.PDX.CE.Tests/MageeSoft.PDX.CE.Tests.csproj">
+    <Configuration Solution="Debug|x64" Project="Debug|Any CPU" />
+    <Configuration Solution="Debug|x86" Project="Debug|Any CPU" />
+    <Configuration Solution="Release|x64" Project="Release|Any CPU" />
+    <Configuration Solution="Release|x86" Project="Release|Any CPU" />
+  </Project>
+  <Project Path="MageeSoft.PDX.CE/MageeSoft.PDX.CE.csproj">
+    <Configuration Solution="Debug|x64" Project="Debug|Any CPU" />
+    <Configuration Solution="Debug|x86" Project="Debug|Any CPU" />
+    <Configuration Solution="Release|x64" Project="Release|Any CPU" />
+    <Configuration Solution="Release|x86" Project="Release|Any CPU" />
+  </Project>
 </Solution>

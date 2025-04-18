@@ -111,7 +111,7 @@ public class SummaryCommand : BaseCommand
     private string FormatSummaryAsText(SaveSummary summary)
     {
         var builder = new StringBuilder();
-        builder.AppendLine($"Game: {summary.GameName}");
+        builder.AppendLine($"Game: {summary.GameType}");
         builder.AppendLine($"File Name: {summary.FileName}");
         builder.AppendLine($"File Size: {FormatFileSize(summary.FileSize)}");
         builder.AppendLine($"Last Modified: {summary.LastModified}");

@@ -1,11 +1,7 @@
 using System.CommandLine;
 using System.CommandLine.IO;
 using System.Text.Json;
-using MageeSoft.PDX.CE.Cli.Games;
 using MageeSoft.PDX.CE.Save;
-using MageeSoft.PDX.CE.Cli.JsonContext;
-using MageeSoft.PDX.CE.Cli.Services.Model;
-using MageeSoft.PDX.CE.Reader.Cli;
 
 namespace MageeSoft.PDX.CE.Cli.Services.Games.Stellaris;
 
@@ -19,25 +15,31 @@ public class StellarisSaveService(IConsole console, GamePathResolver pathResolve
 
     public IEnumerable<FileInfo> FindSaveFiles()
     {
-        var saveDirectory = pathResolver.GetSaveDirectory(GameType);
-        if (saveDirectory is null || !Directory.Exists(saveDirectory))
-        {
-            console.Error.WriteLine($"Save directory for {GameName} not found.");
-            return Array.Empty<FileInfo>();
-        }
+        var saveDirectories = pathResolver.GetPotentialSavePaths(GameName);
 
-        try
+        var files = new List<FileInfo>();
+        foreach (var dir in saveDirectories)
         {
-            var directory = new DirectoryInfo(saveDirectory);
-            return directory.GetFiles("*" + SaveFileExtension, SearchOption.TopDirectoryOnly)
-                .Where(file => file.Length > 0)
-                .OrderByDescending(file => file.LastWriteTime);
+            if (!Directory.Exists(dir))
+                continue;
+            
+            try
+            {
+                var directory = new DirectoryInfo(dir);
+                
+                // save files are usually in subfolders of a game session / empire / country name
+                var entries = directory
+                    .GetFiles("*" + SaveFileExtension, SearchOption.AllDirectories)
+                    .Where(file => file.Length > 0);
+
+                files.AddRange(entries);
+            }
+            catch (Exception ex)
+            {
+                console.Error.WriteLine($"Error finding save files in {dir}: {ex.Message}");
+            }
         }
-        catch (Exception ex)
-        {
-            console.Error.WriteLine($"Error finding save files: {ex.Message}");
-            return Array.Empty<FileInfo>();
-        }
+        return files.OrderByDescending(file => file.LastWriteTime);
     }
 
     public bool IsValidSaveFile(FileInfo file)
@@ -58,8 +60,8 @@ public class StellarisSaveService(IConsole console, GamePathResolver pathResolve
                 FileName = saveFile.Name,
                 FileSize = saveFile.Length,
                 LastModified = saveFile.LastWriteTime,
-                Ironman = save.Meta.Ironman != null && save.Meta.Ironman == true,
-                Version = save.Meta.Version ?? "Unknown",
+                Ironman = save.Meta.FindProperty("ironman").Value.Value<bool>(),
+                Version = save.Meta.FindProperty("version").Value.Value<string>(),
                 Error = null,
             };
 
