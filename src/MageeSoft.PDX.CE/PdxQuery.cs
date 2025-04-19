@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace MageeSoft.PDX.CE;
 
 /// <summary>
@@ -335,8 +337,12 @@ public class PdxQuery(IPdxElement root)
     /// <summary>
     /// Helper to print an IPdxElement to string (for test/demo purposes).
     /// </summary>
-    public static string? ElementToString(IPdxElement element)
+    /// <exception cref="InvalidOperationException">Thrown when an unexpected element type is encountered.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when the element is null.</exception>
+    public static string ElementToString([Required] IPdxElement element)
     {
+        ArgumentNullException.ThrowIfNull(element, nameof(element));
+        
         return element switch
         {
             IPdxScalar scalar => scalar.ToString(),
@@ -395,6 +401,74 @@ public class PdxQuery(IPdxElement root)
                 foreach (var found in FindAllByKeyWithPathRecursive(arr.Items[i], keyName, newPath))
                     yield return found;
             }
+        }
+    }
+
+    /// <summary>
+    /// Recursively yields all nodes in the tree (like jq's `..`).
+    /// </summary>
+    public IEnumerable<(string Path, IPdxElement Value)> RecursiveDescentWithPath()
+    {
+        return RecursiveDescentWithPathInternal(root, "");
+    }
+
+    private IEnumerable<(string Path, IPdxElement Value)> RecursiveDescentWithPathInternal(IPdxElement element, string currentPath)
+    {
+        yield return (currentPath, element);
+        if (element is PdxObject obj)
+        {
+            foreach (var kvp in obj.Properties)
+            {
+                var keyStr = kvp.Key.ToString();
+                var newPath = string.IsNullOrEmpty(currentPath) ? keyStr : $"{currentPath}.{keyStr}";
+                foreach (var found in RecursiveDescentWithPathInternal(kvp.Value, newPath))
+                    yield return found;
+            }
+        }
+        else if (element is PdxArray arr)
+        {
+            for (int i = 0; i < arr.Items.Count; i++)
+            {
+                var newPath = $"{currentPath}.[{i}]";
+                foreach (var found in RecursiveDescentWithPathInternal(arr.Items[i], newPath))
+                    yield return found;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Recursively finds all values for a key anywhere in the tree (like jq's `.. | .key?`).
+    /// </summary>
+    public IEnumerable<(string Path, IPdxElement Value)> RecursiveKeySearch(string key)
+    {
+        foreach (var (path, value) in RecursiveDescentWithPath())
+        {
+            if (!string.IsNullOrEmpty(path) && path.EndsWith($".{key}") || path == key)
+                yield return (path, value);
+        }
+    }
+
+    /// <summary>
+    /// Recursively finds all values matching a string anywhere in the tree (like jq's `.. | select(. == value)`).
+    /// </summary>
+    public IEnumerable<(string Path, IPdxElement Value)> RecursiveValueSearch(string value)
+    {
+        foreach (var (path, val) in RecursiveDescentWithPath())
+        {
+            if (ElementToString(val) == value)
+                yield return (path, val);
+        }
+    }
+
+    /// <summary>
+    /// Recursively finds all values containing a substring anywhere in the tree.
+    /// </summary>
+    public IEnumerable<(string Path, IPdxElement Value)> RecursiveValueSubstringSearch(string substring)
+    {
+        foreach (var (path, val) in RecursiveDescentWithPath())
+        {
+            if (val is IPdxScalar && ElementToString(val)?.Contains(substring) == true)
+                yield return (path, val);
         }
     }
 }

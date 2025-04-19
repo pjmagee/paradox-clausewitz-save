@@ -42,7 +42,3 @@ This implementation focuses on minimizing allocations and maximizing performance
 - Avoids unnecessary string allocations
 - Provides efficient token processing
 - Optimizes type inference for commonly used data types
-
-## License
-
-This project is licensed under the same terms as the parent project. 

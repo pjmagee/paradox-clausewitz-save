@@ -1,17 +1,17 @@
 # PDX Clausewitz Save File Structures and Parser Representation
 
-This document outlines the distinct data structures commonly found in PDX Interactive save 
+This document outlines the distinct data structures commonly found in PDX Interactive save
 
 ## Scalars
 
 * **Description:** The most basic structure. A key (string) maps directly to a single primitive value.
-  * Handles scalar types: `int`, `long`, `float`, `bool`, `string`, `date`, `uuid`
+  * types: `int32`, `int64`, `float`, `bool`, `string`, `date`, `uuid`
 
 * **Example:**
 
-    ```pdx
-    int=2200
-    long=123456789012345 
+    ```toml
+    int32=2200
+    int64=123456789012345 
     float=3.14159
     bool=yes
     string="Hello, World!"
@@ -25,7 +25,7 @@ This document outlines the distinct data structures commonly found in PDX Intera
 * **Description:** A key maps to a block enclosed in `{ ... }` containing further key-value pairs or other nested structures. Represents hierarchical data.
 * **Example:**
 
-    ```pdx
+    ```toml
     settings={
         difficulty="normal"
         ironman=yes
@@ -44,7 +44,7 @@ This document outlines the distinct data structures commonly found in PDX Intera
 * **Description:** A key maps to a block `{ ... }` containing a space-separated sequence of values. Values can be scalars, objects, or arrays.
 * **Example:**
 
-    ```pdx
+    ```toml
     integer_array={ 1 2 3 4 5 }
     float_array={ 1.1 2.2 3.3 4.4 5.5 }
     object_array={
@@ -64,7 +64,7 @@ This document outlines the distinct data structures commonly found in PDX Intera
 * **Description:** A key maps to a block `{ ... }` where the keys *inside* are integers, and values can be scalars or objects. Used for ID-based lookups.
 * **Example:**
 
-    ```pdx
+    ```toml
     integer_keyed_objects={
         1={ name="First Item" value=100 }
         2={ name="Second Item" value=200 }
@@ -83,7 +83,7 @@ This document outlines the distinct data structures commonly found in PDX Intera
 
 * **Example:** (From `intel_manager`)
 
-    ```pdx
+    ```toml
     intel={
         { 
             67108916 
@@ -96,11 +96,9 @@ This document outlines the distinct data structures commonly found in PDX Intera
     }
     ```
 
-## Clausewitz Format
+## Clausewitz Save Archive
 
-### Stellaris uses .sav to store the save documents
-
-There are two files that make up a Stellaris save document:
+### Stellaris
 
 * `meta` - This contains the metadata for the save
 * `gamestate` - The main save document that contains the game state

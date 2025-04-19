@@ -30,13 +30,14 @@ public class SerializerTests
         // Arrange
         var saveObject = new PdxObject([
                 new(new PdxString("key1"), new PdxInt(42)),
-                new(new PdxString("key2"), new PdxString("value")),
+                new(new PdxString("key2"), new PdxString("value", wasQuoted: true)),
                 new(new PdxString("key3"), new PdxObject([
                             new(new PdxString("nestedKey1"), new PdxInt(100)),
                             new(new PdxString("nestedKey2"), new PdxString("nested", wasQuoted: true))
                         ]
                     )
-                )
+                ),
+                new(new PdxString("key4"), new PdxString("unquotedValue", wasQuoted: false))
             ]
         );
 
@@ -44,7 +45,7 @@ public class SerializerTests
         string? result = saveObject.ToString();
 
         // Assert
-        Assert.AreEqual(
+        Assert.That.AreClausewitzStringsEqual(
             expected: """
                       { 
                         key1=42 
@@ -53,6 +54,7 @@ public class SerializerTests
                             nestedKey1=100
                             nestedKey2="nested"
                         }
+                        key4=unquotedValue
                       }
                       """,
             actual: result

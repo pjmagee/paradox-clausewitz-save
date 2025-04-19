@@ -1003,8 +1003,7 @@ public class PdxParserTests
     {
         // Arrange
         string input = """
-                       culling_value=
-                       {
+                       culling_value={
                        	{ }
                        	{ }
                         { }
@@ -1043,16 +1042,13 @@ public class PdxParserTests
 
         string input = """
                        {
-                           intel_manager=
-                           {
-                               intel=
-                               {
+                           intel_manager={
+                               intel={
                                    {
                                        67108916 
                                        {
                                            intel=10
-                                           stale_intel=
-                                           {
+                                           stale_intel={
                                            }
                                        }
                                    }
@@ -1061,8 +1057,7 @@ public class PdxParserTests
                                        218103860 
                                        {
                                            intel=10
-                                           stale_intel=
-                                           {
+                                           stale_intel={
                                            }
                                        }
                                    }
@@ -1187,3 +1182,4 @@ public class PdxParserTests
         Assert.AreEqual("3254", ((PdxString)firstArray.Items[1]).Value);
     }
 }
+

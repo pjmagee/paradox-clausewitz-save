@@ -5,5 +5,5 @@ namespace MageeSoft.PDX.CE;
 /// </summary>
 public interface IPdxScalar : IPdxElement
 {    
-    string? ToString();
+    string ToString();
 }

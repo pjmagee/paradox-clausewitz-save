@@ -15,6 +15,5 @@ public readonly struct PdxDate(DateOnly value) : IPdxScalar, IEquatable<PdxDate>
     public override int GetHashCode() => Value.GetHashCode();
     public static implicit operator DateOnly(PdxDate d) => d.Value;
     public static implicit operator PdxDate(DateOnly d) => new PdxDate(d);
-    
-    public string ToSaveString() => Value.ToString(CultureInfo.InvariantCulture);
+    public override string ToString() => $"\"{Value:yyyy.MM.dd}\"";
 }

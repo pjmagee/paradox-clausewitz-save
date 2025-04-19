@@ -62,12 +62,7 @@ public class PdxQueryTests
         var root = PdxSaveReader.Read(save);
         var query = new PdxQuery(root);
         TestContext.WriteLine("Before: " + string.Join(",", query.GetList("nums.[*]").Select(PdxQuery.ElementToString)));
-        query.SetArray("nums", new List<IPdxElement>
-            {
-                new PdxInt(10),
-                new PdxInt(20)
-            }
-        );
+        query.SetArray("nums", new List<IPdxElement> { new PdxInt(10), new PdxInt(20) });
 
         query = new PdxQuery(root);
         TestContext.WriteLine("After: " + string.Join(",", query.GetList("nums.[*]").Select(PdxQuery.ElementToString)));
@@ -166,12 +161,7 @@ public class PdxQueryTests
         var root = PdxSaveReader.Read(save);
         var query = new PdxQuery(root);
         var names = query.GetList("fleets.[*].name").Select(PdxQuery.ElementToString).ToList();
-        CollectionAssert.AreEqual(new[]
-            {
-                "\"1st Fleet\"",
-                "\"Reserve Fleet\""
-            }, names
-        );
+        CollectionAssert.AreEqual(new[] { "\"1st Fleet\"", "\"Reserve Fleet\"" }, names);
     }
 
     [TestMethod]
@@ -187,18 +177,10 @@ public class PdxQueryTests
         var root = PdxSaveReader.Read(save);
         var query = new PdxQuery(root);
         var values = query.GetList("country_opinions.10.value").Select(PdxQuery.ElementToString).ToList();
-        CollectionAssert.AreEqual(new[]
-            {
-                "50"
-            }, values
-        );
+        CollectionAssert.AreEqual(new[] { "50" }, values);
 
         var relations = query.GetList("country_opinions.15.relation").Select(PdxQuery.ElementToString).ToList();
-        CollectionAssert.AreEqual(new[]
-            {
-                "rival"
-            }, relations
-        );
+        CollectionAssert.AreEqual(new[] { "rival" }, relations);
     }
 
     [TestMethod]
@@ -214,18 +196,10 @@ public class PdxQueryTests
         var root = PdxSaveReader.Read(save);
         var query = new PdxQuery(root);
         var intelligent = query.GetList("traits.trait_intelligent").Select(PdxQuery.ElementToString).ToList();
-        CollectionAssert.AreEqual(new[]
-            {
-                "yes"
-            }, intelligent
-        );
-
+        CollectionAssert.AreEqual(new[] { "yes" }, intelligent);
+        
         var thrifty = query.GetList("traits.trait_thrifty").Select(PdxQuery.ElementToString).ToList();
-        CollectionAssert.AreEqual(new[]
-            {
-                "no"
-            }, thrifty
-        );
+        CollectionAssert.AreEqual(new[] { "no" }, thrifty);
     }
 
     [TestMethod]
@@ -482,6 +456,7 @@ public class PdxQueryTests
         var root = PdxSaveReader.Read(save);
         var query = new PdxQuery(root);
         var val = query.GetList("root.0.1.2.foo").FirstOrDefault();
+        Assert.IsNotNull(val);
         Assert.AreEqual("bar", PdxQuery.ElementToString(val));
     }
 
@@ -510,6 +485,7 @@ public class PdxQueryTests
         var reparsed = PdxSaveReader.Read(serialized);
         var reparsedQuery = new PdxQuery(reparsed);
         var barVal = reparsedQuery.GetList("bar").FirstOrDefault();
+        Assert.IsNotNull(barVal);
         Assert.AreEqual("99", PdxQuery.ElementToString(barVal));
     }
 
@@ -518,9 +494,8 @@ public class PdxQueryTests
     {
         var save = "foo=1 bar=2";
         var root = PdxSaveReader.Read(save);
-        var obj = (PdxObject)root;
-        obj.Properties.RemoveAll(p => p.Key.ToString() == "bar");
-        var serialized = obj.ToString();
+        root.Properties.RemoveAll(p => p.Key.ToString() == "bar");
+        var serialized = root.ToString();
         var reparsed = PdxSaveReader.Read(serialized);
         var reparsedQuery = new PdxQuery(reparsed);
         var barVal = reparsedQuery.GetList("bar").FirstOrDefault();
@@ -532,21 +507,14 @@ public class PdxQueryTests
     {
         var save = "arr={ 1 2 3 }";
         var root = PdxSaveReader.Read(save);
-        var obj = (PdxObject)root;
-        var arr = (PdxArray)obj.Properties.First(p => p.Key.ToString() == "arr").Value;
+        var arr = (PdxArray)root.Properties.First(p => p.Key.ToString() == "arr").Value;
         arr.Items.Add(new PdxInt(4));
         arr.Items.RemoveAt(0); // Remove first element
-        var serialized = obj.ToString();
+        var serialized = root.ToString();
         var reparsed = PdxSaveReader.Read(serialized);
         var reparsedQuery = new PdxQuery(reparsed);
         var vals = reparsedQuery.GetList("arr.[*]").Select(PdxQuery.ElementToString).ToList();
-        CollectionAssert.AreEqual(new[]
-            {
-                "2",
-                "3",
-                "4"
-            }, vals
-        );
+        CollectionAssert.AreEqual(new[] { "2", "3", "4" }, vals);
     }
 
     [TestMethod]
@@ -554,8 +522,7 @@ public class PdxQueryTests
     {
         var save = "root={ nested={ foo=1 } }";
         var root = PdxSaveReader.Read(save);
-        var obj = (PdxObject)root;
-        var nested = (PdxObject)obj.Properties.First(p => p.Key.ToString() == "root").Value;
+        var nested = (PdxObject)root.Properties.First(p => p.Key.ToString() == "root").Value;
         var nested2 = (PdxObject)nested.Properties.First(p => p.Key.ToString() == "nested").Value;
 
         for (int i = 0; i < nested2.Properties.Count; i++)
@@ -564,10 +531,11 @@ public class PdxQueryTests
                 nested2.Properties[i] = new KeyValuePair<IPdxScalar, IPdxElement>(nested2.Properties[i].Key, new PdxInt(99));
         }
 
-        var serialized = obj.ToString();
+        var serialized = root.ToString();
         var reparsed = PdxSaveReader.Read(serialized);
         var reparsedQuery = new PdxQuery(reparsed);
         var fooVal = reparsedQuery.GetList("root.nested.foo").FirstOrDefault();
+        Assert.IsNotNull(fooVal);
         Assert.AreEqual("99", PdxQuery.ElementToString(fooVal));
     }
 
@@ -578,17 +546,11 @@ public class PdxQueryTests
         var root = PdxSaveReader.Read(save);
         var obj = (PdxObject)root.Properties.First(p => p.Key.ToString() == "root").Value;
         obj.Properties.Add(new KeyValuePair<IPdxScalar, IPdxElement>(new PdxString("key"), new PdxInt(3)));
-        var serialized = ((PdxObject)root).ToString();
+        var serialized = root.ToString();
         var reparsed = PdxSaveReader.Read(serialized);
         var reparsedQuery = new PdxQuery(reparsed);
         var vals = reparsedQuery.GetList("root.key").Select(PdxQuery.ElementToString).ToList();
-        CollectionAssert.AreEqual(new[]
-            {
-                "1",
-                "2",
-                "3"
-            }, vals
-        );
+        CollectionAssert.AreEqual(new[] { "1", "2", "3" }, vals);
     }
 
     [TestMethod]
@@ -599,20 +561,16 @@ public class PdxQueryTests
         var obj = (PdxObject)root.Properties.First(p => p.Key.ToString() == "root").Value;
         var newObj = new PdxObject(new List<KeyValuePair<IPdxScalar, IPdxElement>>
             {
-                new KeyValuePair<IPdxScalar, IPdxElement>(new PdxString("foo"), new PdxInt(3))
+                new(new PdxString("foo"), new PdxInt(3))
             }
         );
 
         obj.Properties.Add(new KeyValuePair<IPdxScalar, IPdxElement>(new PdxInt(2), newObj));
-        var serialized = ((PdxObject)root).ToString();
+        var serialized = root.ToString();
         var reparsed = PdxSaveReader.Read(serialized);
         var reparsedQuery = new PdxQuery(reparsed);
         var vals = reparsedQuery.GetList("root.2.foo").Select(PdxQuery.ElementToString).ToList();
-        CollectionAssert.AreEqual(new[]
-            {
-                "3"
-            }, vals
-        );
+        CollectionAssert.AreEqual(new[] { "3" }, vals);
     }
 
     [TestMethod]
@@ -689,5 +647,74 @@ public class PdxQueryTests
             Assert.IsTrue(results.Any(r => r.Path == path && PdxQuery.ElementToString(r.Value) == value), $"Expected {path} = {value}");
         }
         Assert.AreEqual(expected.Length, results.Count, "Should find all expected energy values with paths");
+    }
+
+    [TestMethod]
+    public void RequiredDLCs_ArrayWildcard_Works()
+    {
+        var save = """
+                   required_dlcs={
+                      "Ancient Relics Story Pack"
+                      "Anniversary Portraits"
+                      "Apocalypse"
+                      "Aquatics Species Pack"
+                      "Utopia"
+                   }
+                   """;
+        var root = PdxSaveReader.Read(save);
+        var query = new PdxQuery(root);
+        var dlcs = query.GetList("required_dlcs.[*]").Select(PdxQuery.ElementToString).ToList();
+        CollectionAssert.AreEqual(new[]
+        {
+            "\"Ancient Relics Story Pack\"",
+            "\"Anniversary Portraits\"",
+            "\"Apocalypse\"",
+            "\"Aquatics Species Pack\"",
+            "\"Utopia\""
+        }, dlcs);
+    }
+    
+    [TestMethod]
+    public void PlayerArray_WildcardAndIndex_Works()
+    {
+        var save = """
+                   player={
+                       {
+                           name="Delegate"
+                           country=0
+                       }
+                   }
+                   """;
+        var root = PdxSaveReader.Read(save);
+        var query = new PdxQuery(root);
+
+        // Try wildcard
+        var wildcardNames = query.GetList("player.[*].name").Select(PdxQuery.ElementToString).ToList();
+        TestContext.WriteLine("Wildcard: " + string.Join(",", wildcardNames));
+
+        // Try index
+        var indexName = query.GetList("player.[0].name").Select(PdxQuery.ElementToString).ToList();
+        TestContext.WriteLine("Index: " + string.Join(",", indexName));
+
+        // Try just 'player'
+        var playerType = query.GetList("player").FirstOrDefault()?.GetType().Name;
+        TestContext.WriteLine("player type: " + playerType);
+
+        // Assert
+        Assert.AreEqual(1, wildcardNames.Count);
+        Assert.AreEqual("\"Delegate\"", wildcardNames[0]);
+        Assert.AreEqual(1, indexName.Count);
+        Assert.AreEqual("\"Delegate\"", indexName[0]);
+    }
+
+    [TestMethod]
+    public void RecursiveValueSubstringSearch_FindsIntSubstring()
+    {
+        var save = @"foo=122 bar=221 baz=33";
+        var root = PdxSaveReader.Read(save);
+        var query = new PdxQuery(root);
+        var results = query.RecursiveValueSubstringSearch("22").Select((result) => PdxQuery.ElementToString(result.Value)).ToList();
+        TestContext.WriteLine("Results: " + string.Join(", ", results));
+        CollectionAssert.AreEquivalent(new[] { "122", "221" }, results);
     }
 }

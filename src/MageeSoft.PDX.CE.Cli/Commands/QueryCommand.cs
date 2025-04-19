@@ -23,10 +23,11 @@ public class QueryCommand : BaseCommand
         AddOption(new QueryOption());
         AddOption(new FormatOption());
         AddOption(new OutputOption());
-        Handler = CommandHandler.Create<IHost, IConsole, string, int?, FileInfo?, string, string, FileInfo?>(HandleCommand);
+        AddOption(new ShowPathsOption());
+        Handler = CommandHandler.Create<IHost, IConsole, string, int?, FileInfo?, string, string, FileInfo?, bool>(HandleCommand);
     }
 
-    private void HandleCommand(IHost host, IConsole console, string game, int? number, FileInfo? saveFile, string query, string format, FileInfo? output)
+    private void HandleCommand(IHost host, IConsole console, string game, int? number, FileInfo? saveFile, string query, string format, FileInfo? output, bool showPaths)
     {
         // Validate that exactly one of number or saveFile is provided
         if ((number.HasValue && saveFile != null) || (!number.HasValue && saveFile == null))
@@ -40,8 +41,7 @@ public class QueryCommand : BaseCommand
         if (saveFile != null)
         {
             file = saveFile;
-            provider = host.Services.GetRequiredService<GameServiceManager>().GetProviderByName(game) ??
-                       host.Services.GetRequiredService<GameServiceManager>().GetProviderByName("stellaris");
+            provider = host.Services.GetRequiredService<GameServiceManager>().GetProviderByName(game);
         }
         else
         {
@@ -58,6 +58,7 @@ public class QueryCommand : BaseCommand
             StellarisSave stellarisSave = StellarisSave.FromSave(file);
             root = stellarisSave.GameState;
         }
+        
         // TODO: Add support for other games here
         if (root == null)
         {
@@ -66,26 +67,105 @@ public class QueryCommand : BaseCommand
         }
 
         var pdxQuery = new PdxQuery(root);
-        var results = pdxQuery.GetList(query);
+        
+        List<(string Path, string Value)> resultsWithPaths = new();
+        
+        bool isRecursive = false;
+        
+        if (query.StartsWith(".. | .") && query.EndsWith("?"))
+        {
+            // jq-style recursive key search: .. | .key?
+            var key = query.Substring(6, query.Length - 7);
+            
+            foreach (var (path, value) in pdxQuery.RecursiveKeySearch(key))
+                resultsWithPaths.Add((path, PdxQuery.ElementToString(value)!));
+            
+            isRecursive = true;
+        }
+        else if (query.StartsWith(".. | select(. == "))
+        {
+            // jq-style recursive value search: .. | select(. == "value")
+            var value = query.Substring(17, query.Length - 18).Trim('"');
+            foreach (var (path, val) in pdxQuery.RecursiveValueSearch(value))
+                resultsWithPaths.Add((path, PdxQuery.ElementToString(val)));
+            isRecursive = true;
+        }
+        else if (query.StartsWith(".. | select(contains(") && query.EndsWith(')') )
+        {
+            // jq-style recursive substring value search: .. | select(contains("foo"))
+            var i = query.LastIndexOf("select(contains(");
+            var end = query.IndexOf(")");
+            var start = i + "select(contains(".Length;
+            var length = end - start;
+            var value = query.Substring(start, length);
 
-        string outputString;
+            foreach (var (path, val) in pdxQuery.RecursiveValueSubstringSearch(value))
+                resultsWithPaths.Add((path, PdxQuery.ElementToString(val)));
+
+            isRecursive = true;
+        }
+        
+        if (isRecursive)
+        {
+            string outputString;
+            
+            if (format == "json")
+            {
+                outputString = JsonSerializer.Serialize(
+                    showPaths ? resultsWithPaths : resultsWithPaths.Select(r => r.Value),
+                    CliJsonSerializerContext.Default.String);
+            }
+            else // text
+            {
+                outputString = string.Join('\n', showPaths ? resultsWithPaths.Select(r => $"{r.Path}: {r.Value}") : resultsWithPaths.Select(r => r.Value));
+            }
+            
+            if (output != null)
+            {
+                File.WriteAllText(output.FullName, outputString);
+                console.WriteLine($"Query results written to {output.FullName}");
+            }
+            else
+            {
+                console.WriteLine(outputString);
+            }
+            return;
+        }
+        // Default: path-based query
+        var results = pdxQuery.GetList(query);
+        string defaultOutputString;
         if (format == "json")
         {
-            outputString = JsonSerializer.Serialize(results.Select(PdxQuery.ElementToString), CliJsonSerializerContext.Default.String);
+            if (showPaths)
+            {
+                var withPaths = results.Select((v, i) => ($"{query}[{i}]", PdxQuery.ElementToString(v))).ToList();
+                defaultOutputString = JsonSerializer.Serialize(withPaths, CliJsonSerializerContext.Default.String);
+            }
+            else
+            {
+                defaultOutputString = JsonSerializer.Serialize(results.Select(PdxQuery.ElementToString), CliJsonSerializerContext.Default.String);
+            }
         }
         else // text
         {
-            outputString = string.Join("\n", results.Select(PdxQuery.ElementToString));
+            if (showPaths)
+            {
+                var withPaths = results.Select((v, i) => $"{query}[{i}]: {PdxQuery.ElementToString(v)}");
+                defaultOutputString = string.Join("\n", withPaths);
+            }
+            else
+            {
+                defaultOutputString = string.Join("\n", results.Select(PdxQuery.ElementToString));
+            }
         }
-
         if (output != null)
         {
-            File.WriteAllText(output.FullName, outputString);
+            File.WriteAllText(output.FullName, defaultOutputString);
             console.WriteLine($"Query results written to {output.FullName}");
         }
         else
         {
-            console.WriteLine(outputString);
+            console.WriteLine(defaultOutputString);
         }
     }
 
