@@ -1,6 +1,6 @@
 {
   "name": "paradox-clausewitz-sav",
-  "engineVersion": "v0.18.4-250418162245-cc6dab0ee50c",
+  "engineVersion": "v0.18.3",
   "sdk": {
     "source": "go"
   },

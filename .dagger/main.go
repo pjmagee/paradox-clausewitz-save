@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"dagger/paradox-clausewitz-sav/internal/dagger"
+	"strconv"
 )
 
 type ParadoxClausewitzSav struct {
@@ -27,7 +28,7 @@ func (m *ParadoxClausewitzSav) Build(
 	repoDir *dagger.Directory,
 ) *dagger.Container {
 	return dag.Container().
-		From("mcr.microsoft.com/dotnet/sdk:10.0-preview").
+		From("mcr.microsoft.com/dotnet/sdk:10.0-preview-aot").
 		WithMountedCache("/root/.nuget/packages", dag.CacheVolume("nuget")).
 		WithMountedDirectory("/repo", repoDir).
 		WithWorkdir("/repo/src").
@@ -53,13 +54,17 @@ func (m *ParadoxClausewitzSav) Publish(
 	// +defaultPath="./"
 	// +ignore=["**/obj", "**/bin"]
 	repoDir *dagger.Directory,
+	// Whether to publish the project with AOT compilation
+	// +defaultValue=false
+	// +optional
+	aot bool,
 ) *dagger.Container {
 	return dag.Container().
-		From("mcr.microsoft.com/dotnet/sdk:10.0-preview").
+		From("mcr.microsoft.com/dotnet/sdk:10.0-preview-aot").
 		WithMountedCache("/root/.nuget/packages", dag.CacheVolume("nuget")).
 		WithMountedDirectory("/repo", repoDir).
 		WithWorkdir("/repo/src/MageeSoft.PDX.CE.Cli").
-		WithExec([]string{"dotnet", "publish"})
+		WithExec([]string{"dotnet", "publish", "-c", "Release", "-p:PublishAot=" + strconv.FormatBool(aot)})
 }
 
 type Rid = string

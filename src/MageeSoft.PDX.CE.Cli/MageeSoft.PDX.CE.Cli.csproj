@@ -7,6 +7,7 @@
     <Nullable>enable</Nullable>
     <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
     <PackAsTool>false</PackAsTool>
+    <PublishAot>false</PublishAot>
     <ToolCommandName>mageesoft-pdx-ce-sav</ToolCommandName>
     <AssemblyName>mageesoft-pdx-ce-sav</AssemblyName>
 
@@ -45,7 +46,7 @@
   </ItemGroup>
 
   <!-- Native AOT Configuration (default) -->
-  <PropertyGroup Condition="'$(Configuration)'=='Release' And '$(PackAsTool)'!='true'">
+  <PropertyGroup Condition="'$(Configuration)'=='Release' And '$(PackAsTool)'!='true' And '$(PublishAot)'=='true'">
     <PublishAot>true</PublishAot>
     <PublishTrimmed>true</PublishTrimmed>
     <TrimMode>full</TrimMode>
