@@ -18,8 +18,8 @@ public class SerializerTests
         string result = saveObject.ToString()!;
 
         // Assert
-        Assert.AreEqual(
-            expected: "{\r\n\tkey=42\r\n}",
+        Assert.AreClausewitzStringsEqual(
+            expected: "{ key=42 }",
             actual: result
         );
     }
@@ -45,7 +45,7 @@ public class SerializerTests
         string? result = saveObject.ToString();
 
         // Assert
-        Assert.That.AreClausewitzStringsEqual(
+        Assert.AreClausewitzStringsEqual(
             expected: """
                       { 
                         key1=42 
@@ -82,7 +82,7 @@ public class SerializerTests
         var reparsed = PdxSaveReader.Read(serialized);
 
         // Assert
-        Assert.AreEqual(element.ToString(), reparsed.ToString(),
+        Assert.AreClausewitzStringsEqual(element.ToString(), reparsed.ToString(),
             "Simple scalar values should be preserved through serialization"
         );
     }
@@ -115,7 +115,7 @@ public class SerializerTests
         var reparsed = PdxSaveReader.Read(serialized);
 
         // Assert
-        Assert.AreEqual(
+        Assert.AreClausewitzStringsEqual(
             element.ToString(),
             reparsed.ToString(),
             "Nested structures should be preserved through serialization"
@@ -140,7 +140,7 @@ special={
         var reparsed = PdxSaveReader.Read(serialized);
 
         // Assert
-        Assert.AreEqual(
+        Assert.AreClausewitzStringsEqual(
             expected: element.ToString(),
             actual: reparsed.ToString(),
             message: "Special characters should be preserved through serialization"
