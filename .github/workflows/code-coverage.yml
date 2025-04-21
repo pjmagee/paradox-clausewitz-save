@@ -20,14 +20,8 @@ jobs:
       with:
         dotnet-version: 10.0.x
 
-    - name: Restore dependencies
-      run: dotnet restore ./src/MageeSoft.Paradox.Clausewitz.Save.slnx
-
-    - name: Build
-      run: dotnet build ./src/MageeSoft.Paradox.Clausewitz.Save.slnx --no-restore
-
     - name: Test with coverage
-      run: dotnet test ./src/MageeSoft.Paradox.Clausewitz.Save.slnx --no-build --verbosity normal /p:CollectCoverage=true /p:CoverletOutputFormat=opencover /p:CoverletOutput="./coverage.opencover.xml"
+      run: dotnet test ./src/MageeSoft.PDX.CE.slnx --coverage --coverage-output-format=coverage  --coverage-output "./src/MageeSoft.PDX.CE.Tests/coverage"
 
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v5
@@ -39,4 +33,4 @@ jobs:
         name: codecov-umbrella
         fail_ci_if_error: true
         verbose: false
-        files: ./src/MageeSoft.Paradox.Clausewitz.Save.Tests/coverage.opencover.xml
+        files: ./src/MageeSoft.PDX.CE.Tests/coverage.opencover.xml

@@ -122,14 +122,15 @@ func (m *ParadoxClausewitzSav) Test(
 	// +defaultPath="./"
 	// +ignore=["**/obj", "**/bin"]
 	repoDir *dagger.Directory,
-) (string, error) {
+) *dagger.Container {
 	return dag.Container().
 		From("mcr.microsoft.com/dotnet/sdk:10.0-preview").
 		WithMountedCache("/root/.nuget/packages", dag.CacheVolume("nuget")).
 		WithMountedDirectory("/repo", repoDir).
 		WithWorkdir("/repo/src").
-		WithExec([]string{"dotnet", "test"}).
-		Stdout(ctx)
+		WithExec([]string{"dotnet", "test"}, dagger.ContainerWithExecOpts{
+			Expect: dagger.ReturnTypeAny,
+		})
 }
 
 func (m *ParadoxClausewitzSav) LinuxTest(
