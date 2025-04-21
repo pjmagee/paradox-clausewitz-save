@@ -21,9 +21,21 @@ jobs:
         dotnet-version: 10.0.x
 
     - name: Test with coverage
-      run: dotnet test ./src/MageeSoft.PDX.CE.slnx --coverage --coverage-output-format=coverage  --coverage-output "./src/MageeSoft.PDX.CE.Tests/coverage"
+      run: |
+        cd ./src/MageeSoft.PDX.CE.Tests
+        dotnet run --coverage --coverage-output $GITHUB_WORKSPACE/report.cobertura.xml  --coverage-output-format cobertura
 
-    - name: Upload coverage reports to Codecov
+    - name: ReportGenerator
+      uses: danielpalme/ReportGenerator-GitHub-Action@5.2.0
+      with:
+        reports: '${{ github.workspace }}/report.cobertura.xml'
+        targetdir: '${{ github.workspace }}/coveragereport'
+        reporttypes: 'MarkdownSummaryGithub'
+
+    - name: Upload coverage - GitHub
+      run: cat $GITHUB_WORKSPACE/coveragereport/SummaryGithub.md >> $GITHUB_STEP_SUMMARY
+
+    - name: Upload coverage - Codecov
       uses: codecov/codecov-action@v5
       env:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
@@ -33,4 +45,4 @@ jobs:
         name: codecov-umbrella
         fail_ci_if_error: true
         verbose: false
-        files: ./src/MageeSoft.PDX.CE.Tests/coverage.opencover.xml
+        files: ${{ github.workspace }}/report.cobertura.xml
