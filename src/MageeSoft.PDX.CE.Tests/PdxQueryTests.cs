@@ -384,7 +384,7 @@ public class PdxQueryTests
         var items = query.GetList("mixed.[*]");
         Assert.AreEqual("1", PdxQuery.ElementToString(items[0]));
         Assert.AreEqual("\"foo\"", PdxQuery.ElementToString(items[1]));
-        Assert.AreEqual(expected: "{\r\n\tbar=1\r\n}", actual: PdxQuery.ElementToString(items[2]));
+        Assert.AreClausewitzStringsEqual(expected: "{ bar=1 }", actual: PdxQuery.ElementToString(items[2]));
     }
 
     [TestMethod]
@@ -401,7 +401,7 @@ public class PdxQueryTests
         Assert.AreEqual(0, arr.Count);
         var obj = query.GetList("empty_obj");
         Assert.AreEqual(1, obj.Count);
-        Assert.AreEqual("{ }", PdxQuery.ElementToString(obj[0]));
+        Assert.AreClausewitzStringsEqual("{ }", PdxQuery.ElementToString(obj[0]));
     }
 
     [TestMethod]
@@ -437,7 +437,7 @@ public class PdxQueryTests
         var str = PdxQuery.ElementToString(noneVal);
         Assert.IsTrue(str == "none" || str == "" || str == null);
         var fooVal = query.GetList("root.1.foo").FirstOrDefault();
-        Assert.AreEqual("bar", PdxQuery.ElementToString(fooVal));
+        Assert.AreClausewitzStringsEqual("bar", PdxQuery.ElementToString(fooVal));
     }
 
     [TestMethod]
