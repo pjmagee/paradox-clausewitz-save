@@ -48,12 +48,13 @@ public class CliCommandTests
     }
     
     [TestMethod]
+    [DataRow("player.name", "player.name[0]: \"Delegate\"")]
     [DataRow("galactic_object", "galactic_object[0]: {")]
     [DataRow("required_dlcs", "Ancient Relics Story Pack")]
     [DataRow("nebula.galactic_object", "nebula.galactic_object[4]")]
     public void Query_Key(string key, string expected)
     {
-        var ironmanPath = Path.Combine("Stellaris", "TestData", "ironman.sav");
+        var ironmanPath = Path.Combine("TestData", "stellaris", "ironman.sav");
         var parser = new CommandLineBuilder(new PdxRootCommand())
             .UseDefaults()
             .UseHost(_ => Host.CreateDefaultBuilder(), hostBuilder =>
@@ -70,7 +71,7 @@ public class CliCommandTests
             .Build();
 
         TestConsole console = new();
-        parser.Invoke($"query -g=stellaris -s={ironmanPath} -q={key} --show-paths", console: console);
+        parser.Invoke($"""query -g=stellaris -s="{ironmanPath}" -q="{key}" --show-paths""", console: console);
         var output = console.Out.ToString();
         TestContext.WriteLine(output);
         StringAssert.Contains(value: output, substring: expected, StringComparison.Ordinal);
@@ -82,7 +83,7 @@ public class CliCommandTests
     [DataRow("player.[*].country", "player.[*].country[0]: 0")]
     public void Query_Wildcard(string query, string expected)
     {
-        var ironmanPath = Path.Combine("Stellaris", "TestData", "ironman.sav");
+        var ironmanPath = Path.Combine("TestData", "stellaris", "ironman.sav");
         var parser = new CommandLineBuilder(new PdxRootCommand())
             .UseDefaults()
             .UseHost(_ => Host.CreateDefaultBuilder(), hostBuilder =>
@@ -124,7 +125,7 @@ public class CliCommandTests
     })]
     public void Query_RecursiveKeySearch(string query, string[] results)
     {
-        var ironmanPath = Path.Combine("Stellaris", "TestData", "ironman.sav");
+        var ironmanPath = Path.Combine("TestData", "stellaris", "ironman.sav");
         var parser = new CommandLineBuilder(new PdxRootCommand())
             .UseDefaults()
             .UseHost(_ => Host.CreateDefaultBuilder(), hostBuilder =>
@@ -155,7 +156,7 @@ public class CliCommandTests
     [DataRow(".. | select(. == none)")]
     public void Query_RecursiveValueSearch(string query)
     {
-        var ironmanPath = Path.Combine("Stellaris", "TestData", "ironman.sav");
+        var ironmanPath = Path.Combine("TestData", "stellaris", "ironman.sav");
         var parser = new CommandLineBuilder(new PdxRootCommand())
             .UseDefaults()
             .UseHost(_ => Host.CreateDefaultBuilder(), hostBuilder =>
@@ -182,7 +183,7 @@ public class CliCommandTests
     [DataRow(".. | select(contains(22))")]
     public void Query_RecursiveSubStringSearch(string query)
     {
-        var ironmanPath = Path.Combine("Stellaris", "TestData", "ironman.sav");
+        var ironmanPath = Path.Combine("TestData", "stellaris", "ironman.sav");
         
         var parser = new CommandLineBuilder(new PdxRootCommand())
             .UseDefaults()

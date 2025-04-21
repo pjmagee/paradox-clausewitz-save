@@ -18,20 +18,20 @@ public class GameSaveZip : IDisposable
 
     private GameSaveZip(Stream stream)
     {
-        // ArgumentNullException.ThrowIfNull(stream, nameof(stream));
+        ArgumentNullException.ThrowIfNull(stream, nameof(stream));
         _archive = new ZipArchive(stream, ZipArchiveMode.Read, leaveOpen: false);
     }
     
     public static GameSaveZip Open(string filePath)
     {
-        //ArgumentNullException.ThrowIfNull(filePath, nameof(filePath));
+        ArgumentNullException.ThrowIfNull(filePath, nameof(filePath));
         var stream = File.OpenRead(filePath);
         return new GameSaveZip(stream);
     }
     
     public static GameSaveZip Open(FileInfo fileInfo)
     {
-        //ArgumentNullException.ThrowIfNull(fileInfo, nameof(fileInfo));
+        ArgumentNullException.ThrowIfNull(fileInfo, nameof(fileInfo));
         var stream = fileInfo.Open(FileMode.Open, FileAccess.Read, FileShare.Delete);
         return new GameSaveZip(stream);
     }

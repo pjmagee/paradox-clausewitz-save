@@ -10,7 +10,7 @@ public class GameStateDocumentTests
     [TestMethod]
     public void Parse_Loads_GameState()
     {
-        var document = GameStateDocument.Parse(new FileInfo(Path.Combine("Stellaris","TestData", "gamestate")));
+        var document = GameStateDocument.Parse(new FileInfo(Path.Combine("TestData", "stellaris","gamestate")));
         Assert.IsNotNull(document);
         Assert.IsNotNull(document.Root);
 
@@ -29,7 +29,7 @@ public class GameStateDocumentTests
     [TestMethod]
     public void Parse_Loads_Meta()
     {
-        var document = GameStateDocument.Parse(new FileInfo(Path.Combine("Stellaris","TestData", "meta")));
+        var document = GameStateDocument.Parse(new FileInfo(Path.Combine("TestData", "stellaris","meta")));
         Assert.IsNotNull(document);
         Assert.IsNotNull(document.Root);
 

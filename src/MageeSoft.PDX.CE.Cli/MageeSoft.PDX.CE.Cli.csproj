@@ -14,7 +14,7 @@
     <Authors>Patrick Magee</Authors>
     <Description>A command-line tool for parsing and analyzing paradox clausewitz engine game save files.</Description>
 
-     <!-- Version Information - Using GitVersion -->
+    <!-- Version Information - Using GitVersion -->
     <AssemblyVersion>$(GitVersion_AssemblySemVer)</AssemblyVersion>
     <FileVersion>$(GitVersion_AssemblySemFileVer)</FileVersion>
     <InformationalVersion>$(GitVersion_InformationalVersion)</InformationalVersion>
@@ -39,6 +39,10 @@
     <PublishAot>false</PublishAot>
     <PublishTrimmed>false</PublishTrimmed>
   </PropertyGroup>
+  
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\"/>
+  </ItemGroup>
 
   <!-- Native AOT Configuration (default) -->
   <PropertyGroup Condition="'$(Configuration)'=='Release' And '$(PackAsTool)'!='true'">
@@ -53,7 +57,7 @@
     <ProjectReference Include="..\MageeSoft.PDX.CE\MageeSoft.PDX.CE.csproj" />
     <ProjectReference Include="..\MageeSoft.PDX.CE.Save\MageeSoft.PDX.CE.Save.csproj" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
     <PackageReference Include="System.CommandLine.Hosting" Version="0.4.0-alpha.22272.1" />

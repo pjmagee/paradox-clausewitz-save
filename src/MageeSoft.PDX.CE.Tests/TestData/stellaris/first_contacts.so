@@ -1,0 +1,2545 @@
+first_contacts=
+{
+	contacts=
+	{
+		0=
+		{
+			owner=26
+			country=32
+			name=
+			{
+				key="%ADJ%"
+				variables=
+				{
+					
+					{
+						key="1"
+						value=
+						{
+							key="Lambda"
+							variables=
+							{
+								
+								{
+									key="1"
+									value=
+									{
+										key="Aliens"
+									}
+								}
+ 
+							}
+						}
+					}
+ 
+				}
+			}
+			location=65
+			leader=505
+			date="2200.01.01"
+			last_roll=9
+			days_left=110
+			difficulty=5
+			clues=6
+			stage="enclave_stage_2"
+			status=finished
+			event=
+			{
+				expired=no
+				event_id="first_contact_critters.5"
+				scope=
+				{
+					type=first_contact
+					id=0
+					opener_id=4294967295
+					random={ 0 3563516227 }
+					random_allowed=yes
+					root=
+					{
+						type=first_contact
+						id=0
+						opener_id=4294967295
+						random={ 0 3298273929 }
+						random_allowed=yes
+						from=
+						{
+							type=country
+							id=32
+							opener_id=4294967295
+							random={ 0 1549167618 }
+							random_allowed=yes
+						}
+					}
+					from=
+					{
+						type=country
+						id=32
+						opener_id=4294967295
+						random={ 0 1549167618 }
+						random_allowed=yes
+					}
+				}
+				picture="GFX_evt_space_station"
+				index=2
+			}
+			events=
+			{
+				
+				{
+					expired=no
+					event_id="first_contact.1"
+					scope=
+					{
+						type=first_contact
+						id=0
+						opener_id=4294967295
+						random={ 0 1734956282 }
+						random_allowed=yes
+						root=
+						{
+							type=first_contact
+							id=0
+							opener_id=4294967295
+							random={ 0 3060046839 }
+							random_allowed=yes
+							from=
+							{
+								type=country
+								id=32
+								opener_id=4294967295
+								random={ 0 1658322667 }
+								random_allowed=yes
+							}
+						}
+						from=
+						{
+							type=country
+							id=32
+							opener_id=4294967295
+							random={ 0 1658322667 }
+							random_allowed=yes
+						}
+					}
+					picture="GFX_evt_star_chart"
+					index=0
+				}
+ 
+				{
+					expired=no
+					event_id="first_contact_critters.1"
+					scope=
+					{
+						type=first_contact
+						id=0
+						opener_id=4294967295
+						random={ 0 1838066980 }
+						random_allowed=yes
+						root=
+						{
+							type=first_contact
+							id=0
+							opener_id=4294967295
+							random={ 0 3860012583 }
+							random_allowed=yes
+							from=
+							{
+								type=country
+								id=32
+								opener_id=4294967295
+								random={ 0 1071717964 }
+								random_allowed=yes
+							}
+						}
+						from=
+						{
+							type=country
+							id=32
+							opener_id=4294967295
+							random={ 0 1071717964 }
+							random_allowed=yes
+						}
+					}
+					picture="GFX_evt_satellite_in_orbit"
+					index=1
+				}
+ 
+				{
+					expired=no
+					event_id="first_contact.5035"
+					scope=
+					{
+						type=first_contact
+						id=0
+						opener_id=4294967295
+						random={ 0 1395373491 }
+						random_allowed=yes
+						from=
+						{
+							type=first_contact
+							id=0
+							opener_id=4294967295
+							random={ 0 3262125029 }
+							random_allowed=yes
+						}
+					}
+					picture="GFX_evt_worrying_signal"
+					index=2
+				}
+ 
+				{
+					expired=no
+					event_id="first_contact_critters.5"
+					scope=
+					{
+						type=first_contact
+						id=0
+						opener_id=4294967295
+						random={ 0 3563516227 }
+						random_allowed=yes
+						root=
+						{
+							type=first_contact
+							id=0
+							opener_id=4294967295
+							random={ 0 3298273929 }
+							random_allowed=yes
+							from=
+							{
+								type=country
+								id=32
+								opener_id=4294967295
+								random={ 0 1549167618 }
+								random_allowed=yes
+							}
+						}
+						from=
+						{
+							type=country
+							id=32
+							opener_id=4294967295
+							random={ 0 1549167618 }
+							random_allowed=yes
+						}
+					}
+					picture="GFX_evt_space_station"
+					index=2
+				}
+ 
+			}
+			flags=
+			{
+				enclave_first_contact=62808000
+				seen_aliens=62825736
+				fc_event_5035=62825736
+			}
+			completed=
+			{
+				
+				{
+					date="2200.01.01"
+					stage="base_contact_set"
+				}
+
+				{
+					date="2201.06.14"
+					stage="enclave_stage_1"
+				}
+			}
+		}
+		1=
+		{
+			owner=75
+			country=20
+			name=
+			{
+				key="%ADJ%"
+				variables=
+				{
+					
+					{
+						key="1"
+						value=
+						{
+							key="Psi"
+							variables=
+							{
+								
+								{
+									key="1"
+									value=
+									{
+										key="Aliens"
+									}
+								}
+ 
+							}
+						}
+					}
+ 
+				}
+			}
+			location=984
+			leader=616
+			date="2200.01.01"
+			last_roll=10
+			days_left=110
+			difficulty=7
+			clues=12
+			stage="voidworms_stage_2"
+			status=finished
+			event=
+			{
+				expired=no
+				event_id="grand_archive.2005"
+				scope=
+				{
+					type=first_contact
+					id=1
+					opener_id=4294967295
+					random={ 0 841862992 }
+					random_allowed=yes
+					root=
+					{
+						type=first_contact
+						id=1
+						opener_id=4294967295
+						random={ 0 2490013575 }
+						random_allowed=yes
+						from=
+						{
+							type=country
+							id=20
+							opener_id=4294967295
+							random={ 0 2987994747 }
+							random_allowed=yes
+						}
+					}
+					from=
+					{
+						type=country
+						id=20
+						opener_id=4294967295
+						random={ 0 2987994747 }
+						random_allowed=yes
+					}
+				}
+				picture="GFX_evt_unidentified_voidworms"
+				index=2
+			}
+			events=
+			{
+				
+				{
+					expired=no
+					event_id="first_contact.1"
+					scope=
+					{
+						type=first_contact
+						id=1
+						opener_id=4294967295
+						random={ 0 1771038300 }
+						random_allowed=yes
+						root=
+						{
+							type=first_contact
+							id=1
+							opener_id=4294967295
+							random={ 0 2094518419 }
+							random_allowed=yes
+							from=
+							{
+								type=country
+								id=20
+								opener_id=4294967295
+								random={ 0 158453416 }
+								random_allowed=yes
+							}
+						}
+						from=
+						{
+							type=country
+							id=20
+							opener_id=4294967295
+							random={ 0 158453416 }
+							random_allowed=yes
+						}
+					}
+					picture="GFX_evt_star_chart"
+					index=0
+				}
+ 
+				{
+					expired=no
+					event_id="grand_archive.2000"
+					scope=
+					{
+						type=first_contact
+						id=1
+						opener_id=4294967295
+						random={ 0 3254456028 }
+						random_allowed=yes
+						root=
+						{
+							type=first_contact
+							id=1
+							opener_id=4294967295
+							random={ 0 3599149023 }
+							random_allowed=yes
+							from=
+							{
+								type=country
+								id=20
+								opener_id=4294967295
+								random={ 0 1157026956 }
+								random_allowed=yes
+							}
+						}
+						from=
+						{
+							type=country
+							id=20
+							opener_id=4294967295
+							random={ 0 1157026956 }
+							random_allowed=yes
+						}
+					}
+					picture="GFX_evt_unidentified_voidworms"
+					index=1
+				}
+ 
+				{
+					expired=no
+					event_id="grand_archive.2005"
+					scope=
+					{
+						type=first_contact
+						id=1
+						opener_id=4294967295
+						random={ 0 841862992 }
+						random_allowed=yes
+						root=
+						{
+							type=first_contact
+							id=1
+							opener_id=4294967295
+							random={ 0 2490013575 }
+							random_allowed=yes
+							from=
+							{
+								type=country
+								id=20
+								opener_id=4294967295
+								random={ 0 2987994747 }
+								random_allowed=yes
+							}
+						}
+						from=
+						{
+							type=country
+							id=20
+							opener_id=4294967295
+							random={ 0 2987994747 }
+							random_allowed=yes
+						}
+					}
+					picture="GFX_evt_unidentified_voidworms"
+					index=2
+				}
+ 
+			}
+			flags=
+			{
+				voidworms_first_contact=62808000
+			}
+			completed=
+			{
+				
+				{
+					date="2200.01.01"
+					stage="base_contact_set"
+				}
+
+				{
+					date="2202.04.16"
+					stage="voidworms_stage_1"
+				}
+			}
+		}
+		2=
+		{
+			owner=75
+			country=21
+			name=
+			{
+				key="%ADJ%"
+				variables=
+				{
+					
+					{
+						key="1"
+						value=
+						{
+							key="Chi"
+							variables=
+							{
+								
+								{
+									key="1"
+									value=
+									{
+										key="Aliens"
+									}
+								}
+ 
+							}
+						}
+					}
+ 
+				}
+			}
+			location=984
+			leader=616
+			date="2200.01.01"
+			last_roll=7
+			days_left=110
+			difficulty=3
+			clues=8
+			stage="tiyanki_stage_2"
+			status=finished
+			event=
+			{
+				expired=no
+				event_id="first_contact_critters.15"
+				scope=
+				{
+					type=first_contact
+					id=2
+					opener_id=4294967295
+					random={ 0 3593451259 }
+					random_allowed=yes
+					root=
+					{
+						type=first_contact
+						id=2
+						opener_id=4294967295
+						random={ 0 4218039029 }
+						random_allowed=yes
+						from=
+						{
+							type=country
+							id=21
+							opener_id=4294967295
+							random={ 0 466639856 }
+							random_allowed=yes
+						}
+					}
+					from=
+					{
+						type=country
+						id=21
+						opener_id=4294967295
+						random={ 0 466639856 }
+						random_allowed=yes
+					}
+				}
+				picture="GFX_evt_tiyanki_family"
+				index=2
+			}
+			events=
+			{
+				
+				{
+					expired=no
+					event_id="first_contact.1"
+					scope=
+					{
+						type=first_contact
+						id=2
+						opener_id=4294967295
+						random={ 0 3532157592 }
+						random_allowed=yes
+						root=
+						{
+							type=first_contact
+							id=2
+							opener_id=4294967295
+							random={ 0 3343045932 }
+							random_allowed=yes
+							from=
+							{
+								type=country
+								id=21
+								opener_id=4294967295
+								random={ 0 1121344785 }
+								random_allowed=yes
+							}
+						}
+						from=
+						{
+							type=country
+							id=21
+							opener_id=4294967295
+							random={ 0 1121344785 }
+							random_allowed=yes
+						}
+					}
+					picture="GFX_evt_star_chart"
+					index=0
+				}
+ 
+				{
+					expired=no
+					event_id="first_contact_critters.10"
+					scope=
+					{
+						type=first_contact
+						id=2
+						opener_id=4294967295
+						random={ 0 3518688602 }
+						random_allowed=yes
+						root=
+						{
+							type=first_contact
+							id=2
+							opener_id=4294967295
+							random={ 0 2162752873 }
+							random_allowed=yes
+							from=
+							{
+								type=country
+								id=21
+								opener_id=4294967295
+								random={ 0 1906255906 }
+								random_allowed=yes
+							}
+						}
+						from=
+						{
+							type=country
+							id=21
+							opener_id=4294967295
+							random={ 0 1906255906 }
+							random_allowed=yes
+						}
+					}
+					picture="GFX_evt_unidentified_monster"
+					index=1
+				}
+ 
+				{
+					expired=no
+					event_id="first_contact_critters.15"
+					scope=
+					{
+						type=first_contact
+						id=2
+						opener_id=4294967295
+						random={ 0 3593451259 }
+						random_allowed=yes
+						root=
+						{
+							type=first_contact
+							id=2
+							opener_id=4294967295
+							random={ 0 4218039029 }
+							random_allowed=yes
+							from=
+							{
+								type=country
+								id=21
+								opener_id=4294967295
+								random={ 0 466639856 }
+								random_allowed=yes
+							}
+						}
+						from=
+						{
+							type=country
+							id=21
+							opener_id=4294967295
+							random={ 0 466639856 }
+							random_allowed=yes
+						}
+					}
+					picture="GFX_evt_tiyanki_family"
+					index=2
+				}
+ 
+			}
+			flags=
+			{
+				tiyanki_first_contact=62808000
+			}
+			completed=
+			{
+				
+				{
+					date="2200.01.01"
+					stage="base_contact_set"
+				}
+
+				{
+					date="2204.02.04"
+					stage="tiyanki_stage_1"
+				}
+			}
+		}
+		3=
+		{
+			owner=75
+			country=22
+			name=
+			{
+				key="%ADJ%"
+				variables=
+				{
+					
+					{
+						key="1"
+						value=
+						{
+							key="Beta"
+							variables=
+							{
+								
+								{
+									key="1"
+									value=
+									{
+										key="Aliens"
+									}
+								}
+ 
+							}
+						}
+					}
+ 
+				}
+			}
+			location=984
+			leader=616
+			date="2200.01.01"
+			last_roll=10
+			days_left=110
+			difficulty=3
+			clues=11
+			stage="void_clouds_stage_2"
+			status=finished
+			event=
+			{
+				expired=no
+				event_id="first_contact_critters.85"
+				scope=
+				{
+					type=first_contact
+					id=3
+					opener_id=4294967295
+					random={ 0 2681992963 }
+					random_allowed=yes
+					root=
+					{
+						type=first_contact
+						id=3
+						opener_id=4294967295
+						random={ 0 728203037 }
+						random_allowed=yes
+						from=
+						{
+							type=country
+							id=22
+							opener_id=4294967295
+							random={ 0 3116744792 }
+							random_allowed=yes
+						}
+					}
+					from=
+					{
+						type=country
+						id=22
+						opener_id=4294967295
+						random={ 0 3116744792 }
+						random_allowed=yes
+					}
+				}
+				picture="GFX_evt_binary_stars"
+				index=2
+			}
+			events=
+			{
+				
+				{
+					expired=no
+					event_id="first_contact.1"
+					scope=
+					{
+						type=first_contact
+						id=3
+						opener_id=4294967295
+						random={ 0 2872291733 }
+						random_allowed=yes
+						root=
+						{
+							type=first_contact
+							id=3
+							opener_id=4294967295
+							random={ 0 3125466407 }
+							random_allowed=yes
+							from=
+							{
+								type=country
+								id=22
+								opener_id=4294967295
+								random={ 0 1044497557 }
+								random_allowed=yes
+							}
+						}
+						from=
+						{
+							type=country
+							id=22
+							opener_id=4294967295
+							random={ 0 1044497557 }
+							random_allowed=yes
+						}
+					}
+					picture="GFX_evt_star_chart"
+					index=0
+				}
+ 
+				{
+					expired=no
+					event_id="first_contact_critters.80"
+					scope=
+					{
+						type=first_contact
+						id=3
+						opener_id=4294967295
+						random={ 0 1082803884 }
+						random_allowed=yes
+						root=
+						{
+							type=first_contact
+							id=3
+							opener_id=4294967295
+							random={ 0 35051062 }
+							random_allowed=yes
+							from=
+							{
+								type=country
+								id=22
+								opener_id=4294967295
+								random={ 0 2373064913 }
+								random_allowed=yes
+							}
+						}
+						from=
+						{
+							type=country
+							id=22
+							opener_id=4294967295
+							random={ 0 2373064913 }
+							random_allowed=yes
+						}
+					}
+					picture="GFX_evt_unidentified_monster"
+					index=1
+				}
+ 
+				{
+					expired=no
+					event_id="first_contact_critters.85"
+					scope=
+					{
+						type=first_contact
+						id=3
+						opener_id=4294967295
+						random={ 0 2681992963 }
+						random_allowed=yes
+						root=
+						{
+							type=first_contact
+							id=3
+							opener_id=4294967295
+							random={ 0 728203037 }
+							random_allowed=yes
+							from=
+							{
+								type=country
+								id=22
+								opener_id=4294967295
+								random={ 0 3116744792 }
+								random_allowed=yes
+							}
+						}
+						from=
+						{
+							type=country
+							id=22
+							opener_id=4294967295
+							random={ 0 3116744792 }
+							random_allowed=yes
+						}
+					}
+					picture="GFX_evt_binary_stars"
+					index=2
+				}
+ 
+			}
+			flags=
+			{
+				void_clouds_first_contact=62808000
+			}
+			completed=
+			{
+				
+				{
+					date="2200.01.01"
+					stage="base_contact_set"
+				}
+
+				{
+					date="2203.04.19"
+					stage="void_clouds_stage_1"
+				}
+			}
+		}
+		4=
+		{
+			owner=75
+			country=23
+			name=
+			{
+				key="%ADJ%"
+				variables=
+				{
+					
+					{
+						key="1"
+						value=
+						{
+							key="Xi"
+							variables=
+							{
+								
+								{
+									key="1"
+									value=
+									{
+										key="Aliens"
+									}
+								}
+ 
+							}
+						}
+					}
+ 
+				}
+			}
+			location=984
+			leader=617
+			date="2200.01.01"
+			last_roll=8
+			days_left=110
+			difficulty=5
+			clues=7
+			stage="marauders_stage_2"
+			status=finished
+			event=
+			{
+				expired=no
+				event_id="first_contact_critters.55"
+				scope=
+				{
+					type=first_contact
+					id=4
+					opener_id=4294967295
+					random={ 0 3869059038 }
+					random_allowed=yes
+					root=
+					{
+						type=first_contact
+						id=4
+						opener_id=4294967295
+						random={ 0 488674570 }
+						random_allowed=yes
+						from=
+						{
+							type=country
+							id=23
+							opener_id=4294967295
+							random={ 0 2719511702 }
+							random_allowed=yes
+							saved_event_target=
+							{
+								type=country
+								id=23
+								opener_id=4294967295
+								name="encountered_marauder"
+							}
+							saved_event_target=
+							{
+								type=galactic_object
+								id=12
+								opener_id=4294967295
+								name="marauder_system"
+							}
+						}
+					}
+					from=
+					{
+						type=country
+						id=23
+						opener_id=4294967295
+						random={ 0 2719511702 }
+						random_allowed=yes
+						saved_event_target=
+						{
+							type=country
+							id=23
+							opener_id=4294967295
+							name="encountered_marauder"
+						}
+						saved_event_target=
+						{
+							type=galactic_object
+							id=12
+							opener_id=4294967295
+							name="marauder_system"
+						}
+					}
+				}
+				picture="GFX_evt_pirate_armada"
+				index=2
+			}
+			events=
+			{
+				
+				{
+					expired=no
+					event_id="first_contact.1"
+					scope=
+					{
+						type=first_contact
+						id=4
+						opener_id=4294967295
+						random={ 0 3767640729 }
+						random_allowed=yes
+						root=
+						{
+							type=first_contact
+							id=4
+							opener_id=4294967295
+							random={ 0 3850456927 }
+							random_allowed=yes
+							from=
+							{
+								type=country
+								id=23
+								opener_id=4294967295
+								random={ 0 1701696481 }
+								random_allowed=yes
+							}
+						}
+						from=
+						{
+							type=country
+							id=23
+							opener_id=4294967295
+							random={ 0 1701696481 }
+							random_allowed=yes
+						}
+					}
+					picture="GFX_evt_star_chart"
+					index=0
+				}
+ 
+				{
+					expired=no
+					event_id="first_contact_critters.50"
+					scope=
+					{
+						type=first_contact
+						id=4
+						opener_id=4294967295
+						random={ 0 4028219312 }
+						random_allowed=yes
+						root=
+						{
+							type=first_contact
+							id=4
+							opener_id=4294967295
+							random={ 0 1237082875 }
+							random_allowed=yes
+							from=
+							{
+								type=country
+								id=23
+								opener_id=4294967295
+								random={ 0 1274044318 }
+								random_allowed=yes
+							}
+						}
+						from=
+						{
+							type=country
+							id=23
+							opener_id=4294967295
+							random={ 0 1274044318 }
+							random_allowed=yes
+						}
+					}
+					picture="GFX_evt_pirates_attacking_cargo"
+					index=1
+				}
+ 
+				{
+					expired=no
+					event_id="first_contact_critters.55"
+					scope=
+					{
+						type=first_contact
+						id=4
+						opener_id=4294967295
+						random={ 0 3869059038 }
+						random_allowed=yes
+						root=
+						{
+							type=first_contact
+							id=4
+							opener_id=4294967295
+							random={ 0 488674570 }
+							random_allowed=yes
+							from=
+							{
+								type=country
+								id=23
+								opener_id=4294967295
+								random={ 0 2719511702 }
+								random_allowed=yes
+								saved_event_target=
+								{
+									type=country
+									id=23
+									opener_id=4294967295
+									name="encountered_marauder"
+								}
+								saved_event_target=
+								{
+									type=galactic_object
+									id=12
+									opener_id=4294967295
+									name="marauder_system"
+								}
+							}
+						}
+						from=
+						{
+							type=country
+							id=23
+							opener_id=4294967295
+							random={ 0 2719511702 }
+							random_allowed=yes
+							saved_event_target=
+							{
+								type=country
+								id=23
+								opener_id=4294967295
+								name="encountered_marauder"
+							}
+							saved_event_target=
+							{
+								type=galactic_object
+								id=12
+								opener_id=4294967295
+								name="marauder_system"
+							}
+						}
+					}
+					picture="GFX_evt_pirate_armada"
+					index=2
+				}
+ 
+			}
+			flags=
+			{
+				marauders_first_contact=62808000
+			}
+			completed=
+			{
+				
+				{
+					date="2200.01.01"
+					stage="base_contact_set"
+				}
+
+				{
+					date="2202.01.11"
+					stage="marauders_stage_1"
+				}
+			}
+		}
+		5=
+		{
+			owner=75
+			country=29
+			name=
+			{
+				key="%ADJ%"
+				variables=
+				{
+					
+					{
+						key="1"
+						value=
+						{
+							key="Sin"
+							variables=
+							{
+								
+								{
+									key="1"
+									value=
+									{
+										key="Aliens"
+									}
+								}
+ 
+							}
+						}
+					}
+ 
+				}
+			}
+			location=984
+			leader=616
+			date="2200.01.01"
+			last_roll=10
+			days_left=110
+			difficulty=5
+			clues=5
+			stage="enclave_stage_2"
+			status=finished
+			event=
+			{
+				expired=no
+				event_id="first_contact_critters.5"
+				scope=
+				{
+					type=first_contact
+					id=5
+					opener_id=4294967295
+					random={ 0 976786919 }
+					random_allowed=yes
+					root=
+					{
+						type=first_contact
+						id=5
+						opener_id=4294967295
+						random={ 0 3022784357 }
+						random_allowed=yes
+						from=
+						{
+							type=country
+							id=29
+							opener_id=4294967295
+							random={ 0 1149837308 }
+							random_allowed=yes
+						}
+					}
+					from=
+					{
+						type=country
+						id=29
+						opener_id=4294967295
+						random={ 0 1149837308 }
+						random_allowed=yes
+					}
+				}
+				picture="GFX_evt_space_station"
+				index=2
+			}
+			events=
+			{
+				
+				{
+					expired=no
+					event_id="first_contact.1"
+					scope=
+					{
+						type=first_contact
+						id=5
+						opener_id=4294967295
+						random={ 0 3062778747 }
+						random_allowed=yes
+						root=
+						{
+							type=first_contact
+							id=5
+							opener_id=4294967295
+							random={ 0 3119346884 }
+							random_allowed=yes
+							from=
+							{
+								type=country
+								id=29
+								opener_id=4294967295
+								random={ 0 3864025268 }
+								random_allowed=yes
+							}
+						}
+						from=
+						{
+							type=country
+							id=29
+							opener_id=4294967295
+							random={ 0 3864025268 }
+							random_allowed=yes
+						}
+					}
+					picture="GFX_evt_star_chart"
+					index=0
+				}
+ 
+				{
+					expired=no
+					event_id="first_contact_critters.1"
+					scope=
+					{
+						type=first_contact
+						id=5
+						opener_id=4294967295
+						random={ 0 4039084022 }
+						random_allowed=yes
+						root=
+						{
+							type=first_contact
+							id=5
+							opener_id=4294967295
+							random={ 0 43827041 }
+							random_allowed=yes
+							from=
+							{
+								type=country
+								id=29
+								opener_id=4294967295
+								random={ 0 2046651078 }
+								random_allowed=yes
+							}
+						}
+						from=
+						{
+							type=country
+							id=29
+							opener_id=4294967295
+							random={ 0 2046651078 }
+							random_allowed=yes
+						}
+					}
+					picture="GFX_evt_satellite_in_orbit"
+					index=1
+				}
+ 
+				{
+					expired=no
+					event_id="first_contact_critters.5"
+					scope=
+					{
+						type=first_contact
+						id=5
+						opener_id=4294967295
+						random={ 0 976786919 }
+						random_allowed=yes
+						root=
+						{
+							type=first_contact
+							id=5
+							opener_id=4294967295
+							random={ 0 3022784357 }
+							random_allowed=yes
+							from=
+							{
+								type=country
+								id=29
+								opener_id=4294967295
+								random={ 0 1149837308 }
+								random_allowed=yes
+							}
+						}
+						from=
+						{
+							type=country
+							id=29
+							opener_id=4294967295
+							random={ 0 1149837308 }
+							random_allowed=yes
+						}
+					}
+					picture="GFX_evt_space_station"
+					index=2
+				}
+ 
+			}
+			flags=
+			{
+				enclave_first_contact=62808000
+			}
+			completed=
+			{
+				
+				{
+					date="2200.01.01"
+					stage="base_contact_set"
+				}
+
+				{
+					date="2208.08.11"
+					stage="enclave_stage_1"
+				}
+			}
+		}
+		6=
+		{
+			owner=75
+			country=31
+			name=
+			{
+				key="%ADJ%"
+				variables=
+				{
+					
+					{
+						key="1"
+						value=
+						{
+							key="Qoph"
+							variables=
+							{
+								
+								{
+									key="1"
+									value=
+									{
+										key="Aliens"
+									}
+								}
+ 
+							}
+						}
+					}
+ 
+				}
+			}
+			location=984
+			leader=617
+			date="2200.01.01"
+			last_roll=9
+			days_left=110
+			difficulty=5
+			clues=6
+			stage="enclave_stage_2"
+			status=finished
+			event=
+			{
+				expired=no
+				event_id="first_contact_critters.5"
+				scope=
+				{
+					type=first_contact
+					id=6
+					opener_id=4294967295
+					random={ 0 4171333311 }
+					random_allowed=yes
+					root=
+					{
+						type=first_contact
+						id=6
+						opener_id=4294967295
+						random={ 0 60956743 }
+						random_allowed=yes
+						from=
+						{
+							type=country
+							id=31
+							opener_id=4294967295
+							random={ 0 4219997879 }
+							random_allowed=yes
+						}
+					}
+					from=
+					{
+						type=country
+						id=31
+						opener_id=4294967295
+						random={ 0 4219997879 }
+						random_allowed=yes
+					}
+				}
+				picture="GFX_evt_space_station"
+				index=2
+			}
+			events=
+			{
+				
+				{
+					expired=no
+					event_id="first_contact.1"
+					scope=
+					{
+						type=first_contact
+						id=6
+						opener_id=4294967295
+						random={ 0 3867997981 }
+						random_allowed=yes
+						root=
+						{
+							type=first_contact
+							id=6
+							opener_id=4294967295
+							random={ 0 1893529057 }
+							random_allowed=yes
+							from=
+							{
+								type=country
+								id=31
+								opener_id=4294967295
+								random={ 0 280493456 }
+								random_allowed=yes
+							}
+						}
+						from=
+						{
+							type=country
+							id=31
+							opener_id=4294967295
+							random={ 0 280493456 }
+							random_allowed=yes
+						}
+					}
+					picture="GFX_evt_star_chart"
+					index=0
+				}
+ 
+				{
+					expired=no
+					event_id="first_contact.5000"
+					scope=
+					{
+						type=first_contact
+						id=6
+						opener_id=4294967295
+						random={ 0 2714401742 }
+						random_allowed=yes
+						from=
+						{
+							type=first_contact
+							id=6
+							opener_id=4294967295
+							random={ 0 2343925964 }
+							random_allowed=yes
+						}
+					}
+					picture="GFX_evt_mysterious_signal"
+					index=1
+				}
+ 
+				{
+					expired=no
+					event_id="first_contact_critters.1"
+					scope=
+					{
+						type=first_contact
+						id=6
+						opener_id=4294967295
+						random={ 0 3445384791 }
+						random_allowed=yes
+						root=
+						{
+							type=first_contact
+							id=6
+							opener_id=4294967295
+							random={ 0 1924848627 }
+							random_allowed=yes
+							from=
+							{
+								type=country
+								id=31
+								opener_id=4294967295
+								random={ 0 3292343017 }
+								random_allowed=yes
+							}
+						}
+						from=
+						{
+							type=country
+							id=31
+							opener_id=4294967295
+							random={ 0 3292343017 }
+							random_allowed=yes
+						}
+					}
+					picture="GFX_evt_satellite_in_orbit"
+					index=1
+				}
+ 
+				{
+					expired=no
+					event_id="first_contact_critters.5"
+					scope=
+					{
+						type=first_contact
+						id=6
+						opener_id=4294967295
+						random={ 0 4171333311 }
+						random_allowed=yes
+						root=
+						{
+							type=first_contact
+							id=6
+							opener_id=4294967295
+							random={ 0 60956743 }
+							random_allowed=yes
+							from=
+							{
+								type=country
+								id=31
+								opener_id=4294967295
+								random={ 0 4219997879 }
+								random_allowed=yes
+							}
+						}
+						from=
+						{
+							type=country
+							id=31
+							opener_id=4294967295
+							random={ 0 4219997879 }
+							random_allowed=yes
+						}
+					}
+					picture="GFX_evt_space_station"
+					index=2
+				}
+ 
+			}
+			flags=
+			{
+				enclave_first_contact=62808000
+				fc_event_5000=62884680
+			}
+			completed=
+			{
+				
+				{
+					date="2200.01.01"
+					stage="base_contact_set"
+				}
+
+				{
+					date="2209.05.24"
+					stage="enclave_stage_1"
+				}
+			}
+		}
+		7=
+		{
+			owner=75
+			country=32
+			name=
+			{
+				key="%ADJ%"
+				variables=
+				{
+					
+					{
+						key="1"
+						value=
+						{
+							key="Samekh"
+							variables=
+							{
+								
+								{
+									key="1"
+									value=
+									{
+										key="Aliens"
+									}
+								}
+ 
+							}
+						}
+					}
+ 
+				}
+			}
+			location=984
+			leader=617
+			date="2200.01.01"
+			last_roll=4
+			days_left=110
+			difficulty=5
+			clues=11
+			stage="enclave_stage_2"
+			status=finished
+			event=
+			{
+				expired=no
+				event_id="first_contact_critters.5"
+				scope=
+				{
+					type=first_contact
+					id=7
+					opener_id=4294967295
+					random={ 0 2338280917 }
+					random_allowed=yes
+					root=
+					{
+						type=first_contact
+						id=7
+						opener_id=4294967295
+						random={ 0 3964576523 }
+						random_allowed=yes
+						from=
+						{
+							type=country
+							id=32
+							opener_id=4294967295
+							random={ 0 2007788538 }
+							random_allowed=yes
+						}
+					}
+					from=
+					{
+						type=country
+						id=32
+						opener_id=4294967295
+						random={ 0 2007788538 }
+						random_allowed=yes
+					}
+				}
+				picture="GFX_evt_space_station"
+				index=2
+			}
+			events=
+			{
+				
+				{
+					expired=no
+					event_id="first_contact.1"
+					scope=
+					{
+						type=first_contact
+						id=7
+						opener_id=4294967295
+						random={ 0 733145311 }
+						random_allowed=yes
+						root=
+						{
+							type=first_contact
+							id=7
+							opener_id=4294967295
+							random={ 0 2909735630 }
+							random_allowed=yes
+							from=
+							{
+								type=country
+								id=32
+								opener_id=4294967295
+								random={ 0 2569542371 }
+								random_allowed=yes
+							}
+						}
+						from=
+						{
+							type=country
+							id=32
+							opener_id=4294967295
+							random={ 0 2569542371 }
+							random_allowed=yes
+						}
+					}
+					picture="GFX_evt_star_chart"
+					index=0
+				}
+ 
+				{
+					expired=no
+					event_id="first_contact_critters.1"
+					scope=
+					{
+						type=first_contact
+						id=7
+						opener_id=4294967295
+						random={ 0 3721259682 }
+						random_allowed=yes
+						root=
+						{
+							type=first_contact
+							id=7
+							opener_id=4294967295
+							random={ 0 4212229087 }
+							random_allowed=yes
+							from=
+							{
+								type=country
+								id=32
+								opener_id=4294967295
+								random={ 0 1217038394 }
+								random_allowed=yes
+							}
+						}
+						from=
+						{
+							type=country
+							id=32
+							opener_id=4294967295
+							random={ 0 1217038394 }
+							random_allowed=yes
+						}
+					}
+					picture="GFX_evt_satellite_in_orbit"
+					index=1
+				}
+ 
+				{
+					expired=no
+					event_id="first_contact.5030"
+					scope=
+					{
+						type=first_contact
+						id=7
+						opener_id=4294967295
+						random={ 0 2832055596 }
+						random_allowed=yes
+						from=
+						{
+							type=first_contact
+							id=7
+							opener_id=4294967295
+							random={ 0 3926298806 }
+							random_allowed=yes
+						}
+					}
+					picture="GFX_evt_hand_shake"
+					index=2
+				}
+ 
+				{
+					expired=no
+					event_id="first_contact_critters.5"
+					scope=
+					{
+						type=first_contact
+						id=7
+						opener_id=4294967295
+						random={ 0 2338280917 }
+						random_allowed=yes
+						root=
+						{
+							type=first_contact
+							id=7
+							opener_id=4294967295
+							random={ 0 3964576523 }
+							random_allowed=yes
+							from=
+							{
+								type=country
+								id=32
+								opener_id=4294967295
+								random={ 0 2007788538 }
+								random_allowed=yes
+							}
+						}
+						from=
+						{
+							type=country
+							id=32
+							opener_id=4294967295
+							random={ 0 2007788538 }
+							random_allowed=yes
+						}
+					}
+					picture="GFX_evt_space_station"
+					index=2
+				}
+ 
+			}
+			flags=
+			{
+				enclave_first_contact=62808000
+				seen_aliens=62906856
+				fc_event_5030=62906856
+			}
+			completed=
+			{
+				
+				{
+					date="2200.01.01"
+					stage="base_contact_set"
+				}
+
+				{
+					date="2210.02.23"
+					stage="enclave_stage_1"
+				}
+			}
+		}
+		8=
+		{
+			owner=75
+			country=33
+			name=
+			{
+				key="%ADJ%"
+				variables=
+				{
+					
+					{
+						key="1"
+						value=
+						{
+							key="Samekh"
+							variables=
+							{
+								
+								{
+									key="1"
+									value=
+									{
+										key="Aliens"
+									}
+								}
+ 
+							}
+						}
+					}
+ 
+				}
+			}
+			location=984
+			leader=617
+			date="2200.01.01"
+			last_roll=8
+			days_left=110
+			difficulty=3
+			clues=8
+			stage="amoeba_stage_2"
+			status=finished
+			event=
+			{
+				expired=no
+				event_id="first_contact_critters.25"
+				scope=
+				{
+					type=first_contact
+					id=8
+					opener_id=4294967295
+					random={ 0 2490929651 }
+					random_allowed=yes
+					root=
+					{
+						type=first_contact
+						id=8
+						opener_id=4294967295
+						random={ 0 3113657895 }
+						random_allowed=yes
+						from=
+						{
+							type=country
+							id=33
+							opener_id=4294967295
+							random={ 0 1624060400 }
+							random_allowed=yes
+						}
+					}
+					from=
+					{
+						type=country
+						id=33
+						opener_id=4294967295
+						random={ 0 1624060400 }
+						random_allowed=yes
+					}
+				}
+				picture="GFX_evt_friendly_amoeba"
+				index=2
+			}
+			events=
+			{
+				
+				{
+					expired=no
+					event_id="first_contact.1"
+					scope=
+					{
+						type=first_contact
+						id=8
+						opener_id=4294967295
+						random={ 0 1287957660 }
+						random_allowed=yes
+						root=
+						{
+							type=first_contact
+							id=8
+							opener_id=4294967295
+							random={ 0 199159278 }
+							random_allowed=yes
+							from=
+							{
+								type=country
+								id=33
+								opener_id=4294967295
+								random={ 0 583233412 }
+								random_allowed=yes
+							}
+						}
+						from=
+						{
+							type=country
+							id=33
+							opener_id=4294967295
+							random={ 0 583233412 }
+							random_allowed=yes
+						}
+					}
+					picture="GFX_evt_star_chart"
+					index=0
+				}
+ 
+				{
+					expired=no
+					event_id="first_contact_critters.20"
+					scope=
+					{
+						type=first_contact
+						id=8
+						opener_id=4294967295
+						random={ 0 2426765505 }
+						random_allowed=yes
+						root=
+						{
+							type=first_contact
+							id=8
+							opener_id=4294967295
+							random={ 0 3767641020 }
+							random_allowed=yes
+							from=
+							{
+								type=country
+								id=33
+								opener_id=4294967295
+								random={ 0 1850372170 }
+								random_allowed=yes
+							}
+						}
+						from=
+						{
+							type=country
+							id=33
+							opener_id=4294967295
+							random={ 0 1850372170 }
+							random_allowed=yes
+						}
+					}
+					picture="GFX_evt_unidentified_monster"
+					index=1
+				}
+ 
+				{
+					expired=no
+					event_id="first_contact_critters.25"
+					scope=
+					{
+						type=first_contact
+						id=8
+						opener_id=4294967295
+						random={ 0 2490929651 }
+						random_allowed=yes
+						root=
+						{
+							type=first_contact
+							id=8
+							opener_id=4294967295
+							random={ 0 3113657895 }
+							random_allowed=yes
+							from=
+							{
+								type=country
+								id=33
+								opener_id=4294967295
+								random={ 0 1624060400 }
+								random_allowed=yes
+							}
+						}
+						from=
+						{
+							type=country
+							id=33
+							opener_id=4294967295
+							random={ 0 1624060400 }
+							random_allowed=yes
+						}
+					}
+					picture="GFX_evt_friendly_amoeba"
+					index=2
+				}
+ 
+			}
+			flags=
+			{
+				amoeba_first_contact=62808000
+			}
+			completed=
+			{
+				
+				{
+					date="2200.01.01"
+					stage="base_contact_set"
+				}
+
+				{
+					date="2212.02.17"
+					stage="amoeba_stage_1"
+				}
+			}
+		}
+		9=
+		{
+			owner=75
+			country=34
+			name=
+			{
+				key="%ADJ%"
+				variables=
+				{
+					
+					{
+						key="1"
+						value=
+						{
+							key="Gamma"
+							variables=
+							{
+								
+								{
+									key="1"
+									value=
+									{
+										key="Aliens"
+									}
+								}
+ 
+							}
+						}
+					}
+ 
+				}
+			}
+			location=984
+			leader=617
+			date="2200.01.01"
+			last_roll=8
+			days_left=110
+			difficulty=5
+			clues=5
+			stage="enclave_stage_2"
+			status=finished
+			event=
+			{
+				expired=no
+				event_id="first_contact_critters.5"
+				scope=
+				{
+					type=first_contact
+					id=9
+					opener_id=4294967295
+					random={ 0 1651262162 }
+					random_allowed=yes
+					root=
+					{
+						type=first_contact
+						id=9
+						opener_id=4294967295
+						random={ 0 1082340690 }
+						random_allowed=yes
+						from=
+						{
+							type=country
+							id=34
+							opener_id=4294967295
+							random={ 0 4272577295 }
+							random_allowed=yes
+						}
+					}
+					from=
+					{
+						type=country
+						id=34
+						opener_id=4294967295
+						random={ 0 4272577295 }
+						random_allowed=yes
+					}
+				}
+				picture="GFX_evt_space_station"
+				index=2
+			}
+			events=
+			{
+				
+				{
+					expired=no
+					event_id="first_contact.1"
+					scope=
+					{
+						type=first_contact
+						id=9
+						opener_id=4294967295
+						random={ 0 1349286592 }
+						random_allowed=yes
+						root=
+						{
+							type=first_contact
+							id=9
+							opener_id=4294967295
+							random={ 0 1299367934 }
+							random_allowed=yes
+							from=
+							{
+								type=country
+								id=34
+								opener_id=4294967295
+								random={ 0 3567719139 }
+								random_allowed=yes
+							}
+						}
+						from=
+						{
+							type=country
+							id=34
+							opener_id=4294967295
+							random={ 0 3567719139 }
+							random_allowed=yes
+						}
+					}
+					picture="GFX_evt_star_chart"
+					index=0
+				}
+ 
+				{
+					expired=no
+					event_id="first_contact_critters.1"
+					scope=
+					{
+						type=first_contact
+						id=9
+						opener_id=4294967295
+						random={ 0 1727918984 }
+						random_allowed=yes
+						root=
+						{
+							type=first_contact
+							id=9
+							opener_id=4294967295
+							random={ 0 3374793525 }
+							random_allowed=yes
+							from=
+							{
+								type=country
+								id=34
+								opener_id=4294967295
+								random={ 0 205935577 }
+								random_allowed=yes
+							}
+						}
+						from=
+						{
+							type=country
+							id=34
+							opener_id=4294967295
+							random={ 0 205935577 }
+							random_allowed=yes
+						}
+					}
+					picture="GFX_evt_satellite_in_orbit"
+					index=1
+				}
+ 
+				{
+					expired=no
+					event_id="first_contact_critters.5"
+					scope=
+					{
+						type=first_contact
+						id=9
+						opener_id=4294967295
+						random={ 0 1651262162 }
+						random_allowed=yes
+						root=
+						{
+							type=first_contact
+							id=9
+							opener_id=4294967295
+							random={ 0 1082340690 }
+							random_allowed=yes
+							from=
+							{
+								type=country
+								id=34
+								opener_id=4294967295
+								random={ 0 4272577295 }
+								random_allowed=yes
+							}
+						}
+						from=
+						{
+							type=country
+							id=34
+							opener_id=4294967295
+							random={ 0 4272577295 }
+							random_allowed=yes
+						}
+					}
+					picture="GFX_evt_space_station"
+					index=2
+				}
+ 
+			}
+			flags=
+			{
+				enclave_first_contact=62808000
+			}
+			completed=
+			{
+				
+				{
+					date="2200.01.01"
+					stage="base_contact_set"
+				}
+
+				{
+					date="2211.11.28"
+					stage="enclave_stage_1"
+				}
+			}
+		}
+		10=
+		{
+			owner=75
+			country=35
+			name=
+			{
+				key="%ADJ%"
+				variables=
+				{
+					
+					{
+						key="1"
+						value=
+						{
+							key="Teth"
+							variables=
+							{
+								
+								{
+									key="1"
+									value=
+									{
+										key="Aliens"
+									}
+								}
+ 
+							}
+						}
+					}
+ 
+				}
+			}
+			location=984
+			leader=616
+			date="2200.01.01"
+			last_roll=7
+			days_left=110
+			difficulty=5
+			clues=9
+			stage="drones_stage_2"
+			status=finished
+			event=
+			{
+				expired=no
+				event_id="first_contact_critters.45"
+				scope=
+				{
+					type=first_contact
+					id=10
+					opener_id=4294967295
+					random={ 0 981559662 }
+					random_allowed=yes
+					root=
+					{
+						type=first_contact
+						id=10
+						opener_id=4294967295
+						random={ 0 1846441757 }
+						random_allowed=yes
+						from=
+						{
+							type=country
+							id=35
+							opener_id=4294967295
+							random={ 0 4025355503 }
+							random_allowed=yes
+						}
+					}
+					from=
+					{
+						type=country
+						id=35
+						opener_id=4294967295
+						random={ 0 4025355503 }
+						random_allowed=yes
+					}
+				}
+				picture="GFX_evt_mining_station"
+				index=2
+			}
+			events=
+			{
+				
+				{
+					expired=no
+					event_id="first_contact.1"
+					scope=
+					{
+						type=first_contact
+						id=10
+						opener_id=4294967295
+						random={ 0 4017552055 }
+						random_allowed=yes
+						root=
+						{
+							type=first_contact
+							id=10
+							opener_id=4294967295
+							random={ 0 2379712046 }
+							random_allowed=yes
+							from=
+							{
+								type=country
+								id=35
+								opener_id=4294967295
+								random={ 0 1258523055 }
+								random_allowed=yes
+							}
+						}
+						from=
+						{
+							type=country
+							id=35
+							opener_id=4294967295
+							random={ 0 1258523055 }
+							random_allowed=yes
+						}
+					}
+					picture="GFX_evt_star_chart"
+					index=0
+				}
+ 
+				{
+					expired=no
+					event_id="first_contact_critters.40"
+					scope=
+					{
+						type=first_contact
+						id=10
+						opener_id=4294967295
+						random={ 0 4184922452 }
+						random_allowed=yes
+						root=
+						{
+							type=first_contact
+							id=10
+							opener_id=4294967295
+							random={ 0 4205897709 }
+							random_allowed=yes
+							from=
+							{
+								type=country
+								id=35
+								opener_id=4294967295
+								random={ 0 191017918 }
+								random_allowed=yes
+							}
+						}
+						from=
+						{
+							type=country
+							id=35
+							opener_id=4294967295
+							random={ 0 191017918 }
+							random_allowed=yes
+						}
+					}
+					picture="GFX_evt_ship_in_orbit"
+					index=1
+				}
+ 
+				{
+					expired=no
+					event_id="first_contact_critters.45"
+					scope=
+					{
+						type=first_contact
+						id=10
+						opener_id=4294967295
+						random={ 0 981559662 }
+						random_allowed=yes
+						root=
+						{
+							type=first_contact
+							id=10
+							opener_id=4294967295
+							random={ 0 1846441757 }
+							random_allowed=yes
+							from=
+							{
+								type=country
+								id=35
+								opener_id=4294967295
+								random={ 0 4025355503 }
+								random_allowed=yes
+							}
+						}
+						from=
+						{
+							type=country
+							id=35
+							opener_id=4294967295
+							random={ 0 4025355503 }
+							random_allowed=yes
+						}
+					}
+					picture="GFX_evt_mining_station"
+					index=2
+				}
+ 
+			}
+			flags=
+			{
+				drones_first_contact=62808000
+			}
+			completed=
+			{
+				
+				{
+					date="2200.01.01"
+					stage="base_contact_set"
+				}
+
+				{
+					date="2214.03.08"
+					stage="drones_stage_1"
+				}
+			}
+		}
+	}	
+}

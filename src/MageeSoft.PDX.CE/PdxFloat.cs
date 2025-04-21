@@ -10,7 +10,7 @@ public readonly struct PdxFloat(float value) : IPdxScalar, IEquatable<PdxFloat>
     public float Value { get; } = value;
     public PdxType Type => PdxType.Float;
 
-    public bool Equals(PdxFloat other) => Value == other.Value;
+    public bool Equals(PdxFloat other) => Value.Equals(other.Value);
     public override bool Equals(object? obj) => obj is PdxFloat other && Equals(other);
     public override int GetHashCode() => Value.GetHashCode();
     public override string ToString() => Value.ToString(CultureInfo.InvariantCulture);

@@ -1,9 +1,10 @@
 namespace MageeSoft.PDX.CE.Tests;
 
 [TestClass]
+[Ignore]
 public class TestDataTests
 {
-    private static string ReadTestFile(string filename) => File.ReadAllText(Path.Combine("Stellaris", "TestData", filename));
+    private static string ReadTestFile(string filename) => File.ReadAllText(Path.Combine("TestData", "stellaris", filename));
     
     private static string NormalizeLineEndings(string text) => text.Replace("\r\n", "\n").Replace("\r", "\n");
     

@@ -4,6 +4,7 @@ using System.CommandLine.NamingConventionBinder;
 using MageeSoft.PDX.CE.Cli.Commands.Options;
 using MageeSoft.PDX.CE.Save;
 using MageeSoft.PDX.CE.Cli.Services;
+using MageeSoft.PDX.CE.Save.Games.Stellaris;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 

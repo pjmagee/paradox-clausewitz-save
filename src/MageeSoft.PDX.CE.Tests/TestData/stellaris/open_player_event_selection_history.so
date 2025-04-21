@@ -1,0 +1,480 @@
+open_player_event_selection_history=
+{
+	selected=
+	{
+
+		{
+			player_event=1
+			human=1
+			option=0
+		}
+
+		{
+			player_event=3
+			human=1
+			option=0
+		}
+
+		{
+			player_event=2
+			human=1
+			option=0
+		}
+
+		{
+			player_event=4
+			human=1
+			option=0
+		}
+
+		{
+			player_event=5
+			human=1
+			option=0
+		}
+
+		{
+			player_event=6
+			human=1
+			option=0
+		}
+
+		{
+			player_event=7
+			human=1
+			option=8
+		}
+
+		{
+			player_event=8
+			human=1
+			option=0
+		}
+
+		{
+			player_event=9
+			human=1
+			option=0
+		}
+
+		{
+			player_event=10
+			human=1
+			option=0
+		}
+
+		{
+			player_event=11
+			human=1
+			option=0
+		}
+
+		{
+			player_event=12
+			human=1
+			option=0
+		}
+
+		{
+			player_event=13
+			human=1
+			option=0
+		}
+
+		{
+			player_event=14
+			human=1
+			option=0
+		}
+
+		{
+			player_event=15
+			human=1
+			option=0
+		}
+
+		{
+			player_event=16
+			human=1
+			option=0
+		}
+
+		{
+			player_event=18
+			human=1
+			option=0
+		}
+
+		{
+			player_event=17
+			human=1
+			option=0
+		}
+
+		{
+			player_event=19
+			human=1
+			option=1
+		}
+
+		{
+			player_event=20
+			human=1
+			option=0
+		}
+
+		{
+			player_event=22
+			human=1
+			option=0
+		}
+
+		{
+			player_event=21
+			human=1
+			option=0
+		}
+
+		{
+			player_event=23
+			human=1
+			option=0
+		}
+
+		{
+			player_event=24
+			human=1
+			option=0
+		}
+
+		{
+			player_event=25
+			human=1
+			option=0
+		}
+
+		{
+			player_event=26
+			human=1
+			option=0
+		}
+
+		{
+			player_event=27
+			human=1
+			option=0
+		}
+
+		{
+			player_event=28
+			human=1
+			option=0
+		}
+
+		{
+			player_event=29
+			human=1
+			option=0
+		}
+
+		{
+			player_event=30
+			human=1
+			option=0
+		}
+
+		{
+			player_event=31
+			human=1
+			option=0
+		}
+
+		{
+			player_event=32
+			human=1
+			option=0
+		}
+
+		{
+			player_event=33
+			human=1
+			option=0
+		}
+
+		{
+			player_event=34
+			human=1
+			option=0
+		}
+
+		{
+			player_event=35
+			human=1
+			option=0
+		}
+
+		{
+			player_event=36
+			human=1
+			option=0
+		}
+
+		{
+			player_event=37
+			human=1
+			option=0
+		}
+
+		{
+			player_event=38
+			human=1
+			option=0
+		}
+
+		{
+			player_event=39
+			human=1
+			option=0
+		}
+
+		{
+			player_event=40
+			human=1
+			option=0
+		}
+
+		{
+			player_event=42
+			human=1
+			option=1
+		}
+
+		{
+			player_event=41
+			human=1
+			option=0
+		}
+
+		{
+			player_event=43
+			human=1
+			option=0
+		}
+
+		{
+			player_event=45
+			human=1
+			option=0
+		}
+
+		{
+			player_event=46
+			human=1
+			option=1
+		}
+
+		{
+			player_event=44
+			human=1
+			option=1
+		}
+
+		{
+			player_event=47
+			human=1
+			option=0
+		}
+
+		{
+			player_event=48
+			human=1
+			option=0
+		}
+
+		{
+			player_event=49
+			human=1
+			option=0
+		}
+
+		{
+			player_event=50
+			human=1
+			option=1
+		}
+
+		{
+			player_event=52
+			human=1
+			option=0
+		}
+
+		{
+			player_event=53
+			human=1
+			option=0
+		}
+
+		{
+			player_event=55
+			human=1
+			option=0
+		}
+
+		{
+			player_event=54
+			human=1
+			option=0
+		}
+
+		{
+			player_event=51
+			human=-1
+			option=0
+		}
+
+		{
+			player_event=56
+			human=1
+			option=0
+		}
+
+		{
+			player_event=57
+			human=1
+			option=1
+		}
+
+		{
+			player_event=58
+			human=1
+			option=0
+		}
+
+		{
+			player_event=59
+			human=1
+			option=0
+		}
+
+		{
+			player_event=60
+			human=1
+			option=0
+		}
+
+		{
+			player_event=61
+			human=1
+			option=0
+		}
+
+		{
+			player_event=62
+			human=1
+			option=0
+		}
+
+		{
+			player_event=63
+			human=1
+			option=0
+		}
+
+		{
+			player_event=64
+			human=1
+			option=0
+		}
+
+		{
+			player_event=65
+			human=1
+			option=0
+		}
+
+		{
+			player_event=66
+			human=1
+			option=1
+		}
+
+		{
+			player_event=67
+			human=1
+			option=0
+		}
+
+		{
+			player_event=68
+			human=1
+			option=0
+		}
+
+		{
+			player_event=69
+			human=1
+			option=0
+		}
+
+		{
+			player_event=70
+			human=1
+			option=4
+		}
+
+		{
+			player_event=71
+			human=1
+			option=2
+		}
+
+		{
+			player_event=72
+			human=1
+			option=0
+		}
+
+		{
+			player_event=73
+			human=1
+			option=0
+		}
+
+		{
+			player_event=74
+			human=1
+			option=0
+		}
+
+		{
+			player_event=75
+			human=1
+			option=0
+		}
+
+		{
+			player_event=76
+			human=1
+			option=10
+		}
+
+		{
+			player_event=77
+			human=1
+			option=0
+		}
+
+		{
+			player_event=78
+			human=1
+			option=2
+		}
+
+		{
+			player_event=79
+			human=1
+			option=1
+		}
+	}
+}

@@ -2,6 +2,7 @@ using System.CommandLine;
 using System.CommandLine.IO;
 using System.Text.Json;
 using MageeSoft.PDX.CE.Save;
+using MageeSoft.PDX.CE.Save.Games.Stellaris;
 
 namespace MageeSoft.PDX.CE.Cli.Services.Games.Stellaris;
 

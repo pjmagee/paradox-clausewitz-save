@@ -3,9 +3,22 @@
         <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <LangVersion>latest</LangVersion>    
+        <LangVersion>latest</LangVersion>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageProjectUrl>https://github.com/pjmagee/paradox-clausewitz-sav</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/pjmagee/paradox-clausewitz-sav</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageId>MageeSoft.PDX.CE.Save</PackageId>
+        <PackageTags>stellaris paradox clausewitz engine game save parser</PackageTags>
+        <PackageVersion>1.0.0</PackageVersion>
+        <Authors>Patrick Magee</Authors>
+        <Description>A game save parser for Paradox Interactive titles.</Description>
     </PropertyGroup>
-    <ItemGroup>                
+    <ItemGroup>
         <ProjectReference Include="..\MageeSoft.PDX.CE\MageeSoft.PDX.CE.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Include="..\..\README.md" Pack="true" PackagePath="\"/>
     </ItemGroup>
 </Project>

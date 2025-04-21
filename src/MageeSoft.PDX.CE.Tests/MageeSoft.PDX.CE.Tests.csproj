@@ -11,17 +11,11 @@
         <ProjectReference Include="..\MageeSoft.PDX.CE\MageeSoft.PDX.CE.csproj"/>
         <ProjectReference Include="..\MageeSoft.PDX.CE.Cli\MageeSoft.PDX.CE.Cli.csproj" />
     </ItemGroup>
-
-    <!-- Copy Stellaris test data files to output directory -->
-    <ItemGroup>
-        <Content Include="Stellaris\**\*">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-    </ItemGroup>
-    <ItemGroup>
-      <None Update="Stellaris\TestData\ironman.sav">
+    
+    <ItemGroup>      
+      <Content Include="TestData/**/*.*">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </None>
+      </Content>
     </ItemGroup>
     
 </Project>

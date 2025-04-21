@@ -150,7 +150,7 @@ public class GameSaveZipTests
     public void TestUnzipIronmanSave()
     {
         // Arrange
-        var saveFile = new FileInfo(Path.Combine("Stellaris", "TestData", "ironman.sav"));
+        var saveFile = new FileInfo(Path.Combine("TestData", "stellaris", "ironman.sav"));
         Assert.IsTrue(saveFile.Exists, "ironman.sav test file not found");
 
         // Act

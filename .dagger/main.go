@@ -19,36 +19,11 @@ var matrix = []struct {
 	{os: "darwin", rid: "osx-arm64", address: "sickcodes/docker-osx:auto"},
 }
 
-func (m *ParadoxClausewitzSav) Agent(
-	ctx context.Context,
-// Assignment
-	assignment string,
-
-// +ignore=["**/obj", "**/bin"]
-	repoDir *dagger.Directory,
-) *dagger.Container {
-
-	ws := dag.AgentWorkspace().Write("assignment.txt", assignment)
-
-	env := dag.Env(dagger.EnvOpts{}).
-		WithAgentWorkspaceInput("workspace", ws, "The workspace for the assignment").
-		WithAgentWorkspaceOutput("workspace", "The workspace with results of the assignment")
-
-	return dag.LLM().
-		WithEnv(env).
-		WithPrompt("You are an expert C# .NET Programmer and QA. You have access to a workspace.").
-		WithPrompt("Complete the assignment found in the workspace, assignment.txt").
-		WithPrompt("Do not wipe the state of the container. Focus on withExec, file, directory, and container commands.").
-		Env().
-		Output("results").
-		AsContainer()
-}
-
 // Build the project
 func (m *ParadoxClausewitzSav) Build(
 	ctx context.Context,
-// +defaultPath="./"
-// +ignore=["**/obj", "**/bin"]
+	// +defaultPath="./"
+	// +ignore=["**/obj", "**/bin"]
 	repoDir *dagger.Directory,
 ) *dagger.Container {
 	return dag.Container().
@@ -61,8 +36,8 @@ func (m *ParadoxClausewitzSav) Build(
 
 func (m *ParadoxClausewitzSav) Tool(
 	ctx context.Context,
-// +defaultPath="./"
-// +ignore=["**/obj", "**/bin"]
+	// +defaultPath="./"
+	// +ignore=["**/obj", "**/bin"]
 	repoDir *dagger.Directory,
 ) *dagger.Container {
 	return dag.Container().
@@ -75,8 +50,8 @@ func (m *ParadoxClausewitzSav) Tool(
 
 func (m *ParadoxClausewitzSav) Publish(
 	ctx context.Context,
-// +defaultPath="./"
-// +ignore=["**/obj", "**/bin"]
+	// +defaultPath="./"
+	// +ignore=["**/obj", "**/bin"]
 	repoDir *dagger.Directory,
 ) *dagger.Container {
 	return dag.Container().
@@ -95,8 +70,8 @@ const (
 )
 
 func (m *ParadoxClausewitzSav) PublishAot(
-// +defaultPath="./"
-// +ignore=["**/obj", "**/bin"]
+	// +defaultPath="./"
+	// +ignore=["**/obj", "**/bin"]
 	repoDir *dagger.Directory,
 	rid Rid,
 ) *dagger.File {
@@ -113,8 +88,8 @@ func (m *ParadoxClausewitzSav) PublishAot(
 }
 
 func (m *ParadoxClausewitzSav) BuildNativeLinux(
-// +defaultPath="./"
-// +ignore=["**/obj", "**/bin"]
+	// +defaultPath="./"
+	// +ignore=["**/obj", "**/bin"]
 	repoDir *dagger.Directory,
 ) *dagger.Directory {
 	return dag.Directory().
@@ -124,8 +99,8 @@ func (m *ParadoxClausewitzSav) BuildNativeLinux(
 
 func (m *ParadoxClausewitzSav) VsTest(
 	ctx context.Context,
-// +defaultPath="./"
-// +ignore=["**/obj", "**/bin"]
+	// +defaultPath="./"
+	// +ignore=["**/obj", "**/bin"]
 	repoDir *dagger.Directory,
 ) (string, error) {
 	return dag.Container().
@@ -139,8 +114,8 @@ func (m *ParadoxClausewitzSav) VsTest(
 
 func (m *ParadoxClausewitzSav) Test(
 	ctx context.Context,
-// +defaultPath="./"
-// +ignore=["**/obj", "**/bin"]
+	// +defaultPath="./"
+	// +ignore=["**/obj", "**/bin"]
 	repoDir *dagger.Directory,
 ) (string, error) {
 	return dag.Container().
@@ -154,8 +129,8 @@ func (m *ParadoxClausewitzSav) Test(
 
 func (m *ParadoxClausewitzSav) LinuxTest(
 	ctx context.Context,
-// +defaultPath="./"
-// +ignore=["**/obj", "**/bin"]
+	// +defaultPath="./"
+	// +ignore=["**/obj", "**/bin"]
 	repoDir *dagger.Directory,
 ) (string, error) {
 	return dag.Container().
@@ -165,5 +140,6 @@ func (m *ParadoxClausewitzSav) LinuxTest(
 		WithMountedFile("/root/.paradoxlauncher/Stellaris/save games/my test empire/ironman.sav", dag.CurrentModule().Source().File("saves/stellaris/ironman.sav")).
 		WithWorkdir("/repo/src/MageeSoft.PDX.CE.Cli").
 		WithExec([]string{"dotnet", "run", "--", "list"}).
+		WithExec([]string{"dotnet", "run", "--", "query", "-n", "1", "-q", "player"}).
 		Stdout(ctx)
 }

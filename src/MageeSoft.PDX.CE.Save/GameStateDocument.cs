@@ -68,18 +68,8 @@ public class GameStateDocument
 
     public static GameStateDocument Parse(Stream stream)
     {
-        if (stream is null)
-            throw new ArgumentNullException(nameof(stream), "Stream cannot be null");
-
-        var reader = new StreamReader(stream);
-
-        try
-        {
-            return Parse(reader.ReadToEnd());
-        }
-        finally
-        {
-            reader.Dispose();
-        }
+        ArgumentNullException.ThrowIfNull(stream, nameof(stream));
+        using var reader = new StreamReader(stream);              
+        return Parse(reader.ReadToEnd());
     }
 }

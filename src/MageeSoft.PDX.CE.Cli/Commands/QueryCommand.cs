@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System.Text.Json;
 using MageeSoft.PDX.CE.Save;
+using MageeSoft.PDX.CE.Save.Games.Stellaris;
 
 namespace MageeSoft.PDX.CE.Cli.Commands;
 

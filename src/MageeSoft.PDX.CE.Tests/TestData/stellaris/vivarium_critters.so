@@ -1,0 +1,39 @@
+vivarium_critters=
+{
+	16777216=
+	{
+		rarity=epic
+		design=2646
+		name=
+		{
+			key="SPACE_AMOEBA_SHIP_EPIC_16"
+		}
+		creation_date="2240.11.01"
+		maturation_date="2240.11.01"
+		last_breeding_date="2240.11.01"
+	}
+	33554433=
+	{
+		rarity=common
+		design=2645
+		name=
+		{
+			key="SPACE_AMOEBA_SHIP_COMMON_11"
+		}
+		creation_date="2149.01.01"
+		maturation_date="2179.01.01"
+		last_breeding_date="2250.08.21"
+	}
+	16777218=
+	{
+		rarity=rare
+		design=2646
+		name=
+		{
+			key="SPACE_AMOEBA_SHIP_RARE_6"
+		}
+		creation_date="2239.09.01"
+		maturation_date="2239.09.01"
+		last_breeding_date="2239.09.01"
+	}
+}

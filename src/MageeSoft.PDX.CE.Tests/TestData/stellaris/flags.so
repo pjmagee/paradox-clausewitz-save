@@ -1,0 +1,32 @@
+flags=
+{
+	origin_lost_colony_used=62980800
+	origin_machine_used=62808000
+	fumongus_spawned=62808000
+	spawn_caravaneer_2=62808000
+	spawn_caravaneer_3=62808000
+	origin_shattered_ring_used=63061464
+	game_started=62808000
+	origin_lithoid_used=62980800
+	anomaly_ANCREL_RUBRICATOR_CAT=62848224
+	anomaly_irregular_energy_cat=62888832
+	asteroid_sighted_pre_ftl_global=
+	{
+		flag_date=62899440
+		flag_days=3496
+	}
+	nuclear_war_pre_ftl_global=
+	{
+		flag_date=62916720
+		flag_days=4216
+	}
+	cosmic_storm_has_occurred=63246936
+	seismic_disturbance_global=63017520
+	site_ice_trauma_found=63165192
+	hivers_appeared=63095016
+	solarpunk_discovered=63102624
+	xenophile_leader_2=63157056
+	fumongus_resolved=63232632
+	anomaly_BARR_BASE_CAT=63217536
+	fumongus_active=63232632
+}
