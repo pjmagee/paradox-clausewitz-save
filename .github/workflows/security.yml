@@ -1,0 +1,29 @@
+name: 🔍 Security scan with Snyk
+
+on:
+  workflow_dispatch: # Allows manual triggering
+
+jobs:
+  snyk:
+    name: Snyk Vulnerability Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: snyk/actions/setup@master
+
+      - name: Run Snyk test (dotnet)
+        uses: snyk/actions/dotnet@master
+        with:
+          command: test
+          args: --severity-threshold=high --all-projects --detection-depth=5
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+      - name: Run Snyk test (Go)
+        uses: snyk/actions/golang@master
+        with:
+          command: test
+          args: --severity-threshold=high --all-projects --detection-depth=5
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
