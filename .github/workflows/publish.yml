@@ -1,22 +1,22 @@
 name: Publish Release
 
 on:
-  release:
-    types: [created] # Trigger when a draft release is created
+  push:
+    tags:
+      - 'v*' # Trigger on version tags like v1.0.0
 
 permissions:
-  contents: write # Needed to write release assets
-  packages: write # Needed to publish packages
+  contents: write
+  packages: write
 
 jobs:
   publish-nuget:
-    if: github.event.release.draft == true
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.ref }} # Checkout the specific tag of the release
+          ref: ${{ github.ref }}
 
       - name: Get Commit SHA for Tag
         id: get_sha
@@ -28,7 +28,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           COMMIT_SHA: ${{ steps.get_sha.outputs.sha }}
         run: |
-          # Find the latest successful run for the specific commit SHA from the build.yml workflow
           run_id=$(gh run list --workflow "Build & Test" --commit $COMMIT_SHA --status success --json databaseId --jq 'sort_by(.databaseId) | .[-1].databaseId // ""' )
           if [ -z "$run_id" ]; then
             echo "No successful build run found for commit ${{ steps.get_sha.outputs.sha }}"
@@ -46,10 +45,6 @@ jobs:
 
       - name: Publish NuGet packages to GitHub Packages
         run: |
-          # Ensure packages were downloaded
-          if [ ! -d "./nupkgs" ] || [ -z "$(ls -A ./nupkgs)" ]; then echo "No NuGet packages found in ./nupkgs"; exit 1; fi
-          if [ ! -d "./nupkgtool" ] || [ -z "$(ls -A ./nupkgtool)" ]; then echo "No .NET tool package found in ./nupkgtool"; exit 1; fi
-          
           for pkg in ./nupkgs/*.nupkg; do
             dotnet nuget push "$pkg" --source "github" --api-key "${{ secrets.GITHUB_TOKEN }}" --skip-duplicate
           done
@@ -58,13 +53,12 @@ jobs:
           done
 
   release-aot-binaries:
-    if: github.event.release.draft == true
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.ref }} # Checkout the specific tag of the release
+          ref: ${{ github.ref }}
 
       - name: Get Commit SHA for Tag
         id: get_sha
@@ -76,7 +70,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           COMMIT_SHA: ${{ steps.get_sha.outputs.sha }}
         run: |
-          # Find the latest successful run for the specific commit SHA from the build-aot.yml workflow
           run_id=$(gh run list --workflow "Build Native AOT Binaries" --commit $COMMIT_SHA --status success --json databaseId --jq 'sort_by(.databaseId) | .[-1].databaseId // ""' )
           if [ -z "$run_id" ]; then
             echo "No successful AOT build run found for commit ${{ steps.get_sha.outputs.sha }}"
@@ -91,15 +84,13 @@ jobs:
         run: |
           mkdir -p ./all-artifacts
           gh run download $RUN_ID --pattern "native-binary-*" --dir ./all-artifacts
-          # Check if artifacts were downloaded
           if [ -z "$(ls -A ./all-artifacts)" ]; then echo "No native binary artifacts found for run $RUN_ID"; exit 1; fi
 
       - name: Upload native binaries to Draft GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          # tag_name, name, body are taken from the existing draft release
-          draft: true # Keep it as draft
-          prerelease: ${{ github.event.release.prerelease }} # Keep prerelease status
-          files: ./all-artifacts/* # Upload all downloaded binaries
+          tag_name: ${{ github.ref_name }}
+          draft: true
+          files: ./all-artifacts/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
