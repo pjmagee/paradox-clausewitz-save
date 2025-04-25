@@ -32,7 +32,7 @@ jobs:
         uses: dagger/dagger-for-github@8.0.0
         with:
           version: "latest"
-          call: pack --output nupkgs
+          call: pack --repo-dir=./ export --path nupkgs
 
       - name: Upload NuGet package
         uses: actions/upload-artifact@v4
@@ -44,7 +44,7 @@ jobs:
         uses: dagger/dagger-for-github@8.0.0
         with:
           version: "latest"
-          call: tool --repo-dir=./ --output nupkgtool
+          call: pack-tool --repo-dir=./ export --path nupkgtool
 
       - name: Upload .NET Tool package
         uses: actions/upload-artifact@v4
