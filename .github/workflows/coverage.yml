@@ -19,13 +19,17 @@ jobs:
       uses: dagger/dagger-for-github@8.0.0
       with:
         version: "latest"
-        call: coverage --repo-dir=./ --output report.cobertura.xml
+        call: coverage export --path report.cobertura.xml
 
     - name: Upload coverage artifact
       uses: actions/upload-artifact@v4
       with:
         name: coverage-report
         path: report.cobertura.xml
+
+    - uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 10.0.x
 
     - name: ReportGenerator
       uses: danielpalme/ReportGenerator-GitHub-Action@5.2.0
