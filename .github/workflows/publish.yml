@@ -1,106 +1,82 @@
 name: Publish Release
 
 on:
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: 'Tag to publish (e.g. v1.0.0)'
-        required: true
-        type: string
+  release:
+    types: [created]
 
 permissions:
   contents: write
   packages: write
 
 jobs:
-  publish:
+  build-and-pack:
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.gitversion.outputs.semVer }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.tag }}
+          fetch-depth: 0
+      
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      
+      - name: Install GitVersion
+        uses: gittools/actions/gitversion/setup@v3
+        with:
+          versionSpec: '6.0.x'
+      
+      - name: Determine Version using GitVersion
+        id: gitversion
+        uses: gittools/actions/gitversion/execute@v3
 
-      # Remove the gh auth setup-git step as it's not needed
-      # GitHub Actions automatically sets up the GITHUB_TOKEN
-
-      - name: Find Build & Test run ID
-        id: find_build_run
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Display GitVersion outputs
         run: |
-          ref_name="${{ inputs.tag }}"
-          run_id=$(gh run list --workflow "Build & Test" --branch "refs/tags/$ref_name" --status completed --json databaseId,conclusion --jq '.[] | select(.conclusion=="success") | .databaseId' --limit 1)
-          echo "Found Build & Test run ID: $run_id"
-          echo "run_id=$run_id" >> $GITHUB_OUTPUT
-          if [ -z "$run_id" ]; then
-            echo "No successful Build & Test run found for tag $ref_name"
-            exit 1
-          fi
+          echo "SemVer: ${{ steps.gitversion.outputs.semVer }}"
+          echo "MajorMinorPatch: ${{ steps.gitversion.outputs.majorMinorPatch }}"
 
-      - name: Find Native AOT Build run ID
-        id: find_aot_run
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          ref_name="${{ inputs.tag }}"
-          run_id=$(gh run list --workflow "Build Native AOT Binaries" --branch "refs/tags/$ref_name" --status completed --json databaseId,conclusion --jq '.[] | select(.conclusion=="success") | .databaseId' --limit 1)
-          echo "Found Native AOT Build run ID: $run_id"
-          echo "run_id=$run_id" >> $GITHUB_OUTPUT
-          if [ -z "$run_id" ]; then
-            echo "No successful Native AOT Build run found for tag $ref_name"
-            exit 1
-          fi
+      # Use Dagger for build, test and packaging
+      - name: Dagger Build
+        uses: dagger/dagger-for-github@8.0.0
+        with:
+          version: "latest"
+          call: build
+      
+      - name: Dagger Test
+        uses: dagger/dagger-for-github@8.0.0
+        with:
+          version: "latest"
+          call: test
+      
+      - name: Dagger Pack NuGet
+        uses: dagger/dagger-for-github@8.0.0
+        with:
+          version: "latest"
+          call: pack export --path nupkgs
+      
+      - name: Dagger Pack .NET Tool
+        uses: dagger/dagger-for-github@8.0.0
+        with:
+          version: "latest"
+          call: pack-tool export --path nupkgtool
 
-      - name: Download NuGet package artifacts
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          mkdir -p ./nupkgs
-          mkdir -p ./nupkgtool
-          gh run download ${{ steps.find_build_run.outputs.run_id }} --name nuget-packages --dir ./nupkgs
-          gh run download ${{ steps.find_build_run.outputs.run_id }} --name nuget-tool-package --dir ./nupkgtool
+      # Upload artifacts for later use
+      - name: Upload NuGet package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-packages
+          path: nupkgs/*.nupkg
           
-          # Verify we have packages
-          if [ ! -d "./nupkgs" ] || [ -z "$(ls -A ./nupkgs)" ]; then 
-            echo "No NuGet packages found in ./nupkgs"
-            exit 1
-          fi
-          
-          if [ ! -d "./nupkgtool" ] || [ -z "$(ls -A ./nupkgtool)" ]; then 
-            echo "No .NET tool packages found in ./nupkgtool"
-            exit 1
-          fi
+      - name: Upload .NET Tool package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-tool-package
+          path: nupkgtool/*.nupkg
 
-      - name: Download native binary artifacts
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          mkdir -p ./all-artifacts
-          
-          # Download Windows artifacts
-          echo "Downloading Windows artifacts"
-          gh run download ${{ steps.find_aot_run.outputs.run_id }} --name "native-binaries-windows-x64" --dir ./all-artifacts
-          gh run download ${{ steps.find_aot_run.outputs.run_id }} --name "native-binaries-windows-arm64" --dir ./all-artifacts
-          
-          # Download Linux artifacts
-          echo "Downloading Linux artifacts"
-          gh run download ${{ steps.find_aot_run.outputs.run_id }} --name "native-binaries-linux-x64" --dir ./all-artifacts
-          gh run download ${{ steps.find_aot_run.outputs.run_id }} --name "native-binaries-linux-arm64" --dir ./all-artifacts
-          
-          # Download macOS artifacts
-          echo "Downloading macOS artifacts"
-          gh run download ${{ steps.find_aot_run.outputs.run_id }} --name "native-binaries-macos-x64" --dir ./all-artifacts
-          gh run download ${{ steps.find_aot_run.outputs.run_id }} --name "native-binaries-macos-arm64" --dir ./all-artifacts
-          
-          # Verify we have artifacts
-          if [ -z "$(ls -A ./all-artifacts)" ]; then
-            echo "No native binary artifacts found"
-            exit 1
-          fi
-          
-          find ./all-artifacts -type f | sort
-
+      # Publish packages directly
       - name: Publish NuGet packages to GitHub Packages
         run: |
           dotnet nuget add source https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json --name github --username ${{ github.repository_owner }} --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text
@@ -115,11 +91,134 @@ jobs:
             dotnet nuget push "$pkg" --source "github" --api-key ${{ secrets.GITHUB_TOKEN }} --skip-duplicate
           done
 
-      - name: Create or update GitHub Release with native binaries
+  build-windows:
+    needs: build-and-pack
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        arch: [x64, arm64]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Build and package for Windows
+        shell: pwsh
+        run: |
+          $RepoRoot = "${{ github.workspace }}"
+          & "$RepoRoot\etc\build-native-executable.ps1" `
+              -SrcDir "$RepoRoot\src" `
+              -RuntimeIdentifier "win-${{ matrix.arch }}" `
+              -Configuration "Release" `
+              -VersionPrefix "${{ needs.build-and-pack.outputs.version }}"
+          if ($LASTEXITCODE -eq 0) {
+            & "$RepoRoot\etc\package-native-executable.ps1" `
+                -Platform windows `
+                -Architecture ${{ matrix.arch }} `
+                -InputFile "$RepoRoot\bin\aot-win-${{ matrix.arch }}\mageesoft-pdx-ce-sav.exe" `
+                -OutputDir "$RepoRoot\artifacts"
+          } else {
+            Write-Error "Build failed with exit code $LASTEXITCODE"
+            exit $LASTEXITCODE
+          }
+      - name: Upload native binaries as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-binaries-windows-${{ matrix.arch }}
+          path: ./artifacts/*
+      - name: Upload native binaries to Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ inputs.tag }}
-          draft: true
-          files: ./all-artifacts/**/*
+          files: ./artifacts/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-linux:
+    needs: build-and-pack
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [x64, arm64]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Dagger AOT
+        uses: dagger/dagger-for-github@8.0.0
+        with:
+          version: "latest"
+          call: publish-aot --rid=linux-${{ matrix.arch }} export --path ./bin/aot-linux-${{ matrix.arch }}/mageesoft-pdx-ce-sav --allow-parent-dir-path
+      - name: Package for Linux
+        shell: bash
+        run: |
+          REPO_ROOT="${{ github.workspace }}"
+          pwsh -File "${REPO_ROOT}/etc/package-native-executable.ps1" \
+            -Platform linux \
+            -Architecture ${{ matrix.arch }} \
+            -InputFile "${REPO_ROOT}/bin/aot-linux-${{ matrix.arch }}/mageesoft-pdx-ce-sav" \
+            -OutputDir "${REPO_ROOT}/artifacts"
+      - name: Upload native binaries as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-binaries-linux-${{ matrix.arch }}
+          path: ./artifacts/*
+      - name: Upload native binaries to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ./artifacts/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-macos:
+    needs: build-and-pack
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        arch: [x64, arm64]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Build and package for macOS
+        shell: bash
+        run: |
+          REPO_ROOT="${{ github.workspace }}"
+          pwsh -File "${REPO_ROOT}/etc/build-native-executable.ps1" \
+            -SrcDir "${REPO_ROOT}/src" \
+            -RuntimeIdentifier "osx-${{ matrix.arch }}" \
+            -Configuration "Release" \
+            -VersionPrefix "${{ needs.build-and-pack.outputs.version }}"
+          
+          BUILD_EXIT_CODE=$?
+          if [ $BUILD_EXIT_CODE -eq 0 ]; then
+            pwsh -File "${REPO_ROOT}/etc/package-native-executable.ps1" \
+              -Platform macos \
+              -Architecture ${{ matrix.arch }} \
+              -InputFile "${REPO_ROOT}/bin/aot-osx-${{ matrix.arch }}/mageesoft-pdx-ce-sav" \
+              -OutputDir "${REPO_ROOT}/artifacts"
+          else
+            echo "Build failed with exit code $BUILD_EXIT_CODE"
+            exit $BUILD_EXIT_CODE
+          fi
+      - name: Upload native binaries as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-binaries-macos-${{ matrix.arch }}
+          path: ./artifacts/*
+      - name: Upload native binaries to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ./artifacts/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
