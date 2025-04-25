@@ -49,6 +49,7 @@ func (m *ParadoxClausewitzSav) Tool(
 		WithExec([]string{"dotnet", "publish", "-p:PackAsTool=true"})
 }
 
+// dotnet publish the MageeSoft.PDX.CE.Cli project and return the container.
 func (m *ParadoxClausewitzSav) Publish(
 	ctx context.Context,
 	// +defaultPath="./"
@@ -74,6 +75,7 @@ const (
 	LinuxArm64 Rid = "linux-arm64"
 )
 
+// dotnet publish the MageeSoft.PDX.CE.Cli project for the given rid and return the path to the binary.
 func (m *ParadoxClausewitzSav) PublishAot(
 	// +defaultPath="./"
 	// +ignore=["**/obj", "**/bin"]
@@ -92,7 +94,8 @@ func (m *ParadoxClausewitzSav) PublishAot(
 		File("/repo/bin/Release/" + string(rid) + "/mageesoft-pdx-ce-sav")
 }
 
-func (m *ParadoxClausewitzSav) BuildNativeLinux(
+// Build the linux-x64 and linux-arm64 AOT binaries
+func (m *ParadoxClausewitzSav) BuildAot(
 	// +defaultPath="./"
 	// +ignore=["**/obj", "**/bin"]
 	repoDir *dagger.Directory,
@@ -102,6 +105,7 @@ func (m *ParadoxClausewitzSav) BuildNativeLinux(
 		WithFile("linux-arm64/mageesoft-pdx-ce-sav", m.PublishAot(repoDir, LinuxArm64))
 }
 
+// dotnet run the MageeSoft.PDX.CE.Tests project
 func (m *ParadoxClausewitzSav) VsTest(
 	ctx context.Context,
 	// +defaultPath="./"
@@ -117,6 +121,7 @@ func (m *ParadoxClausewitzSav) VsTest(
 		Stdout(ctx)
 }
 
+// dotnet test the MageeSoft.PDX.CE.Tests project
 func (m *ParadoxClausewitzSav) Test(
 	ctx context.Context,
 	// +defaultPath="./"
@@ -133,7 +138,8 @@ func (m *ParadoxClausewitzSav) Test(
 		})
 }
 
-func (m *ParadoxClausewitzSav) LinuxTest(
+// runs the CLI tool in a container and returns the output.
+func (m *ParadoxClausewitzSav) CliTest(
 	ctx context.Context,
 	// +defaultPath="./"
 	// +ignore=["**/obj", "**/bin"]
@@ -148,4 +154,54 @@ func (m *ParadoxClausewitzSav) LinuxTest(
 		WithExec([]string{"dotnet", "run", "--", "list"}).
 		WithExec([]string{"dotnet", "run", "--", "query", "-n", "1", "-q", "player"}).
 		Stdout(ctx)
+}
+
+// dotnet pack the MageeSoft.PDX.CE library and return the nupkg dir.
+func (m *ParadoxClausewitzSav) Pack(
+	ctx context.Context,
+	// +defaultPath="./"
+	// +ignore=["**/obj", "**/bin"]
+	repoDir *dagger.Directory,
+) *dagger.Directory {
+	return dag.Container().
+		From("mcr.microsoft.com/dotnet/sdk:10.0-preview").
+		WithMountedCache("/root/.nuget/packages", dag.CacheVolume("nuget")).
+		WithMountedDirectory("/repo", repoDir).
+		WithWorkdir("/repo/src/MageeSoft.PDX.CE").
+		WithExec([]string{"dotnet", "pack", "-c", "Release", "-o", "/repo/nupkgs"}).
+		Directory("/repo/nupkgs")
+}
+
+// dotnet pack the MageeSoft.PDX.CE.Cli dotnet-tool and return the nupkg dir.
+func (m *ParadoxClausewitzSav) PackTool(
+	ctx context.Context,
+	// +defaultPath="./"
+	// +ignore=["**/obj", "**/bin"]
+	repoDir *dagger.Directory,
+) *dagger.Directory {
+	return dag.Container().
+		From("mcr.microsoft.com/dotnet/sdk:10.0-preview").
+		WithMountedCache("/root/.nuget/packages", dag.CacheVolume("nuget")).
+		WithMountedDirectory("/repo", repoDir).
+		WithWorkdir("/repo/src/MageeSoft.PDX.CE.Cli").
+		WithExec([]string{"dotnet", "pack", "-c", "Release", "/p:PackAsTool=true", "-o", "/repo/nupkgtool"}).
+		Directory("/repo/nupkgtool")
+}
+
+// dotnet test the MageeSoft.PDX.CE.Tests project and return the coverage report.
+func (m *ParadoxClausewitzSav) Coverage(
+	ctx context.Context,
+	// +defaultPath="./"
+	// +ignore=["**/obj", "**/bin"]
+	repoDir *dagger.Directory,
+) *dagger.File {
+	return dag.Container().
+		From("mcr.microsoft.com/dotnet/sdk:10.0-preview").
+		WithMountedCache("/root/.nuget/packages", dag.CacheVolume("nuget")).
+		WithMountedDirectory("/repo", repoDir).
+		WithWorkdir("/repo/src/MageeSoft.PDX.CE.Tests").
+		WithExec([]string{
+			"dotnet", "run", "--coverage", "--coverage-output", "/repo/report.cobertura.xml", "--coverage-output-format", "cobertura",
+		}).
+		File("/repo/report.cobertura.xml")
 }

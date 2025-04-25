@@ -1,0 +1,115 @@
+name: Build Native AOT Binaries
+
+on:
+  workflow_run:
+    workflows: ["Build & Test"]
+    types:
+      - completed
+
+jobs:
+  build-windows:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        arch: [x64, arm64]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Build and package for Windows
+        shell: pwsh
+        run: |
+          $RepoRoot = "${{ github.workspace }}"
+          & "$RepoRoot\etc\build-native-executable.ps1" `
+              -SrcDir "$RepoRoot\src" `
+              -RuntimeIdentifier "win-${{ matrix.arch }}" `
+              -Configuration "Release"
+          if ($LASTEXITCODE -eq 0) {
+            & "$RepoRoot\etc\package-native-executable.ps1" `
+                -Platform windows `
+                -Architecture ${{ matrix.arch }} `
+                -InputFile "$RepoRoot\bin\aot-win-${{ matrix.arch }}\mageesoft-pdx-ce-sav.exe" `
+                -OutputDir "$RepoRoot\artifacts"
+          } else {
+            Write-Error "Build failed with exit code $LASTEXITCODE"
+            exit $LASTEXITCODE
+          }
+      - name: Upload native binaries as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-binaries-windows-${{ matrix.arch }}
+          path: ./artifacts/*
+
+  build-linux:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [x64, arm64]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Dagger AOT
+        uses: dagger/dagger-for-github@8.0.0
+        with:
+          version: "latest"
+          call: publish-aot --rid=linux-${{ matrix.arch }} export --path ./bin/aot-linux-${{ matrix.arch }}/mageesoft-pdx-ce-sav --allow-parent-dir-path
+      - name: Package and upload for Linux
+        shell: bash
+        run: |
+          REPO_ROOT="${{ github.workspace }}"
+          pwsh -File "${REPO_ROOT}/etc/package-native-executable.ps1" \
+            -Platform linux \
+            -Architecture ${{ matrix.arch }} \
+            -InputFile "${REPO_ROOT}/bin/aot-linux-${{ matrix.arch }}/mageesoft-pdx-ce-sav" \
+            -OutputDir "${REPO_ROOT}/artifacts"
+      - name: Upload native binaries as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-binaries-linux-${{ matrix.arch }}
+          path: ./artifacts/*
+
+  build-macos:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        arch: [x64, arm64]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Build and package for MacOS
+        shell: bash
+        run: |
+          REPO_ROOT="${{ github.workspace }}"
+          pwsh -File "${REPO_ROOT}/etc/build-native-executable.ps1" \
+            -SrcDir "${REPO_ROOT}/src" \
+            -RuntimeIdentifier "osx-${{ matrix.arch }}" \
+            -Configuration "Release"
+          BUILD_EXIT_CODE=$?
+          if [ $BUILD_EXIT_CODE -eq 0 ]; then
+            pwsh -File "${REPO_ROOT}/etc/package-native-executable.ps1" \
+              -Platform macos \
+              -Architecture ${{ matrix.arch }} \
+              -InputFile "${REPO_ROOT}/bin/aot-osx-${{ matrix.arch }}/mageesoft-pdx-ce-sav" \
+              -OutputDir "${REPO_ROOT}/artifacts"
+          else
+            echo "Build failed with exit code $BUILD_EXIT_CODE"
+            exit $BUILD_EXIT_CODE
+          fi
+      - name: Upload native binaries as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-binaries-macos-${{ matrix.arch }}
+          path: ./artifacts/*

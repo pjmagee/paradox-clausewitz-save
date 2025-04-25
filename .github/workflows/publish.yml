@@ -1,0 +1,143 @@
+name: Publish Release on Tag
+
+on:
+  push:
+    tags:
+      - 'v*' # Trigger on version tags like v1.0.0
+
+permissions:
+  contents: write # Needed to create releases
+  packages: write # Needed to publish packages
+
+jobs:
+  determine-version:
+    runs-on: ubuntu-latest
+    outputs:
+      semVer: ${{ steps.gitversion.outputs.semVer }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Required for GitVersion
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Install GitVersion
+        uses: gittools/actions/gitversion/setup@v3
+        with:
+          versionSpec: '6.0.x'
+      - name: Determine Version using GitVersion
+        id: gitversion
+        uses: gittools/actions/gitversion/execute@v3
+
+  publish-nuget:
+    needs: determine-version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Dagger Pack NuGet
+        uses: dagger/dagger-for-github@8.0.0
+        with:
+          version: "latest"
+          call: pack --repo-dir=./ --output nupkgs
+      - name: Dagger Pack .NET Tool
+        uses: dagger/dagger-for-github@8.0.0
+        with:
+          version: "latest"
+          call: pack-tool --repo-dir=./ --output nupkgtool
+      - name: Publish NuGet packages to GitHub Packages
+        run: |
+          for pkg in ./nupkgs/*.nupkg; do
+            dotnet nuget push "$pkg" --source "github" --api-key "${{ secrets.GITHUB_TOKEN }}" --skip-duplicate
+          done
+          for pkg in ./nupkgtool/*.nupkg; do
+            dotnet nuget push "$pkg" --source "github" --api-key "${{ secrets.GITHUB_TOKEN }}" --skip-duplicate
+          done
+
+  build-and-release-aot:
+    needs: determine-version
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        arch: [x64, arm64]
+        include:
+          - os: ubuntu-latest
+            platform: linux
+            runner: ubuntu-latest
+          - os: windows-latest
+            platform: windows
+            runner: windows-latest
+          - os: macos-latest
+            platform: macos
+            runner: macos-latest
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      # Build AOT (adjust based on OS/arch)
+      - name: Build Native AOT
+        shell: pwsh
+        run: |
+          $runtimeIdentifier = "${{ matrix.platform }}-${{ matrix.arch }}"
+          Write-Host "Building for $runtimeIdentifier"
+          # Assuming build-native-executable.ps1 handles the build
+          ./etc/build-native-executable.ps1 -SrcDir ./src -RuntimeIdentifier $runtimeIdentifier -Configuration Release
+
+      # Package AOT (adjust based on OS/arch)
+      - name: Package Native AOT
+        shell: pwsh
+        run: |
+          $inputFile = ""
+          if ("${{ matrix.platform }}" -eq "windows") {
+            $inputFile = "./bin/aot-${{ matrix.platform }}-${{ matrix.arch }}/paradox-clausewitz-sav.exe"
+          } else {
+            $inputFile = "./bin/aot-${{ matrix.platform }}-${{ matrix.arch }}/paradox-clausewitz-sav"
+          }
+          ./etc/package-native-executable.ps1 -Platform ${{ matrix.platform }} -Architecture ${{ matrix.arch }} -InputFile $inputFile -OutputDir ./artifacts
+
+      # Upload AOT artifact (temporary for release step)
+      - name: Upload AOT artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-binary-${{ matrix.platform }}-${{ matrix.arch }}
+          path: ./artifacts/*
+
+  create-draft-release:
+    needs: [publish-nuget, build-and-release-aot]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all native binary artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./all-artifacts
+          pattern: native-binary-*
+          merge-multiple: true # Combine artifacts into one directory
+
+      - name: Create Draft GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref }} # Use the tag that triggered the workflow
+          name: Release ${{ needs.determine-version.outputs.semVer }}
+          body: |
+            Draft release for version ${{ needs.determine-version.outputs.semVer }}.
+
+            NuGet packages published.
+            Native binaries attached.
+
+            *Verify and publish when ready.*
+          draft: true
+          prerelease: false
+          files: ./all-artifacts/* # Upload all downloaded binaries
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

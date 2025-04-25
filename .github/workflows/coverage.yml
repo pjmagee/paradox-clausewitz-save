@@ -15,20 +15,22 @@ jobs:
       with:
         fetch-depth: 0    # Fetch all history for GitVersion
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
+    - name: Dagger Coverage
+      uses: dagger/dagger-for-github@8.0.0
       with:
-        dotnet-version: 10.0.x
+        version: "latest"
+        call: coverage --repo-dir=./ --output report.cobertura.xml
 
-    - name: Test with coverage
-      run: |
-        cd ./src/MageeSoft.PDX.CE.Tests
-        dotnet run --coverage --coverage-output $GITHUB_WORKSPACE/report.cobertura.xml  --coverage-output-format cobertura
+    - name: Upload coverage artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report
+        path: report.cobertura.xml
 
     - name: ReportGenerator
       uses: danielpalme/ReportGenerator-GitHub-Action@5.2.0
       with:
-        reports: '${{ github.workspace }}/report.cobertura.xml'
+        reports: 'report.cobertura.xml'
         targetdir: '${{ github.workspace }}/coveragereport'
         reporttypes: 'MarkdownSummaryGithub'
 
