@@ -1,96 +1,125 @@
 name: Publish Release
 
 on:
-  push:
-    tags:
-      - 'v*' # Trigger on version tags like v1.0.0
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to publish (e.g. v1.0.0)'
+        required: true
+        type: string
 
 permissions:
   contents: write
   packages: write
 
 jobs:
-  publish-nuget:
+  publish:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.ref }}
+          ref: ${{ inputs.tag }}
 
-      - name: Get Commit SHA for Tag
-        id: get_sha
-        run: echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+      # Remove the gh auth setup-git step as it's not needed
+      # GitHub Actions automatically sets up the GITHUB_TOKEN
 
-      - name: Find Build workflow run ID
+      - name: Find Build & Test run ID
         id: find_build_run
         env:
-          GH_TOKEN: ${{ github.token }}
-          COMMIT_SHA: ${{ steps.get_sha.outputs.sha }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          run_id=$(gh run list --workflow "Build & Test" --commit $COMMIT_SHA --status success --json databaseId --jq 'sort_by(.databaseId) | .[-1].databaseId // ""' )
+          ref_name="${{ inputs.tag }}"
+          run_id=$(gh run list --workflow "Build & Test" --branch "refs/tags/$ref_name" --status completed --json databaseId,conclusion --jq '.[] | select(.conclusion=="success") | .databaseId' --limit 1)
+          echo "Found Build & Test run ID: $run_id"
+          echo "run_id=$run_id" >> $GITHUB_OUTPUT
           if [ -z "$run_id" ]; then
-            echo "No successful build run found for commit ${{ steps.get_sha.outputs.sha }}"
+            echo "No successful Build & Test run found for tag $ref_name"
             exit 1
           fi
-          echo "run_id=$run_id" >> $GITHUB_OUTPUT
 
-      - name: Download NuGet artifacts
+      - name: Find Native AOT Build run ID
+        id: find_aot_run
         env:
-          GH_TOKEN: ${{ github.token }}
-          RUN_ID: ${{ steps.find_build_run.outputs.run_id }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh run download $RUN_ID --name nuget-packages --dir ./nupkgs
-          gh run download $RUN_ID --name nuget-tool-package --dir ./nupkgtool
+          ref_name="${{ inputs.tag }}"
+          run_id=$(gh run list --workflow "Build Native AOT Binaries" --branch "refs/tags/$ref_name" --status completed --json databaseId,conclusion --jq '.[] | select(.conclusion=="success") | .databaseId' --limit 1)
+          echo "Found Native AOT Build run ID: $run_id"
+          echo "run_id=$run_id" >> $GITHUB_OUTPUT
+          if [ -z "$run_id" ]; then
+            echo "No successful Native AOT Build run found for tag $ref_name"
+            exit 1
+          fi
+
+      - name: Download NuGet package artifacts
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p ./nupkgs
+          mkdir -p ./nupkgtool
+          gh run download ${{ steps.find_build_run.outputs.run_id }} --name nuget-packages --dir ./nupkgs
+          gh run download ${{ steps.find_build_run.outputs.run_id }} --name nuget-tool-package --dir ./nupkgtool
+          
+          # Verify we have packages
+          if [ ! -d "./nupkgs" ] || [ -z "$(ls -A ./nupkgs)" ]; then 
+            echo "No NuGet packages found in ./nupkgs"
+            exit 1
+          fi
+          
+          if [ ! -d "./nupkgtool" ] || [ -z "$(ls -A ./nupkgtool)" ]; then 
+            echo "No .NET tool packages found in ./nupkgtool"
+            exit 1
+          fi
+
+      - name: Download native binary artifacts
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p ./all-artifacts
+          
+          # Download Windows artifacts
+          echo "Downloading Windows artifacts"
+          gh run download ${{ steps.find_aot_run.outputs.run_id }} --name "native-binaries-windows-x64" --dir ./all-artifacts
+          gh run download ${{ steps.find_aot_run.outputs.run_id }} --name "native-binaries-windows-arm64" --dir ./all-artifacts
+          
+          # Download Linux artifacts
+          echo "Downloading Linux artifacts"
+          gh run download ${{ steps.find_aot_run.outputs.run_id }} --name "native-binaries-linux-x64" --dir ./all-artifacts
+          gh run download ${{ steps.find_aot_run.outputs.run_id }} --name "native-binaries-linux-arm64" --dir ./all-artifacts
+          
+          # Download macOS artifacts
+          echo "Downloading macOS artifacts"
+          gh run download ${{ steps.find_aot_run.outputs.run_id }} --name "native-binaries-macos-x64" --dir ./all-artifacts
+          gh run download ${{ steps.find_aot_run.outputs.run_id }} --name "native-binaries-macos-arm64" --dir ./all-artifacts
+          
+          # Verify we have artifacts
+          if [ -z "$(ls -A ./all-artifacts)" ]; then
+            echo "No native binary artifacts found"
+            exit 1
+          fi
+          
+          find ./all-artifacts -type f | sort
 
       - name: Publish NuGet packages to GitHub Packages
         run: |
+          dotnet nuget add source https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json --name github --username ${{ github.repository_owner }} --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text
+          
           for pkg in ./nupkgs/*.nupkg; do
-            dotnet nuget push "$pkg" --source "github" --api-key "${{ secrets.GITHUB_TOKEN }}" --skip-duplicate
+            echo "Publishing NuGet package: $pkg"
+            dotnet nuget push "$pkg" --source "github" --api-key ${{ secrets.GITHUB_TOKEN }} --skip-duplicate
           done
+          
           for pkg in ./nupkgtool/*.nupkg; do
-            dotnet nuget push "$pkg" --source "github" --api-key "${{ secrets.GITHUB_TOKEN }}" --skip-duplicate
+            echo "Publishing .NET tool package: $pkg"
+            dotnet nuget push "$pkg" --source "github" --api-key ${{ secrets.GITHUB_TOKEN }} --skip-duplicate
           done
 
-  release-aot-binaries:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.ref }}
-
-      - name: Get Commit SHA for Tag
-        id: get_sha
-        run: echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
-
-      - name: Find Build Native AOT workflow run ID
-        id: find_aot_run
-        env:
-          GH_TOKEN: ${{ github.token }}
-          COMMIT_SHA: ${{ steps.get_sha.outputs.sha }}
-        run: |
-          run_id=$(gh run list --workflow "Build Native AOT Binaries" --commit $COMMIT_SHA --status success --json databaseId --jq 'sort_by(.databaseId) | .[-1].databaseId // ""' )
-          if [ -z "$run_id" ]; then
-            echo "No successful AOT build run found for commit ${{ steps.get_sha.outputs.sha }}"
-            exit 1
-          fi
-          echo "run_id=$run_id" >> $GITHUB_OUTPUT
-
-      - name: Download all native binary artifacts
-        env:
-          GH_TOKEN: ${{ github.token }}
-          RUN_ID: ${{ steps.find_aot_run.outputs.run_id }}
-        run: |
-          mkdir -p ./all-artifacts
-          gh run download $RUN_ID --pattern "native-binary-*" --dir ./all-artifacts
-          if [ -z "$(ls -A ./all-artifacts)" ]; then echo "No native binary artifacts found for run $RUN_ID"; exit 1; fi
-
-      - name: Upload native binaries to Draft GitHub Release
+      - name: Create or update GitHub Release with native binaries
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_name }}
+          tag_name: ${{ inputs.tag }}
           draft: true
-          files: ./all-artifacts/*
+          files: ./all-artifacts/**/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
