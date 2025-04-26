@@ -90,7 +90,7 @@ func (m *ParadoxClausewitzSav) PublishAot(
 		WithExec([]string{"rm", "-rf", "/var/lib/apt/lists/*"}).
 		WithMountedDirectory("/repo", repoDir).
 		WithWorkdir("/repo/src/MageeSoft.PDX.CE.Cli").
-		WithExec([]string{"dotnet", "publish", "-c", "Release", "-r", string(rid), "-o", "/repo/bin/Release/" + string(rid)}).
+		WithExec([]string{"dotnet", "publish", "-c", "Release", "-r", string(rid), "/p:PublishAot=true", "-o", "/repo/bin/Release/" + string(rid)}).
 		File("/repo/bin/Release/" + string(rid) + "/mageesoft-pdx-ce-sav")
 }
 
@@ -184,7 +184,16 @@ func (m *ParadoxClausewitzSav) PackTool(
 		WithMountedCache("/root/.nuget/packages", dag.CacheVolume("nuget")).
 		WithMountedDirectory("/repo", repoDir).
 		WithWorkdir("/repo/src/MageeSoft.PDX.CE.Cli").
-		WithExec([]string{"dotnet", "pack", "-c", "Release", "/p:PackAsTool=true", "-o", "/repo/nupkgtool"}).
+		WithExec([]string{
+			"dotnet",
+			"pack",
+			"-c",
+			"Release",
+			"/p:PackAsTool=true",
+			"/p:PublishAot=false",
+			"-o",
+			"/repo/nupkgtool",
+		}).
 		Directory("/repo/nupkgtool")
 }
 

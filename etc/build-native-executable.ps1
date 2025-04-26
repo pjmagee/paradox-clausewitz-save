@@ -47,8 +47,8 @@ dotnet restore $SolutionPath
 
 Write-Host "Building Native AOT executable for $RuntimeIdentifier..." -ForegroundColor Cyan
 
-# Build the AOT executable
-dotnet publish $CsprojPath -c $Configuration -r $RuntimeIdentifier -o $AotOutputDir @VersionArgs
+# Build the AOT executable - explicitly set PublishAot=true
+dotnet publish $CsprojPath -c $Configuration -r $RuntimeIdentifier -o $AotOutputDir /p:PublishAot=true @VersionArgs
 
 if ($LASTEXITCODE -eq 0) {
     $ExeName = if ($RuntimeIdentifier.StartsWith("win")) { 
